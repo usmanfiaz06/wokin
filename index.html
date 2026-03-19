@@ -5,25 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>WOK!N - Modern Pan Asian</title>
     <link rel="icon" type="image/jpeg" href="Wokin.- logo.jpeg">
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&family=Permanent+Marker&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800;900&family=Permanent+Marker&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
     <!-- ===== WELCOME SCREEN ===== -->
     <div class="welcome-screen" id="welcomeScreen">
-        <!-- Red grid background -->
         <div class="grid-bg"></div>
 
-        <!-- Decorative chopsticks -->
+        <!-- Decorative elements -->
         <div class="chopstick chopstick-1"></div>
         <div class="chopstick chopstick-2"></div>
 
-        <!-- Content -->
         <div class="welcome-content">
             <img src="Wokin.- logo.jpeg" alt="WOK!N" class="welcome-logo">
 
-            <!-- Scalloped badge -->
             <div class="scallop-badge">
                 <span class="scallop-text">MAIN<br>MENU</span>
             </div>
@@ -38,7 +35,6 @@
             <p class="welcome-quip">"Fair warning: you'll want everything."</p>
         </div>
 
-        <!-- Floating stamps -->
         <div class="stamp stamp-1">PAN ASIAN</div>
         <div class="stamp stamp-2">EST. 2024</div>
     </div>
@@ -62,7 +58,7 @@
             </div>
         </header>
 
-        <!-- Search Overlay (full screen, not collapsing) -->
+        <!-- Search Overlay -->
         <div class="search-overlay" id="searchOverlay" style="display:none;">
             <div class="search-header">
                 <button class="search-back" id="searchBack">
@@ -95,25 +91,38 @@
 
         <!-- Category Nav -->
         <nav class="cat-nav" id="catNav">
-            <div class="cat-nav-scroll" id="catNavScroll">
-                <!-- Populated by JS -->
-            </div>
+            <div class="cat-nav-scroll" id="catNavScroll"></div>
         </nav>
 
-        <!-- Hero Banner -->
+        <!-- Hero Banner — Editorial Poster Style -->
         <div class="hero-banner" id="heroBanner">
             <div class="hero-grid-bg"></div>
             <div class="hero-content">
-                <div class="hero-badge">WELCOME TO</div>
-                <h1 class="hero-title">WOK!N</h1>
-                <p class="hero-sub">From sizzling woks to your table — bold flavours, zero compromises.</p>
+                <div class="hero-top-row">
+                    <div class="hero-stamp-circle">
+                        <span>W</span>
+                    </div>
+                    <div class="hero-handwritten">from our wok to your table</div>
+                </div>
+                <h1 class="hero-title">
+                    <span class="hero-title-line1">BOLD</span>
+                    <span class="hero-title-line2">FLAVOURS</span>
+                </h1>
+                <div class="hero-divider"></div>
+                <p class="hero-sub">Sizzling Pan Asian cuisine — no compromises, just fire.</p>
+                <div class="hero-tags">
+                    <span class="hero-tag">STIR-FRIED</span>
+                    <span class="hero-tag-dot"></span>
+                    <span class="hero-tag">SZECHUAN</span>
+                    <span class="hero-tag-dot"></span>
+                    <span class="hero-tag">WOK SPECIALS</span>
+                </div>
             </div>
+            <div class="hero-corner-stamp">MENU<br>2024</div>
         </div>
 
         <!-- Menu Sections -->
-        <main class="menu-main" id="menuMain">
-            <!-- Populated by JS -->
-        </main>
+        <main class="menu-main" id="menuMain"></main>
 
         <!-- Footer -->
         <footer class="menu-footer">
