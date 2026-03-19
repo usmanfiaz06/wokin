@@ -802,56 +802,6 @@ const MENU_DATA = [
     ]
   },
   {
-    id: "desserts",
-    name: "Desserts",
-    tagline: "You've earned this",
-    emoji: "🍰",
-    items: [
-      {
-        name: "New York Cheesecake Slice",
-        desc: "Classic creamy cheesecake, a perfect ending.",
-        price: 1050,
-        tags: ["veg"]
-      },
-      {
-        name: "Caramel Custard",
-        desc: "Silky smooth caramel custard.",
-        price: 790,
-        tags: ["veg"]
-      },
-      {
-        name: "Bread and Butter Pudding",
-        desc: "Warm, comforting bread and butter pudding.",
-        price: 1430,
-        tags: ["veg"]
-      },
-      {
-        name: "Molten Lava Cake",
-        desc: "Rich chocolate cake with a gooey molten center.",
-        price: 1430,
-        tags: ["veg"]
-      },
-      {
-        name: "Sizzling Brownie & Ice Cream",
-        desc: "Hot brownie on a sizzler with cold ice cream.",
-        price: 1385,
-        tags: ["veg"]
-      },
-      {
-        name: "Chocolate Fudge Cake Slice",
-        desc: "Decadent chocolate fudge cake.",
-        price: 790,
-        tags: ["veg"]
-      },
-      {
-        name: "Warm Chocolate Fudge Cake with Ice Cream",
-        desc: "Warm fudge cake paired with a scoop of ice cream.",
-        price: 1185,
-        tags: ["veg"]
-      }
-    ]
-  },
-  {
     id: "beverages",
     name: "Beverages",
     tagline: "Sip happens",
