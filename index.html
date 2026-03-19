@@ -5,35 +5,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>WOK!N - Modern Pan Asian</title>
     <link rel="icon" type="image/jpeg" href="Wokin.- logo.jpeg">
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=Satisfy&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&family=Permanent+Marker&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
     <!-- ===== WELCOME SCREEN ===== -->
     <div class="welcome-screen" id="welcomeScreen">
-        <div class="welcome-bg">
-            <div class="steam steam-1"></div>
-            <div class="steam steam-2"></div>
-            <div class="steam steam-3"></div>
-        </div>
+        <!-- Red grid background -->
+        <div class="grid-bg"></div>
+
+        <!-- Decorative chopsticks -->
+        <div class="chopstick chopstick-1"></div>
+        <div class="chopstick chopstick-2"></div>
+
+        <!-- Content -->
         <div class="welcome-content">
             <img src="Wokin.- logo.jpeg" alt="WOK!N" class="welcome-logo">
-            <p class="welcome-subtitle">Your table is set. Your wok is hot.</p>
+
+            <!-- Scalloped badge -->
+            <div class="scallop-badge">
+                <span class="scallop-text">MAIN<br>MENU</span>
+            </div>
+
+            <p class="welcome-tagline">MODERN PAN ASIAN KITCHEN</p>
+
             <button class="explore-btn" id="exploreBtn">
-                <span>Explore The Menu</span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                <span>LET'S EAT</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </button>
-            <p class="welcome-hint">Fair warning: you'll want everything</p>
+
+            <p class="welcome-quip">"Fair warning: you'll want everything."</p>
         </div>
+
+        <!-- Floating stamps -->
+        <div class="stamp stamp-1">PAN ASIAN</div>
+        <div class="stamp stamp-2">EST. 2024</div>
     </div>
 
     <!-- ===== MAIN MENU APP ===== -->
     <div class="menu-app" id="menuApp" style="display:none;">
 
         <!-- Top Bar -->
-        <header class="top-bar">
-            <img src="Wokin.- logo.jpeg" alt="WOK!N" class="top-logo">
+        <header class="top-bar" id="topBar">
+            <a href="#" class="top-logo-link" id="logoLink">
+                <img src="Wokin.- logo.jpeg" alt="WOK!N" class="top-logo">
+            </a>
             <div class="top-actions">
                 <button class="icon-btn search-toggle" id="searchToggle" aria-label="Search">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
@@ -45,12 +62,34 @@
             </div>
         </header>
 
-        <!-- Search Bar (hidden by default) -->
-        <div class="search-bar" id="searchBar">
-            <div class="search-inner">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-                <input type="text" id="searchInput" placeholder="Craving something? Search here..." autocomplete="off">
-                <button class="search-close" id="searchClose">&times;</button>
+        <!-- Search Overlay (full screen, not collapsing) -->
+        <div class="search-overlay" id="searchOverlay" style="display:none;">
+            <div class="search-header">
+                <button class="search-back" id="searchBack">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                </button>
+                <div class="search-input-wrap">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" opacity="0.4"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                    <input type="text" id="searchInput" placeholder="What are you craving?" autocomplete="off">
+                </div>
+            </div>
+            <div class="search-body" id="searchBody">
+                <div class="search-suggestions" id="searchSuggestions">
+                    <p class="search-suggest-title">POPULAR SEARCHES</p>
+                    <div class="search-chips">
+                        <button class="search-chip" data-q="chicken">Chicken</button>
+                        <button class="search-chip" data-q="prawns">Prawns</button>
+                        <button class="search-chip" data-q="szechuan">Szechuan</button>
+                        <button class="search-chip" data-q="soup">Soup</button>
+                        <button class="search-chip" data-q="noodles">Noodles</button>
+                        <button class="search-chip" data-q="tofu">Tofu</button>
+                        <button class="search-chip" data-q="spicy">Spicy</button>
+                        <button class="search-chip" data-q="garlic">Garlic</button>
+                    </div>
+                </div>
+                <div class="search-results" id="searchResults" style="display:none;">
+                    <div class="search-results-inner" id="searchResultsInner"></div>
+                </div>
             </div>
         </div>
 
@@ -61,24 +100,34 @@
             </div>
         </nav>
 
+        <!-- Hero Banner -->
+        <div class="hero-banner" id="heroBanner">
+            <div class="hero-grid-bg"></div>
+            <div class="hero-content">
+                <div class="hero-badge">WELCOME TO</div>
+                <h1 class="hero-title">WOK!N</h1>
+                <p class="hero-sub">From sizzling woks to your table — bold flavours, zero compromises.</p>
+            </div>
+        </div>
+
         <!-- Menu Sections -->
         <main class="menu-main" id="menuMain">
             <!-- Populated by JS -->
         </main>
 
-        <!-- Search Results -->
-        <div class="search-results" id="searchResults" style="display:none;">
-            <div class="search-results-inner" id="searchResultsInner"></div>
-        </div>
-
         <!-- Footer -->
         <footer class="menu-footer">
-            <div class="legend">
-                <span class="legend-item"><span class="dot veg"></span> Vegetarian</span>
-                <span class="legend-item"><span class="dot mild"></span> Non-Spicy</span>
-                <span class="legend-item"><span class="dot chef"></span> Chef's Pick</span>
+            <div class="footer-grid-bg"></div>
+            <div class="footer-content">
+                <img src="Wokin.- logo.jpeg" alt="WOK!N" class="footer-logo">
+                <p class="footer-tagline">BOLD FLAVOURS. ZERO COMPROMISES.</p>
+                <div class="legend">
+                    <span class="legend-item"><span class="dot veg"></span> Vegetarian</span>
+                    <span class="legend-item"><span class="dot mild"></span> Non-Spicy</span>
+                    <span class="legend-item"><span class="dot chef"></span> Chef's Pick</span>
+                </div>
+                <p class="tax-note">All prices are subject to prevailing Government Taxes.</p>
             </div>
-            <p class="tax-note">All prices are subject to prevailing Government Taxes.</p>
         </footer>
     </div>
 
@@ -86,13 +135,21 @@
     <div class="cart-overlay" id="cartOverlay"></div>
     <div class="cart-drawer" id="cartDrawer">
         <div class="cart-header">
-            <h2>Your Order</h2>
+            <h2>YOUR ORDER</h2>
             <button class="cart-close" id="cartClose">&times;</button>
         </div>
         <div class="cart-body" id="cartBody">
             <div class="cart-empty" id="cartEmpty">
-                <span class="cart-empty-icon">🍜</span>
-                <p>Your wok is empty!</p>
+                <div class="cart-empty-wok">
+                    <svg viewBox="0 0 120 80" width="120" height="80">
+                        <ellipse cx="60" cy="55" rx="50" ry="22" fill="none" stroke="#ccc" stroke-width="3"/>
+                        <path d="M10 55 Q60 90 110 55" fill="none" stroke="#ccc" stroke-width="3"/>
+                        <line x1="45" y1="30" x2="43" y2="15" stroke="#ddd" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="60" y1="28" x2="60" y2="10" stroke="#ddd" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="75" y1="30" x2="77" y2="15" stroke="#ddd" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <p class="cart-empty-title">Your wok is empty!</p>
                 <p class="cart-empty-sub">Add some deliciousness to get started</p>
             </div>
             <div class="cart-items" id="cartItems"></div>
@@ -110,23 +167,37 @@
         </div>
     </div>
 
-    <!-- ===== ORDER SUMMARY MODAL ===== -->
+    <!-- ===== ORDER SUMMARY MODAL (Receipt Style) ===== -->
     <div class="order-modal-overlay" id="orderModalOverlay" style="display:none;">
-        <div class="order-modal" id="orderModal">
-            <div class="order-modal-header">
-                <img src="Wokin.- logo.jpeg" alt="WOK!N" class="order-logo">
-                <h2>Order Summary</h2>
-                <p class="order-modal-sub">Show this to your server</p>
-            </div>
-            <div class="order-modal-body" id="orderModalBody"></div>
-            <div class="order-modal-footer">
-                <div class="order-modal-total">
-                    <span>Estimated Total</span>
+        <div class="receipt" id="orderModal">
+            <div class="receipt-tear-top"></div>
+            <div class="receipt-body">
+                <div class="receipt-header">
+                    <img src="Wokin.- logo.jpeg" alt="WOK!N" class="receipt-logo">
+                    <p class="receipt-tagline">MODERN PAN ASIAN</p>
+                    <div class="receipt-divider"></div>
+                    <p class="receipt-title">ORDER SUMMARY</p>
+                    <p class="receipt-sub">Show this to your server</p>
+                </div>
+                <div class="receipt-items" id="orderModalBody">
+                    <div class="receipt-row receipt-row-header">
+                        <span class="receipt-col-qty">QTY</span>
+                        <span class="receipt-col-item">ITEM</span>
+                        <span class="receipt-col-price">PRICE</span>
+                    </div>
+                </div>
+                <div class="receipt-divider"></div>
+                <div class="receipt-total-row">
+                    <span>TOTAL</span>
                     <span id="orderModalTotal">Rs. 0</span>
                 </div>
-                <p class="order-tax-note">*Taxes as applicable</p>
-                <button class="order-modal-close" id="orderModalClose">Done</button>
+                <div class="receipt-divider"></div>
+                <p class="receipt-tax">*Taxes as applicable</p>
+                <p class="receipt-thanks">THANK YOU FOR DINING WITH US!</p>
+                <p class="receipt-quip">Catch you on your next flavour trip</p>
             </div>
+            <div class="receipt-tear-bottom"></div>
+            <button class="receipt-close" id="orderModalClose">Done</button>
         </div>
     </div>
 
