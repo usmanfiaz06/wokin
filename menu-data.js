@@ -1,12 +1,14 @@
 // WOK!N Digital Menu Data
 // All prices reduced 12% from reference menu, rounded to nearest 5
+// Half prices = 55% of full price, rounded to nearest 5
+// Soup single prices = full price / 4, rounded to nearest 5
 
 const MENU_DATA = [
   {
     id: "starters",
     name: "Starters",
     tagline: "First impressions that slap",
-    emoji: "🥟",
+    emoji: "\uD83E\uDD5F",
     items: [
       {
         name: "Crispy Finger Fish",
@@ -18,7 +20,7 @@ const MENU_DATA = [
       },
       {
         name: "Dynamite Chicken",
-        desc: "Crispy Chicken coated with a Rich Creamy Sriracha Mayo Sauce — Super delicious.",
+        desc: "Crispy Chicken coated with a Rich Creamy Sriracha Mayo Sauce \u2014 Super delicious.",
         pcs: "300gm",
         price: 2750,
         tags: []
@@ -39,28 +41,22 @@ const MENU_DATA = [
       },
       {
         name: "Dynamite Prawns",
-        desc: "Crispy Prawns coated with a Rich Creamy Sriracha Mayo Sauce — Super delicious.",
-        pcs: "10-12 Pcs",
-        price: 3780,
-        tags: []
-      },
-      {
-        name: "Stuffed Chilli Prawns",
-        desc: "Hand chopped Prawns, seasoned with Chinese Spices and stuffed in Green Chillies.",
-        pcs: "12 Pcs",
-        price: 3430,
+        desc: "Crispy Prawns coated with a Rich Creamy Sriracha Mayo Sauce \u2014 Super delicious.",
+        pcs: "5-6 Pcs / 12 Pcs",
+        price: 2080,
+        priceFull: 3780,
         tags: []
       },
       {
         name: "Prawn Tempura",
-        desc: "Choicest Prawns, dipped in Asian Wok's Special Batter, deep fried and served with Wonton Sauce.",
+        desc: "Choicest Prawns, dipped in Wokin's Special Batter, deep fried and served with Wonton Sauce.",
         pcs: "6 Pcs",
         price: 3780,
         tags: ["chef"]
       },
       {
         name: "Golden Silk Prawns",
-        desc: "Juiciest Prawns coated with Asian Wok's Special Sauce and shredded Potatoes, deep fried to a Perfect Golden.",
+        desc: "Juiciest Prawns coated with Wokin's Special Sauce and shredded Potatoes, deep fried to a Perfect Golden.",
         pcs: "6-8 Pcs",
         price: 3780,
         tags: []
@@ -74,24 +70,9 @@ const MENU_DATA = [
       },
       {
         name: "Steamed Chicken Dumplings",
-        desc: "Just that — Steamed Dumplings filled with Chicken Mince.",
+        desc: "Just that \u2014 Steamed Dumplings filled with Chicken Mince.",
         pcs: "8 Pcs",
         price: 1930,
-        tags: []
-      },
-      {
-        name: "Fried Wonton",
-        desc: "Deep fried Wontons stuffed with Chicken, Prawns, Black Mushrooms, Spring Onions and Carrots.",
-        pcs: "8 Pcs",
-        price: 2460,
-        tags: []
-      },
-      {
-        name: "Sesame Toast",
-        desc: "Meat Mince on Toast coated with Egg and Sesame Seeds, deep fried to a perfect Crispy Golden. Choice of Chicken or Prawn.",
-        pcs: "8 Pcs",
-        price: 1930,
-        priceFull: 2150,
         tags: []
       },
       {
@@ -107,7 +88,7 @@ const MENU_DATA = [
     id: "fries",
     name: "Fries",
     tagline: "The real MVPs",
-    emoji: "🍟",
+    emoji: "\uD83C\uDF5F",
     items: [
       {
         name: "Plain Fries",
@@ -136,84 +117,87 @@ const MENU_DATA = [
     id: "soup",
     name: "Soup",
     tagline: "Warm hugs in a bowl",
-    emoji: "🍜",
+    emoji: "\uD83C\uDF5C",
     items: [
       {
-        name: "Asian Wok Special Soup",
+        name: "Wokin Special Soup",
         desc: "Delightful thick soup with Chicken, Prawns, Seasonal Vegetables and Black Mushrooms.",
         pcs: "19B",
-        price: 2045,
+        price: 720,
         priceFull: 2880,
+        smallLabel: "Single",
         tags: ["chef"]
       },
       {
         name: "Hot 'N' Sour Soup",
         desc: "All-time favourite soup prepared in Chicken Broth with Chicken and Chinese Vegetables.",
-        price: 1845,
+        price: 625,
         priceFull: 2505,
+        smallLabel: "Single",
         tags: []
       },
       {
         name: "Chicken Corn Soup",
         desc: "Minced Chicken and crushed Sweet Corn, cooked in Chicken Broth.",
-        price: 1845,
+        price: 625,
         priceFull: 2505,
+        smallLabel: "Single",
         tags: ["mild"]
       },
       {
         name: "Hot Szechuan Soup",
         desc: "Authentic Szechuan Soup with Chicken, Prawns, Tofu and Chinese Herbs in a Hot Sauce, topped with Chopped Peanuts.",
-        price: 2020,
+        price: 670,
         priceFull: 2685,
+        smallLabel: "Single",
         tags: []
       },
       {
         name: "Thai Chicken Soup",
         desc: "Clear Chicken soup with Lemon Juice and Green Chillies, garnished with Crispy Rice.",
-        price: 1845,
+        price: 625,
         priceFull: 2505,
+        smallLabel: "Single",
         tags: []
       },
       {
         name: "Chef's Special Soup",
         desc: "Delicious thick soup with Chicken, Prawns, Carrots, Black Mushrooms & Green Onions.",
-        price: 2020,
+        price: 715,
         priceFull: 2860,
+        smallLabel: "Single",
         tags: ["chef"]
       },
       {
         name: "Chicken Noodle Soup",
         desc: "Mild flavour clear soup with Chinese and Chicken Noodles.",
-        price: 1845,
+        price: 625,
         priceFull: 2505,
+        smallLabel: "Single",
         tags: ["mild"]
-      },
-      {
-        name: "Wonton Soup",
-        desc: "A clear soup with Chicken and Prawns, stuffed Wontons and Seasonal Vegetables.",
-        price: 1845,
-        priceFull: 2505,
-        tags: []
       },
       {
         name: "Mix Seafood Soup",
         desc: "Special clear Seafood soup prepared with Fish, Prawns, Chinese Mushrooms and Seasonal Vegetables.",
-        price: 2020,
+        price: 715,
         priceFull: 2860,
+        smallLabel: "Single",
         tags: []
       },
       {
         name: "Clear Vegetable Soup",
         desc: "A medley of Vegetables in a clear Vegetable/Chicken Broth.",
-        price: 1580,
+        price: 540,
         priceFull: 2155,
+        smallLabel: "Single",
         tags: ["veg"]
       },
       {
         name: "Clear Chicken Vegetable Soup",
         desc: "A medley of Vegetables and Chicken in a clear Chicken Broth.",
-        price: 1845,
+        price: 615,
         priceFull: 2460,
+        smallLabel: "Single",
         tags: []
       }
     ]
@@ -222,54 +206,62 @@ const MENU_DATA = [
     id: "poultry",
     name: "Poultry",
     tagline: "Cluckin' good stuff",
-    emoji: "🍗",
+    emoji: "\uD83C\uDF57",
     items: [
       {
         name: "Sesame Sliced Chicken",
         desc: "Sliced Chicken, Broccoli, Green Chillies, Capsicum and Roasted Sesame in Tomato Sauce.",
-        price: 2725,
+        price: 1500,
+        priceFull: 2725,
         tags: []
       },
       {
         name: "Shanghai Special Chicken",
         desc: "Chicken slices, Cucumbers, Carrots, Pineapple, Green Chillies and Roasted Peanuts in a Hot, Spicy, Sweet and Sour Sauce.",
-        price: 2725,
+        price: 1500,
+        priceFull: 2725,
         tags: []
       },
       {
         name: "Chilli Chicken Ginger",
         desc: "Chicken slices with julienned Ginger, Green Chillies, fresh Asparagus and finely chopped Bird Chillies cooked in Oyster and Garlic Sauce.",
-        price: 2725,
+        price: 1500,
+        priceFull: 2725,
         tags: []
       },
       {
         name: "Yajua Chicken",
         desc: "Sliced Chicken, Sliced Onions, Green Chillies and Black Mushrooms in Oyster Sauce.",
-        price: 2725,
+        price: 1500,
+        priceFull: 2725,
         tags: ["mild"]
       },
       {
         name: "Hot and Spicy Braised Chicken",
-        desc: "Spiced up succulent Chicken cubes in a Red Sauce, sautéed with Vegetables.",
-        price: 2725,
+        desc: "Spiced up succulent Chicken cubes in a Red Sauce, saut\u00E9ed with Vegetables.",
+        price: 1500,
+        priceFull: 2725,
         tags: []
       },
       {
         name: "Shu Shi Chicken",
         desc: "Slices of Chicken, Onions, Capsicum and Tomatoes cooked in a Mild Spicy Red Sauce, sprinkled with Sesame Seeds.",
-        price: 2725,
+        price: 1500,
+        priceFull: 2725,
         tags: []
       },
       {
         name: "Chicken with Baby Corn",
         desc: "For those who prefer a Mild, a tasty combination of Chicken and Baby Corn in a Non-Spicy Sauce.",
-        price: 2725,
+        price: 1500,
+        priceFull: 2725,
         tags: ["mild"]
       },
       {
         name: "Peanut Chicken",
-        desc: "Sliced Chicken breast with Vegetables, sautéed with Peanuts.",
-        price: 2725,
+        desc: "Sliced Chicken breast with Vegetables, saut\u00E9ed with Peanuts.",
+        price: 1500,
+        priceFull: 2725,
         tags: []
       },
       {
@@ -283,103 +275,120 @@ const MENU_DATA = [
       {
         name: "Chicken Manchurian",
         desc: "All-time favourite Stir-fried Chicken with Ginger and Garlic in a Spicy Tomato Sauce.",
-        price: 2725,
+        price: 1500,
+        priceFull: 2725,
         tags: []
       },
       {
         name: "Kung Pao Chicken",
         desc: "Stir-fried cubes Chicken with Dry Red Chillies, Roasted Peanuts and Chilli Oil in a Spicy Sauce.",
-        price: 2725,
+        price: 1500,
+        priceFull: 2725,
         tags: []
       },
       {
         name: "Szechuan Chicken",
         desc: "Stir-fried sliced Chicken with Dry Red Chillies, Capsicum, Onions and Green Chillies, glazed in a Spicy Szechuan Sauce.",
-        price: 2725,
+        price: 1500,
+        priceFull: 2725,
         tags: []
       },
       {
-        name: "Asian Wok Special Chicken with Pineapple",
+        name: "Wokin Special Chicken with Pineapple",
         desc: "Sliced Chicken cooked in our Secret Sauce with Pineapple Slices and glazed Red Cherries.",
-        price: 2725,
+        price: 1500,
+        priceFull: 2725,
         tags: ["chef"]
       },
       {
         name: "Chicken with Chillies (Dry)",
         desc: "Stir-fried slices of Chicken, Green Chillies, Garlic and Onions all glazed in a Chinese Sauce.",
-        price: 2725,
+        price: 1500,
+        priceFull: 2725,
         tags: []
       },
       {
         name: "Chicken with Chillies and Onions",
         desc: "Spicy Chicken slices with Green Onions, Chillies, Ginger, Garlic and Chilli Sauce.",
-        price: 2725,
+        price: 1500,
+        priceFull: 2725,
         tags: []
       },
       {
         name: "Chicken in Hot Garlic Sauce",
         desc: "Stir-fried Chicken with Onions, Green Chillies, Capsicum and Carrots, flavoured with our Special Hot Garlic Sauce.",
-        price: 2725,
+        price: 1500,
+        priceFull: 2725,
         tags: []
       },
       {
         name: "Chicken in Garlic Sauce",
         desc: "Stir-fried Chicken with Onions, flavoured with our Chef's Special Garlic Sauce.",
-        price: 2725,
+        price: 1500,
+        priceFull: 2725,
         tags: ["chef"]
       },
       {
         name: "Chicken and Mix Vegetables",
         desc: "Chicken slices and Seasonal Vegetables with Chinese Spices.",
-        price: 2725,
+        price: 1500,
+        priceFull: 2725,
         tags: ["mild"]
       },
       {
         name: "Chicken with Cashew Nuts (Szechuan Style)",
         desc: "Stir-fried Chicken cubes, topped with Roasted Cashew Nuts and seasoned with Szechuan Spices.",
-        price: 2725,
+        price: 1500,
+        priceFull: 2725,
         tags: []
       },
       {
         name: "Mongolian Chicken",
         desc: "Sliced Chicken served with Ripe Tomatoes, Capsicum, Carrots, Bean Sprouts and Special Mongolian Spices.",
-        price: 2725,
+        price: 1500,
+        priceFull: 2725,
         tags: []
       },
       {
         name: "Chicken with Roasted Almonds",
         desc: "Stir-fried Chicken cubes cooked with Seasonal Vegetables and topped with Crunchy Almonds.",
-        price: 2725,
+        price: 1500,
+        priceFull: 2725,
         tags: ["mild"]
       },
       {
         name: "Black Pepper Chicken",
         desc: "Stir-fried Chicken cubes cooked with Onion, and seasoned with freshly crushed Black Peppers.",
-        price: 2725,
+        price: 1500,
+        priceFull: 2725,
         tags: []
       },
       {
         name: "Lemon Chicken",
         desc: "Sliced Chicken prepared in a Homemade Signature Lemon Sauce.",
-        price: 2725,
+        price: 1500,
+        priceFull: 2725,
         tags: ["mild"]
       },
       {
         name: "Mandarin Chicken",
         desc: "Chicken cubes prepared with Premium Battered Mandarin Sauce.",
-        price: 2725,
+        price: 1500,
+        priceFull: 2725,
         tags: []
       },
       {
         name: "Chef's Special Sesame Chicken",
         desc: "Crispy fried Chicken, glazed in our Special Sauce and topped with Roasted Sesame Seeds.",
-        price: 2725,
+        price: 1500,
+        priceFull: 2725,
         tags: ["chef"]
       },
       {
         name: "Chilli Oyster Chicken",
         desc: "Sliced Chicken in a scrumptious Oyster Sauce.",
-        price: 2725,
+        price: 1500,
+        priceFull: 2725,
         tags: []
       }
     ]
@@ -388,72 +397,83 @@ const MENU_DATA = [
     id: "seafood-prawns",
     name: "Seafood Prawns",
     tagline: "From the sea, with love",
-    emoji: "🦐",
+    emoji: "\uD83E\uDD90",
     items: [
       {
         name: "Hot and Spicy Braised Prawns",
-        desc: "Spiced up succulent Prawns in Red Sauce, sautéed with Vegetables.",
-        price: 3850,
+        desc: "Spiced up succulent Prawns in Red Sauce, saut\u00E9ed with Vegetables.",
+        price: 2120,
+        priceFull: 3850,
         tags: []
       },
       {
         name: "Prawn Manchurian",
         desc: "All-time favourite stir-fried Prawns with Ginger and Garlic in a Spicy Tomato Sauce.",
-        price: 3850,
+        price: 2120,
+        priceFull: 3850,
         tags: []
       },
       {
         name: "Prawn with Chillies (Dry)",
         desc: "Stir-fried Prawns with Green Chillies, Garlic and Onions all glazed in a Chinese Sauce.",
-        price: 3850,
+        price: 2120,
+        priceFull: 3850,
         tags: []
       },
       {
         name: "Szechuan Prawns",
         desc: "Stir-fried Prawns cooked with Dry Red Chillies, Capsicum, Onions and Green Chillies, glazed in a Spicy Szechuan Sauce.",
-        price: 3850,
+        price: 2120,
+        priceFull: 3850,
         tags: []
       },
       {
         name: "Prawns with Chillies and Vegetables",
         desc: "Stir-fried large Prawns with a mix of Seasonal Vegetables and Chinese Spices.",
-        price: 3850,
+        price: 2120,
+        priceFull: 3850,
         tags: []
       },
       {
         name: "Prawns in Hot Garlic Sauce",
         desc: "Stir-fried Prawns with Garlic, Onions, Green Chillies and flavoured with our Special Hot Sauce.",
-        price: 3850,
+        price: 2120,
+        priceFull: 3850,
         tags: []
       },
       {
         name: "Prawns in Garlic Sauce",
         desc: "Stir-fried Prawns with Onions, flavoured with our Chef's Special Garlic Sauce.",
-        price: 3850,
+        price: 2120,
+        priceFull: 3850,
         tags: ["chef"]
       },
       {
         name: "Mongolian Prawns",
         desc: "Stir-fried large Prawns served with Ripe Tomatoes, Carrots, Bean Sprouts, Capsicum and Special Mongolian Spices.",
-        price: 3850,
+        price: 2120,
+        priceFull: 3850,
         tags: []
       },
       {
         name: "Kung Pao Prawns",
         desc: "Stir-fried Prawns with Dry Red Chillies, Roasted Peanuts and Chilli Oil in a Spicy Sauce.",
-        price: 3850,
+        price: 2120,
+        priceFull: 3850,
         tags: []
       },
       {
         name: "Stir-Fried Prawns",
         desc: "Large Juicy Prawns in a Spicy Sauce. A Chef's Recommendation.",
-        price: 3850,
+        price: 2120,
+        priceFull: 3850,
         tags: ["chef"]
       },
       {
         name: "Honey Chilli Sesame Prawns",
         desc: "Batter fried Prawns tossed in Honey Sauce and topped with Sesame Seeds.",
-        price: 3850,
+        price: 2120,
+        priceFull: 3850,
         tags: []
       }
     ]
@@ -462,81 +482,70 @@ const MENU_DATA = [
     id: "fish",
     name: "Fish",
     tagline: "Hooked on flavour",
-    emoji: "🐟",
+    emoji: "\uD83D\uDC1F",
     items: [
       {
         name: "Hot and Spicy Braised Fish",
-        desc: "Spiced up Fish cubes in a Red Sauce, sautéed with Vegetables.",
-        price: 3650,
+        desc: "Spiced up Fish cubes in a Red Sauce, saut\u00E9ed with Vegetables.",
+        price: 2010,
+        priceFull: 3650,
         tags: []
       },
       {
-        name: "Fish in Ginger Sauce",
-        desc: "Fillet of Pan Grilled Fish cooked in a Ginger Sauce with Button Mushrooms.",
-        price: 3650,
-        tags: ["mild"]
-      },
-      {
-        name: "Asian Wok Special Fish (with Choice of Sauce)",
+        name: "Wokin Special Fish (with Choice of Sauce)",
         desc: "Mouth-watering crispy deep fried Red Snapper topped with your choice of Sauce: Sweet and Sour, Szechuan, Hot Garlic or Garlic Sauce.",
-        price: 5450,
+        price: 3000,
+        priceFull: 5450,
         tags: ["chef"]
       },
       {
         name: "Fish with Chillies (Dry)",
         desc: "Stir-fried Fish flavoured with Green Chillies and Soya Sauce.",
-        price: 3650,
+        price: 2010,
+        priceFull: 3650,
         tags: []
       },
       {
         name: "Fish in Hot Garlic Sauce",
         desc: "Stir-fried Fish with Garlic, Onions, Green Chillies, Capsicum, Carrots and flavoured with our Special Hot Garlic Sauce.",
-        price: 3650,
+        price: 2010,
+        priceFull: 3650,
         tags: []
       },
       {
         name: "Kung Pao Fish",
         desc: "Stir-fried Fish with Dry Red Chillies, Roasted Peanuts and Chilli Oil in a Spicy Sauce.",
-        price: 3650,
+        price: 2010,
+        priceFull: 3650,
         tags: []
       },
       {
         name: "Fish with Chillies and Vegetables",
         desc: "Stir-fried Fish with a Mix of Seasonal Vegetables and Chinese Spices.",
-        price: 3650,
+        price: 2010,
+        priceFull: 3650,
         tags: []
       },
       {
         name: "Szechuan Fish",
         desc: "Stir-fried Fish with Dry Red Chillies, Capsicum, Onions and Green Chillies, glazed in a Spicy Szechuan Sauce.",
-        price: 3650,
+        price: 2010,
+        priceFull: 3650,
         tags: []
       },
       {
         name: "Mongolian Fish",
         desc: "Stir-fried Fish Served with Ripe Tomatoes, Carrots, Bean Sprouts, Capsicum and Special Mongolian Spices.",
-        price: 3650,
+        price: 2010,
+        priceFull: 3650,
         tags: []
       },
       {
         name: "Fish with Chilli Garlic Sauce",
         desc: "Fried Fish cubes served with Chilli Garlic Sauce.",
-        price: 3650,
+        price: 2010,
+        priceFull: 3650,
         tags: []
-      }
-    ]
-  },
-  {
-    id: "crab",
-    name: "Crab",
-    tagline: "Worth getting your hands dirty",
-    emoji: "🦀",
-    items: [
-      {
-        name: "Crab (with Choice of Sauce)",
-        desc: "Szechuan, Hot Garlic or Garlic Sauce.",
-        price: 4835,
-        tags: ["chef"]
       }
     ]
   },
@@ -544,7 +553,7 @@ const MENU_DATA = [
     id: "lobster",
     name: "Lobster",
     tagline: "The luxe life",
-    emoji: "🦞",
+    emoji: "\uD83E\uDD9E",
     items: [
       {
         name: "Lobster (with Choice of Sauce)",
@@ -558,60 +567,69 @@ const MENU_DATA = [
     id: "beef",
     name: "Beef",
     tagline: "Bold & beefy",
-    emoji: "🥩",
+    emoji: "\uD83E\uDD69",
     items: [
       {
         name: "Hot and Spicy Braised Beef",
-        desc: "Spiced up succulent Beef Slices in a Red Sauce, sautéed with Vegetables.",
-        price: 3295,
+        desc: "Spiced up succulent Beef Slices in a Red Sauce, saut\u00E9ed with Vegetables.",
+        price: 1810,
+        priceFull: 3295,
         tags: []
       },
       {
         name: "Shu Shi Beef",
         desc: "Slices of Beef, Onion, Capsicum and Tomatoes cooked in a Mild Spicy Red Sauce, sprinkled with Sesame Seeds.",
-        price: 3295,
+        price: 1810,
+        priceFull: 3295,
         tags: []
       },
       {
         name: "Beef in Garlic Sauce",
         desc: "Stir-fried Beef with Onions, flavoured with our Chef's Special Garlic Sauce.",
-        price: 3295,
+        price: 1810,
+        priceFull: 3295,
         tags: []
       },
       {
-        name: "Asian Wok Special Beef",
+        name: "Wokin Special Beef",
         desc: "Crispy fried Beef, glazed in our Special Sauce and topped with Roasted Sesame Seeds.",
-        price: 3470,
+        price: 1910,
+        priceFull: 3470,
         tags: ["chef"]
       },
       {
         name: "Beef Chilli Vegetables",
         desc: "Sliced Beef with Seasonal Mix Vegetables, cooked with Red and Green Chillies.",
-        price: 3295,
+        price: 1810,
+        priceFull: 3295,
         tags: []
       },
       {
         name: "Beef with Chillies (Dry)",
         desc: "Sliced Beef marinated with Chinese Spices, stir-fried with Green Chillies and Garlic, glazed in Soya Sauce.",
-        price: 3470,
+        price: 1910,
+        priceFull: 3470,
         tags: []
       },
       {
         name: "Beef with Chillies and Onions",
         desc: "Stir-fried sliced Beef with Green Chillies in a Mild Sauce.",
-        price: 3295,
+        price: 1810,
+        priceFull: 3295,
         tags: []
       },
       {
         name: "Mongolian Beef",
         desc: "Stir-fried Beef tossed with Ripe Tomatoes, Capsicum, Carrots, Bean Sprouts, and Special Mongolian Spices.",
-        price: 3295,
+        price: 1810,
+        priceFull: 3295,
         tags: []
       },
       {
         name: "Chilli Oyster Beef",
         desc: "Sliced Beef in a scrumptious Oyster Sauce.",
-        price: 3295,
+        price: 1810,
+        priceFull: 3295,
         tags: []
       }
     ]
@@ -620,7 +638,7 @@ const MENU_DATA = [
     id: "rice",
     name: "Rice",
     tagline: "The foundation of greatness",
-    emoji: "🍚",
+    emoji: "\uD83C\uDF5A",
     items: [
       {
         name: "Chicken Masala Rice",
@@ -658,8 +676,8 @@ const MENU_DATA = [
         tags: []
       },
       {
-        name: "Asian Wok Special Rice",
-        desc: "Our signature fried rice — the full works.",
+        name: "Wokin Special Rice",
+        desc: "Our signature fried rice \u2014 the full works.",
         price: 1495,
         priceFull: 2285,
         tags: ["chef"]
@@ -691,7 +709,7 @@ const MENU_DATA = [
     id: "noodles",
     name: "Chopsuey & Noodles",
     tagline: "Slurp-worthy goodness",
-    emoji: "🍝",
+    emoji: "\uD83C\uDF5D",
     items: [
       {
         name: "American Chop Suey",
@@ -722,7 +740,7 @@ const MENU_DATA = [
         tags: []
       },
       {
-        name: "Asian Wok Special Chow Mein",
+        name: "Wokin Special Chow Mein",
         desc: "Chinese Noodles with Prawns, Chicken, Black Mushrooms, seasoned with Hot Spices.",
         price: 1775,
         priceFull: 2775,
@@ -739,9 +757,9 @@ const MENU_DATA = [
   },
   {
     id: "vegetables",
-    name: "Vegetables & Tofu",
+    name: "Vegetables",
     tagline: "Green never tasted this good",
-    emoji: "🥦",
+    emoji: "\uD83E\uDD66",
     items: [
       {
         name: "Stir-Fried Vegetables",
@@ -751,7 +769,7 @@ const MENU_DATA = [
       },
       {
         name: "Mushrooms in Garlic Sauce",
-        desc: "Sautéed Button Mushrooms in Hot Chilli Paste with Garlic Sauce.",
+        desc: "Saut\u00E9ed Button Mushrooms in Hot Chilli Paste with Garlic Sauce.",
         price: 1975,
         tags: ["veg"]
       },
@@ -760,24 +778,6 @@ const MENU_DATA = [
         desc: "Stir-fried Seasonal Vegetables glazed in Sweet and Sour Sauce.",
         price: 1975,
         tags: ["veg", "mild"]
-      },
-      {
-        name: "Dry Szechuan Tofu",
-        desc: "Special In-house Spices, Stir-fried with Green Chillies and Garlic glazed in Szechuan Sauce.",
-        price: 2090,
-        tags: ["veg"]
-      },
-      {
-        name: "Tofu with Vegetables",
-        desc: "A combination of Tofu with Seasonal Vegetables.",
-        price: 2090,
-        tags: ["veg", "mild"]
-      },
-      {
-        name: "Tofu in Hot Garlic Sauce",
-        desc: "Tofu with Onions, Green Chillies, Capsicum and Carrots, flavoured with our Special Hot Garlic Sauce.",
-        price: 2090,
-        tags: ["veg"]
       }
     ]
   },
@@ -785,7 +785,7 @@ const MENU_DATA = [
     id: "kids",
     name: "Kids Meal",
     tagline: "Little wokkers welcome",
-    emoji: "🧒",
+    emoji: "\uD83E\uDDD2",
     items: [
       {
         name: "Option 1",
@@ -805,7 +805,7 @@ const MENU_DATA = [
     id: "beverages",
     name: "Beverages",
     tagline: "Sip happens",
-    emoji: "🥤",
+    emoji: "\uD83E\uDD64",
     items: [
       {
         name: "Soft Drinks",
@@ -850,8 +850,8 @@ const MENU_DATA = [
         tags: ["veg"]
       },
       {
-        name: "Tea",
-        desc: "Hot brewed tea.",
+        name: "Karak Tea",
+        desc: "Hot brewed karak tea.",
         price: 365,
         tags: ["veg"]
       },
@@ -862,15 +862,34 @@ const MENU_DATA = [
         tags: ["veg"]
       },
       {
-        name: "Coffee",
-        desc: "Freshly brewed hot coffee.",
-        price: 945,
+        name: "Mint Margarita",
+        desc: "Refreshing mint margarita.",
+        price: 499,
         tags: ["veg"]
       },
       {
-        name: "Cold Coffee",
-        desc: "Chilled blended coffee.",
-        price: 1185,
+        name: "Strawberry Margarita",
+        desc: "Sweet strawberry margarita.",
+        price: 699,
+        tags: ["veg"]
+      },
+      {
+        name: "Lemon Margarita",
+        desc: "Tangy lemon margarita.",
+        price: 499,
+        tags: ["veg"]
+      },
+      {
+        name: "Peach Margarita",
+        desc: "Sweet peach margarita.",
+        price: 699,
+        tags: ["veg"]
+      },
+      {
+        name: "Wokin Special Drink",
+        desc: "Our signature special drink.",
+        price: 1299,
+        priceFull: 2299,
         tags: ["veg"]
       }
     ]
