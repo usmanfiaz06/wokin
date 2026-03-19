@@ -158,11 +158,13 @@
       .map((t) => '<span class="tag tag-' + t + '"></span>')
       .join("");
 
+    const smallLabel = item.smallLabel || "Half";
+    const smallSize = smallLabel.toLowerCase();
     let priceHTML;
     if (hasDual) {
       priceHTML = `
         <div class="item-price-dual">
-          <div><span class="price-label">Half</span> <span class="price-value">${formatPrice(item.price)}</span></div>
+          <div><span class="price-label">${smallLabel}</span> <span class="price-value">${formatPrice(item.price)}</span></div>
           <div><span class="price-label">Full</span> <span class="price-value">${formatPrice(item.priceFull)}</span></div>
         </div>`;
     } else {
@@ -177,7 +179,7 @@
     } else if (hasDual) {
       actionHTML = `
         <div class="size-selector">
-          <button class="size-btn" data-size="half">+ Half</button>
+          <button class="size-btn" data-size="${smallSize}">+ ${smallLabel}</button>
           <button class="size-btn" data-size="full">+ Full</button>
         </div>`;
     } else {
@@ -262,12 +264,14 @@
     const cartEntry = findCartEntry(catId, idx);
     const actionEl = card.querySelector(".item-action");
 
+    const smallLabel = item.smallLabel || "Half";
+    const smallSize = smallLabel.toLowerCase();
     if (cartEntry) {
       actionEl.innerHTML = buildQtyHTML(cartEntry.qty);
     } else if (hasDual) {
       actionEl.innerHTML = `
         <div class="size-selector">
-          <button class="size-btn" data-size="half">+ Half</button>
+          <button class="size-btn" data-size="${smallSize}">+ ${smallLabel}</button>
           <button class="size-btn" data-size="full">+ Full</button>
         </div>`;
       actionEl.querySelectorAll(".size-btn").forEach((btn) => {
