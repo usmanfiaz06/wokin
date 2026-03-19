@@ -11,25 +11,32 @@
   const welcomeScreen = document.getElementById("welcomeScreen");
   const exploreBtn = document.getElementById("exploreBtn");
   const menuApp = document.getElementById("menuApp");
+  const logoLink = document.getElementById("logoLink");
   const catNavScroll = document.getElementById("catNavScroll");
   const menuMain = document.getElementById("menuMain");
+
+  // Search overlay
   const searchToggle = document.getElementById("searchToggle");
-  const searchBar = document.getElementById("searchBar");
+  const searchOverlay = document.getElementById("searchOverlay");
+  const searchBack = document.getElementById("searchBack");
   const searchInput = document.getElementById("searchInput");
-  const searchClose = document.getElementById("searchClose");
+  const searchSuggestions = document.getElementById("searchSuggestions");
   const searchResults = document.getElementById("searchResults");
   const searchResultsInner = document.getElementById("searchResultsInner");
+
+  // Cart
   const cartToggle = document.getElementById("cartToggle");
   const cartBadge = document.getElementById("cartBadge");
   const cartOverlay = document.getElementById("cartOverlay");
   const cartDrawer = document.getElementById("cartDrawer");
   const cartClose = document.getElementById("cartClose");
-  const cartBody = document.getElementById("cartBody");
   const cartEmpty = document.getElementById("cartEmpty");
   const cartItems = document.getElementById("cartItems");
   const cartFooter = document.getElementById("cartFooter");
   const cartTotal = document.getElementById("cartTotal");
   const orderBtn = document.getElementById("orderBtn");
+
+  // Receipt-style order modal
   const orderModalOverlay = document.getElementById("orderModalOverlay");
   const orderModalBody = document.getElementById("orderModalBody");
   const orderModalTotal = document.getElementById("orderModalTotal");
@@ -37,14 +44,14 @@
 
   // ── Fun toast messages ──
   const toastMessages = [
-    "Great choice! 🔥",
-    "Your wok approves! 👨‍🍳",
-    "Added! Keep going! 🍜",
-    "Excellent taste! ✨",
-    "Ooh, nice pick! 😋",
-    "Into the wok it goes! 🥘",
-    "You know what's good! 💯",
-    "Chef's nod of approval 🤌",
+    "Great choice! \uD83D\uDD25",
+    "Your wok approves! \uD83D\uDC68\u200D\uD83C\uDF73",
+    "Added! Keep going! \uD83C\uDF5C",
+    "Excellent taste! \u2728",
+    "Ooh, nice pick! \uD83D\uDE0B",
+    "Into the wok it goes! \uD83E\uDD58",
+    "You know what's good! \uD83D\uDCAF",
+    "Chef's nod of approval \uD83E\uDD0C",
   ];
 
   // ── Helpers ──
@@ -78,6 +85,12 @@
     }, 600);
   });
 
+  // ── Logo Link → back to welcome ──
+  logoLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
   // ── Build Category Nav ──
   function buildCatNav() {
     catNavScroll.innerHTML = "";
@@ -94,7 +107,7 @@
   function scrollToCategory(catId) {
     const section = document.getElementById("section-" + catId);
     if (section) {
-      const offset = 110; // top-bar + nav height
+      const offset = 110;
       const top = section.getBoundingClientRect().top + window.scrollY - offset;
       window.scrollTo({ top, behavior: "smooth" });
     }
@@ -142,7 +155,7 @@
 
     const hasDual = item.priceFull !== undefined;
     const tagDots = item.tags
-      .map((t) => `<span class="tag tag-${t}"></span>`)
+      .map((t) => '<span class="tag tag-' + t + '"></span>')
       .join("");
 
     let priceHTML;
@@ -153,7 +166,7 @@
           <div><span class="price-label">Full</span> <span class="price-value">${formatPrice(item.priceFull)}</span></div>
         </div>`;
     } else {
-      priceHTML = `<div class="item-price">${formatPrice(item.price)}</div>`;
+      priceHTML = '<div class="item-price">' + formatPrice(item.price) + '</div>';
     }
 
     const cartEntry = findCartEntry(catId, idx);
@@ -168,7 +181,7 @@
           <button class="size-btn" data-size="full">+ Full</button>
         </div>`;
     } else {
-      actionHTML = `<button class="add-btn">ADD</button>`;
+      actionHTML = '<button class="add-btn">ADD</button>';
     }
 
     card.innerHTML = `
@@ -268,7 +281,7 @@
         });
       });
     } else {
-      actionEl.innerHTML = `<button class="add-btn">ADD</button>`;
+      actionEl.innerHTML = '<button class="add-btn">ADD</button>';
       actionEl.querySelector(".add-btn").addEventListener("click", (e) => {
         e.stopPropagation();
         addToCart(catId, idx, null);
@@ -332,7 +345,7 @@
       cart.splice(cartIdx, 1);
       // Refresh the menu card if visible
       const card = menuMain.querySelector(
-        `.menu-item[data-cat-id="${catId}"][data-idx="${idx}"]`
+        '.menu-item[data-cat-id="' + catId + '"][data-idx="' + idx + '"]'
       );
       if (card) refreshItemCard(card, catId, idx);
     }
@@ -376,7 +389,7 @@
     cart.forEach((entry, ci) => {
       const div = document.createElement("div");
       div.className = "cart-item";
-      const sizeLabel = entry.size ? ` (${entry.size})` : "";
+      const sizeLabel = entry.size ? " (" + entry.size + ")" : "";
       div.innerHTML = `
         <div class="cart-item-info">
           <div class="cart-item-name">${entry.name}${sizeLabel}</div>
@@ -448,21 +461,35 @@
     }
   }
 
-  // ── Order Summary ──
+  // ── Order Summary (Receipt Style) ──
   orderBtn.addEventListener("click", () => {
     if (cart.length === 0) return;
+
+    // Keep the header row, clear item rows
+    const headerRow = orderModalBody.querySelector(".receipt-row-header");
     orderModalBody.innerHTML = "";
+    if (headerRow) {
+      orderModalBody.appendChild(headerRow);
+    } else {
+      // Rebuild header row
+      const hr = document.createElement("div");
+      hr.className = "receipt-row receipt-row-header";
+      hr.innerHTML = '<span class="receipt-col-qty">QTY</span><span class="receipt-col-item">ITEM</span><span class="receipt-col-price">PRICE</span>';
+      orderModalBody.appendChild(hr);
+    }
+
     cart.forEach((entry) => {
-      const sizeLabel = entry.size ? ` (${entry.size})` : "";
-      const div = document.createElement("div");
-      div.className = "order-line";
-      div.innerHTML = `
-        <span class="order-line-name">${entry.name}${sizeLabel}</span>
-        <span class="order-line-qty">x${entry.qty}</span>
-        <span class="order-line-price">${formatPrice(entry.price * entry.qty)}</span>
+      const sizeLabel = entry.size ? " (" + entry.size + ")" : "";
+      const row = document.createElement("div");
+      row.className = "receipt-row";
+      row.innerHTML = `
+        <span class="receipt-col-qty">${entry.qty}</span>
+        <span class="receipt-col-item">${entry.name}${sizeLabel}</span>
+        <span class="receipt-col-price">${formatPrice(entry.price * entry.qty)}</span>
       `;
-      orderModalBody.appendChild(div);
+      orderModalBody.appendChild(row);
     });
+
     orderModalTotal.textContent = formatPrice(getCartTotal());
     orderModalOverlay.style.display = "flex";
     closeCart();
@@ -476,39 +503,51 @@
     if (e.target === orderModalOverlay) orderModalOverlay.style.display = "none";
   });
 
-  // ── Search ──
-  searchToggle.addEventListener("click", () => {
-    searchBar.classList.toggle("active");
-    if (searchBar.classList.contains("active")) {
-      searchInput.focus();
-    } else {
-      searchInput.value = "";
-      searchResults.style.display = "none";
-    }
-  });
-
-  searchClose.addEventListener("click", () => {
-    searchBar.classList.remove("active");
+  // ── Search Overlay ──
+  function openSearch() {
+    searchOverlay.style.display = "flex";
     searchInput.value = "";
     searchResults.style.display = "none";
+    searchSuggestions.style.display = "block";
+    document.body.style.overflow = "hidden";
+    setTimeout(() => searchInput.focus(), 100);
+  }
+
+  function closeSearch() {
+    searchOverlay.style.display = "none";
+    searchInput.value = "";
+    document.body.style.overflow = "";
+  }
+
+  searchToggle.addEventListener("click", openSearch);
+  searchBack.addEventListener("click", closeSearch);
+
+  // Search chips
+  document.querySelectorAll(".search-chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      searchInput.value = chip.dataset.q;
+      performSearch(chip.dataset.q);
+    });
   });
 
   searchInput.addEventListener("input", () => {
     const q = searchInput.value.trim().toLowerCase();
     if (q.length < 2) {
       searchResults.style.display = "none";
+      searchSuggestions.style.display = "block";
       return;
     }
     performSearch(q);
   });
 
   function performSearch(query) {
+    query = query.toLowerCase();
     searchResultsInner.innerHTML = "";
     let found = false;
 
     MENU_DATA.forEach((cat) => {
       const matches = cat.items.filter(
-        (item, idx) =>
+        (item) =>
           item.name.toLowerCase().includes(query) ||
           item.desc.toLowerCase().includes(query)
       );
@@ -531,23 +570,19 @@
     if (!found) {
       searchResultsInner.innerHTML = `
         <div class="search-no-results">
-          <span class="nope-emoji">🤷</span>
+          <span class="nope-emoji">\uD83E\uDD37</span>
           <p>Nothing found for "${query}"</p>
           <p style="font-size:0.82rem; color:var(--gray-400); margin-top:0.3rem;">Try searching for chicken, prawns, tofu...</p>
         </div>
       `;
     }
 
+    searchSuggestions.style.display = "none";
     searchResults.style.display = "block";
   }
 
   // ── Scroll spy for category nav ──
   function setupScrollSpy() {
-    const sections = MENU_DATA.map((cat) => ({
-      id: cat.id,
-      el: document.getElementById("section-" + cat.id),
-    }));
-
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -560,8 +595,9 @@
       { rootMargin: "-120px 0px -60% 0px", threshold: 0 }
     );
 
-    sections.forEach((s) => {
-      if (s.el) observer.observe(s.el);
+    MENU_DATA.forEach((cat) => {
+      const el = document.getElementById("section-" + cat.id);
+      if (el) observer.observe(el);
     });
   }
 
