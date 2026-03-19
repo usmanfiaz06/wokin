@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WOK!N - Modern Pan Asian</title>
+    <link rel="icon" type="image/jpeg" href="Wokin.- logo.jpeg">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=Satisfy&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- ===== WELCOME SCREEN ===== -->
+    <div class="welcome-screen" id="welcomeScreen">
+        <div class="welcome-bg">
+            <div class="steam steam-1"></div>
+            <div class="steam steam-2"></div>
+            <div class="steam steam-3"></div>
+        </div>
+        <div class="welcome-content">
+            <img src="Wokin.- logo.jpeg" alt="WOK!N" class="welcome-logo">
+            <p class="welcome-subtitle">Your table is set. Your wok is hot.</p>
+            <button class="explore-btn" id="exploreBtn">
+                <span>Explore The Menu</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+            <p class="welcome-hint">Fair warning: you'll want everything</p>
+        </div>
+    </div>
+
+    <!-- ===== MAIN MENU APP ===== -->
+    <div class="menu-app" id="menuApp" style="display:none;">
+
+        <!-- Top Bar -->
+        <header class="top-bar">
+            <img src="Wokin.- logo.jpeg" alt="WOK!N" class="top-logo">
+            <div class="top-actions">
+                <button class="icon-btn search-toggle" id="searchToggle" aria-label="Search">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                </button>
+                <button class="icon-btn cart-toggle" id="cartToggle" aria-label="Cart">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+                    <span class="cart-badge" id="cartBadge" style="display:none;">0</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Search Bar (hidden by default) -->
+        <div class="search-bar" id="searchBar">
+            <div class="search-inner">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                <input type="text" id="searchInput" placeholder="Craving something? Search here..." autocomplete="off">
+                <button class="search-close" id="searchClose">&times;</button>
+            </div>
+        </div>
+
+        <!-- Category Nav -->
+        <nav class="cat-nav" id="catNav">
+            <div class="cat-nav-scroll" id="catNavScroll">
+                <!-- Populated by JS -->
+            </div>
+        </nav>
+
+        <!-- Menu Sections -->
+        <main class="menu-main" id="menuMain">
+            <!-- Populated by JS -->
+        </main>
+
+        <!-- Search Results -->
+        <div class="search-results" id="searchResults" style="display:none;">
+            <div class="search-results-inner" id="searchResultsInner"></div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="menu-footer">
+            <div class="legend">
+                <span class="legend-item"><span class="dot veg"></span> Vegetarian</span>
+                <span class="legend-item"><span class="dot mild"></span> Non-Spicy</span>
+                <span class="legend-item"><span class="dot chef"></span> Chef's Pick</span>
+            </div>
+            <p class="tax-note">All prices are subject to prevailing Government Taxes.</p>
+        </footer>
+    </div>
+
+    <!-- ===== CART DRAWER ===== -->
+    <div class="cart-overlay" id="cartOverlay"></div>
+    <div class="cart-drawer" id="cartDrawer">
+        <div class="cart-header">
+            <h2>Your Order</h2>
+            <button class="cart-close" id="cartClose">&times;</button>
+        </div>
+        <div class="cart-body" id="cartBody">
+            <div class="cart-empty" id="cartEmpty">
+                <span class="cart-empty-icon">🍜</span>
+                <p>Your wok is empty!</p>
+                <p class="cart-empty-sub">Add some deliciousness to get started</p>
+            </div>
+            <div class="cart-items" id="cartItems"></div>
+        </div>
+        <div class="cart-footer" id="cartFooter" style="display:none;">
+            <div class="cart-total">
+                <span>Total</span>
+                <span id="cartTotal">Rs. 0</span>
+            </div>
+            <button class="order-btn" id="orderBtn">
+                <span>Show Order to Staff</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+            <p class="order-hint">Tap to display your order summary</p>
+        </div>
+    </div>
+
+    <!-- ===== ORDER SUMMARY MODAL ===== -->
+    <div class="order-modal-overlay" id="orderModalOverlay" style="display:none;">
+        <div class="order-modal" id="orderModal">
+            <div class="order-modal-header">
+                <img src="Wokin.- logo.jpeg" alt="WOK!N" class="order-logo">
+                <h2>Order Summary</h2>
+                <p class="order-modal-sub">Show this to your server</p>
+            </div>
+            <div class="order-modal-body" id="orderModalBody"></div>
+            <div class="order-modal-footer">
+                <div class="order-modal-total">
+                    <span>Estimated Total</span>
+                    <span id="orderModalTotal">Rs. 0</span>
+                </div>
+                <p class="order-tax-note">*Taxes as applicable</p>
+                <button class="order-modal-close" id="orderModalClose">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="menu-data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
