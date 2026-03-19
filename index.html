@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Wokin \u2014 Modern Pan Asian</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/jpeg" href="Wokin.- logo.jpeg">
+</head>
+<body>
+
+  <!-- ========== SPLASH SCREEN ========== -->
+  <div id="splash" class="splash">
+    <div class="splash-grid-bg"></div>
+    <div class="splash-content">
+      <img src="Wokin.- logo.jpeg" alt="Wokin" class="splash-logo">
+      <p class="splash-tagline">your flavor trip starts here.</p>
+      <button id="splash-enter" class="splash-btn">
+        <span>Explore the Menu</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+      <p class="splash-hint">your taste buds called. they said hurry up.</p>
+    </div>
+    <!-- Decorative chopsticks -->
+    <div class="chopstick chopstick-1"></div>
+    <div class="chopstick chopstick-2"></div>
+  </div>
+
+  <!-- ========== MAIN APP ========== -->
+  <div id="app" class="app hidden">
+
+    <!-- Sticky Header -->
+    <header class="header">
+      <div class="header-top">
+        <img src="Wokin.- logo.jpeg" alt="Wokin" class="header-logo">
+        <div class="header-cart" id="cart-toggle">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+          <span class="cart-badge hidden" id="cart-badge">0</span>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="search-wrap">
+        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="search-input" class="search-input" placeholder="what's your craving?">
+        <button id="search-clear" class="search-clear hidden">&times;</button>
+      </div>
+
+      <!-- Category Tabs -->
+      <div class="tabs-wrap" id="tabs-wrap">
+        <div class="tabs" id="category-tabs"></div>
+      </div>
+    </header>
+
+    <!-- Menu Content -->
+    <main class="menu-content" id="menu-content"></main>
+
+    <!-- Search Results (hidden by default) -->
+    <main class="search-results hidden" id="search-results">
+      <div class="search-results-header">
+        <h2 id="search-results-title"></h2>
+      </div>
+      <div id="search-results-list"></div>
+    </main>
+
+    <!-- Empty Search -->
+    <div class="search-empty hidden" id="search-empty">
+      <div class="search-empty-icon">&#x1F50D;</div>
+      <p>no dishes match that craving...</p>
+      <p class="search-empty-sub">try something else? we've got a lot to offer!</p>
+    </div>
+
+    <!-- Floating Cart Button -->
+    <button class="fab-cart hidden" id="fab-cart">
+      <div class="fab-cart-inner">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        <span>View Order</span>
+        <span class="fab-cart-count" id="fab-cart-count">0</span>
+      </div>
+      <div class="fab-cart-total" id="fab-cart-total">Rs. 0</div>
+    </button>
+  </div>
+
+  <!-- ========== CART DRAWER ========== -->
+  <div class="cart-overlay hidden" id="cart-overlay"></div>
+  <div class="cart-drawer hidden" id="cart-drawer">
+    <div class="cart-header">
+      <h2>Your Order</h2>
+      <button id="cart-close" class="cart-close">&times;</button>
+    </div>
+
+    <!-- Cart Items -->
+    <div class="cart-body" id="cart-body">
+      <!-- Empty state -->
+      <div class="cart-empty" id="cart-empty">
+        <div class="cart-empty-icon">&#x1F962;</div>
+        <p>your cart is lonelier than a dumpling without sauce.</p>
+        <p class="cart-empty-sub">go ahead, add something delicious!</p>
+      </div>
+      <!-- Items list -->
+      <div id="cart-items"></div>
+    </div>
+
+    <!-- Cart Footer -->
+    <div class="cart-footer hidden" id="cart-footer">
+      <div class="cart-total-row">
+        <span>Total</span>
+        <span id="cart-total-amount">Rs. 0</span>
+      </div>
+      <p class="cart-tax-note">all prices are subject to prevailing government taxes</p>
+      <button class="order-btn" id="order-btn">
+        <span>Show to Order Taker</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ========== ORDER SUMMARY (Full-Screen) ========== -->
+  <div class="order-summary hidden" id="order-summary">
+    <div class="order-summary-receipt">
+      <div class="receipt-header">
+        <img src="Wokin.- logo.jpeg" alt="Wokin" class="receipt-logo">
+        <p class="receipt-tagline">modern pan asian</p>
+      </div>
+      <div class="receipt-divider"></div>
+      <h3 class="receipt-title">ORDER SUMMARY</h3>
+      <div class="receipt-items" id="receipt-items"></div>
+      <div class="receipt-divider"></div>
+      <div class="receipt-total-row">
+        <span>TOTAL</span>
+        <span id="receipt-total">Rs. 0</span>
+      </div>
+      <p class="receipt-tax">*subject to prevailing government taxes</p>
+      <div class="receipt-divider"></div>
+      <p class="receipt-footer-text">show this to your server &mdash; they'll take it from here!</p>
+      <p class="receipt-fun">thanks for wok-ing with us &#x1F525;</p>
+    </div>
+    <button class="order-back-btn" id="order-back">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Back to Menu
+    </button>
+  </div>
+
+  <!-- Item Added Toast -->
+  <div class="toast hidden" id="toast">
+    <span id="toast-text">Added to cart!</span>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
