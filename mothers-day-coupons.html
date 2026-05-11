@@ -33,7 +33,7 @@
 
   .page {
     width: 210mm; height: 297mm;
-    padding: 8mm;
+    padding: 6mm 0;
     page-break-after: always; break-after: page;
     display: flex; flex-direction: column;
     gap: 11mm;
@@ -64,7 +64,7 @@
     height: 86mm;
     position: relative;
     overflow: hidden;
-    border-radius: 2.4mm;
+    border-radius: 0;
     display: flex;
     color: #2a1014;
     box-shadow:
@@ -74,7 +74,7 @@
 
   /* ---- LEFT STUB ---- */
   .stub {
-    width: 26mm;
+    width: 28mm;
     flex-shrink: 0;
     position: relative;
     background:
@@ -216,7 +216,7 @@
   .hero {
     flex: 1;
     display: grid;
-    grid-template-columns: 32mm 1fr 30mm;
+    grid-template-columns: 36mm 1fr 34mm;
     gap: 5mm;
     align-items: center;
     margin: 1mm 0 1.5mm;
@@ -225,7 +225,7 @@
 
   /* Circular food image */
   .food-circle {
-    width: 32mm; height: 32mm;
+    width: 34mm; height: 34mm;
     border-radius: 50%;
     overflow: hidden;
     position: relative;
@@ -260,12 +260,13 @@
 
   h1.script {
     font-family: 'Great Vibes', 'Brush Script MT', cursive;
-    font-size: 28pt;
+    font-size: 22pt;
     line-height: 0.92;
     color: #5a1a1f;
     margin: 0 0 0.4mm;
     font-weight: 400;
     letter-spacing: 0.5px;
+    white-space: nowrap;
   }
   .divider {
     width: 26mm;
@@ -316,7 +317,7 @@
     gap: 1.5mm;
   }
   .badge {
-    width: 28mm; height: 28mm;
+    width: 26mm; height: 26mm;
     border-radius: 50%;
     background:
       radial-gradient(circle at 30% 25%, #c93838 0%, #8b1a1a 60%, #5a0e12 100%);
@@ -332,17 +333,17 @@
   .badge .pct {
     font-family: 'Playfair Display', serif;
     font-weight: 900;
-    font-size: 17pt; line-height: 1;
+    font-size: 15pt; line-height: 1;
     color: #f0c060;
     text-shadow: 0 0.4mm 0 rgba(0,0,0,0.15);
   }
-  .badge .pct .sign { font-size: 13pt; color: #ffd56b; }
+  .badge .pct .sign { font-size: 11pt; color: #ffd56b; }
   .badge .off {
-    font-size: 7.2pt;
-    letter-spacing: 4px;
+    font-size: 6.5pt;
+    letter-spacing: 3px;
     color: #f4ead5;
     font-weight: 700;
-    margin-top: 0.5mm;
+    margin-top: 0.4mm;
   }
   .qr-row {
     display: flex; align-items: center; gap: 1.5mm;
@@ -409,7 +410,7 @@
   @media print {
     body { background: #fff; }
     .hint { display: none !important; }
-    .page { padding: 8mm; }
+    .page { padding: 6mm 0; }
   }
 </style>
 </head>
@@ -470,7 +471,7 @@
               <h1 class="script">Happy Mother's Day</h1>
               <div class="divider"></div>
               <div class="subtitle">
-                Happy Women's &amp; Mother's Day at NUST — a heartfelt thank-you to every mother &amp; woman who lights up our community. Please <span class="accent">enjoy 12% off</span> a beautifully plated Pan-Asian meal at Wokin.
+                Happy Women's &amp; Mother's Day at NUST — a heartfelt thank-you to the women who light up our community. <span class="accent">Enjoy 12% off</span> a beautifully plated Pan-Asian meal at Wokin.
               </div>
               <div class="signoff">
                 <span class="heart">♥</span> with love,
