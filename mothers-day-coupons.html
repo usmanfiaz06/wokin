@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Wokin × NUST — Mother's Day Coupons (400)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  @page { size: A4 portrait; margin: 0; }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+    color: #2a1a1f;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    background: #efeae2;
+  }
+
+  /* Floating helper banner — hidden on print */
+  .hint {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 9999;
+    background: #1c0f13;
+    color: #ffe9c2;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    line-height: 1.4;
+    max-width: 320px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  }
+  .hint b { color: #ffd56b; }
+
+  .page {
+    width: 210mm;
+    height: 297mm;
+    padding: 10mm;
+    page-break-after: always;
+    break-after: page;
+    display: flex;
+    flex-direction: column;
+    gap: 11mm;
+    background: #fff;
+    position: relative;
+  }
+  .page:last-of-type { page-break-after: auto; break-after: auto; }
+
+  /* Cut guide rendered as a single line in the gap between coupons */
+  .cut-line {
+    height: 0;
+    border-top: 1px dashed #c9a9b1;
+    position: relative;
+    margin: -5mm 0;
+  }
+  .cut-line::before {
+    content: '✂  cut along the dotted line';
+    position: absolute;
+    top: -3.2mm;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+    padding: 0 3mm;
+    font-size: 7.5pt;
+    color: #b8929a;
+    letter-spacing: 1.5px;
+  }
+
+  /* ---------- Coupon card ---------- */
+  .coupon {
+    width: 190mm;
+    height: 128mm;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    border-radius: 5mm;
+    background:
+      radial-gradient(circle at 100% 0%, rgba(214, 32, 54, 0.08) 0, transparent 38%),
+      radial-gradient(circle at 0% 100%, rgba(212, 175, 55, 0.10) 0, transparent 40%),
+      linear-gradient(135deg, #fff4f6 0%, #fffaf2 55%, #fef0f3 100%);
+    border: 1.2px solid #f1c4cc;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.6) inset;
+    color: #2a1a1f;
+  }
+
+  /* Subtle decorative scallop on the top-right corner */
+  .coupon::before {
+    content: '';
+    position: absolute;
+    top: -30mm;
+    right: -30mm;
+    width: 70mm;
+    height: 70mm;
+    background: radial-gradient(circle, rgba(232, 78, 100, 0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .coupon::after {
+    content: '';
+    position: absolute;
+    bottom: 14mm;
+    left: -28mm;
+    width: 60mm;
+    height: 60mm;
+    background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .body {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: 1.55fr 1fr;
+    height: calc(100% - 18mm); /* leave room for terms strip (6mm) + dark footer (12mm) */
+  }
+
+  /* Left column */
+  .left {
+    padding: 6.5mm 5mm 6mm 8mm;
+    display: flex;
+    flex-direction: column;
+  }
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 5mm;
+    margin-bottom: 4mm;
+  }
+  .wokin-logo img {
+    height: 14mm;
+    width: auto;
+    display: block;
+    border-radius: 1.5mm;
+  }
+  .nust-logo img {
+    height: 13mm;
+    width: auto;
+    display: block;
+  }
+
+  .eyebrow {
+    font-size: 7.5pt;
+    letter-spacing: 3.5px;
+    text-transform: uppercase;
+    color: #b8294a;
+    font-weight: 700;
+    margin-bottom: 0.5mm;
+  }
+  h1.script {
+    font-family: 'Great Vibes', 'Brush Script MT', 'Lucida Handwriting', 'Snell Roundhand', cursive;
+    font-size: 38pt;
+    line-height: 0.95;
+    color: #b8294a;
+    margin: 0 0 2mm 0;
+    font-weight: 400;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.6);
+  }
+  h1.script .amp {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-style: italic;
+    color: #d4a017;
+    font-size: 26pt;
+  }
+  .offer {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 14pt;
+    font-weight: 800;
+    margin: 1.5mm 0 1mm;
+    letter-spacing: 0.2px;
+    color: #1f1f1f;
+  }
+  .offer .pct {
+    color: #d62036;
+    font-size: 17pt;
+    margin: 0 1mm;
+  }
+  .submsg {
+    font-size: 9pt;
+    line-height: 1.4;
+    color: #4a3138;
+    max-width: 100mm;
+    margin-top: 0.5mm;
+  }
+  .signoff {
+    margin-top: auto;
+    font-size: 9pt;
+    color: #8e5a66;
+    font-style: italic;
+    letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+    gap: 2mm;
+  }
+  .signoff .heart { color: #d62036; font-style: normal; }
+  .signoff strong {
+    color: #b8294a;
+    font-style: normal;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  /* Right column */
+  .right {
+    padding: 6mm 6mm 6mm 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    border-left: 1.5px dashed #f0bcc6;
+    margin-left: 4mm;
+    padding-left: 5mm;
+    position: relative;
+  }
+
+  .badge {
+    width: 32mm;
+    height: 32mm;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 30% 25%, #ff5870 0%, #d62036 55%, #a8112c 100%);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2mm 4mm rgba(168, 17, 44, 0.28);
+    border: 1.4mm solid #fff;
+    outline: 0.5mm dashed #d62036;
+    outline-offset: 1mm;
+    text-align: center;
+    margin-top: 0.5mm;
+  }
+  .badge .pct {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 24pt;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -1px;
+    color: #fff7d6;
+  }
+  .badge .off {
+    font-size: 9.5pt;
+    font-weight: 800;
+    letter-spacing: 5px;
+    margin-top: 1mm;
+    color: #ffe28a;
+  }
+
+  .qr-wrap {
+    text-align: center;
+    margin-top: 1mm;
+  }
+  .qr-wrap img {
+    width: 24mm;
+    height: 24mm;
+    display: block;
+    margin: 0 auto 1mm;
+    border: 1px solid #eee;
+    border-radius: 1mm;
+    background: #fff;
+  }
+  .qr-wrap .qr-label {
+    font-size: 7pt;
+    color: #6b4651;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  /* Decorative floral marks */
+  .floral {
+    position: absolute;
+    font-size: 16pt;
+    color: #e7a4b2;
+    opacity: 0.55;
+    pointer-events: none;
+  }
+  .f1 { top: 4mm; left: 46%; color: #d4a017; transform: rotate(-12deg); }
+  .f2 { bottom: 18mm; left: 4mm; color: #d4a017; transform: rotate(-18deg); }
+  .f3 { top: 22mm; right: 4mm; color: #e7a4b2; transform: rotate(18deg); }
+
+  /* Terms strip */
+  .terms {
+    position: absolute;
+    left: 0; right: 0;
+    bottom: 12mm;
+    padding: 1.2mm 8mm;
+    font-size: 6.6pt;
+    color: #7a5560;
+    letter-spacing: 0.4px;
+    z-index: 3;
+    text-align: center;
+    background: rgba(255, 244, 246, 0.65);
+    border-top: 1px dashed #f1c4cc;
+  }
+  .terms b { color: #b8294a; font-weight: 700; letter-spacing: 1px; }
+
+  /* Dark footer band */
+  .footer {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 12mm;
+    background: linear-gradient(90deg, #1c0f13 0%, #2a151b 50%, #1c0f13 100%);
+    color: #ffe9c2;
+    font-size: 7.6pt;
+    padding: 0 6mm;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4mm;
+    z-index: 3;
+  }
+  .footer .item { display: flex; align-items: center; gap: 1.5mm; line-height: 1.2; }
+  .footer .label { color: #c89a6b; font-size: 6.4pt; letter-spacing: 1.2px; text-transform: uppercase; }
+  .footer .value { color: #ffe9c2; font-weight: 600; }
+  .footer .serial .value { color: #ffd56b; letter-spacing: 1.2px; font-weight: 800; }
+
+  /* Print tweaks */
+  @media print {
+    body { background: #fff; }
+    .hint { display: none !important; }
+    .page { padding: 10mm; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hint">
+  <b>Save as PDF:</b> press Ctrl/Cmd + P → Destination <b>"Save as PDF"</b> → Paper <b>A4</b> → Margins <b>None</b> → enable <b>"Background graphics"</b>. 200 pages, 2 coupons each = 400 unique coupons.
+</div>
+
+<div id="root"></div>
+
+<script>
+  const TOTAL = 400;
+  const PER_PAGE = 2;
+  const root = document.getElementById('root');
+
+  const WOKIN_LOGO = "Wokin.-%20logo.jpeg";
+  const NUST_LOGO  = "Typo-removebg-preview.png";
+  const QR_IMG     = "Wokin%20location%20qr.png";
+
+  function couponHTML(serial) {
+    return `
+      <div class="coupon">
+        <span class="floral f1">✿</span>
+        <span class="floral f2">❀</span>
+        <span class="floral f3">✿</span>
+
+        <div class="body">
+          <div class="left">
+            <div class="header">
+              <div class="wokin-logo"><img src="${WOKIN_LOGO}" alt="Wokin — Modern Pan Asian"></div>
+              <div class="nust-logo"><img src="${NUST_LOGO}" alt="NUST"></div>
+            </div>
+
+            <div class="eyebrow">Wokin × NUST · Mother's Day Special</div>
+            <h1 class="script">Happy Mother's Day<span class="amp"></span></h1>
+
+            <div class="offer">Get Special <span class="pct">12% OFF</span> at Wokin</div>
+
+            <div class="submsg">
+              Happy Women's &amp; Mother's Day at NUST. A little thank-you to every mother and woman who lights up our community — enjoy a delicious Pan-Asian meal at Wokin, on us.
+            </div>
+
+            <div class="signoff">
+              <span class="heart">♥</span> with love, <strong>— From NUST HR</strong>
+            </div>
+          </div>
+
+          <div class="right">
+            <div class="badge">
+              <div class="pct">12%</div>
+              <div class="off">OFF</div>
+            </div>
+
+            <div class="qr-wrap">
+              <img src="${QR_IMG}" alt="Wokin location QR">
+              <div class="qr-label">Scan for location</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="terms">
+          <b>Terms:</b> One-time use per coupon · Valid for dine-in &amp; takeaway · Cannot be combined with other offers/discounts · Please present this coupon along with a valid NUST ID at checkout.
+        </div>
+
+        <div class="footer">
+          <div class="item">
+            <span class="label">Valid</span>
+            <span class="value">11 May – 30 Jun 2026</span>
+          </div>
+          <div class="item">
+            <span class="label">Visit</span>
+            <span class="value">Wokin, Empire Plaza, Gulberg Greens, Islamabad</span>
+          </div>
+          <div class="item">
+            <span class="label">Call</span>
+            <span class="value">+92 335 5979775</span>
+          </div>
+          <div class="item serial">
+            <span class="label">Coupon №</span>
+            <span class="value">${serial}</span>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  let html = '';
+  for (let i = 0; i < TOTAL; i += PER_PAGE) {
+    html += '<div class="page">';
+    const a = String(i + 1).padStart(4, '0');
+    html += couponHTML('WKN-NUST-' + a);
+    if (i + 1 < TOTAL) {
+      html += '<div class="cut-line"></div>';
+      const b = String(i + 2).padStart(4, '0');
+      html += couponHTML('WKN-NUST-' + b);
+    }
+    html += '</div>';
+  }
+  root.innerHTML = html;
+</script>
+</body>
+</html>
