@@ -6,19 +6,17 @@
    - Menu render from menu-data.js + dish-images.js
    - Cart drawer (persisted in localStorage)
    - Free-delivery progress, 15% tax, Rs.100 delivery, Rs.1800 threshold
-   - Checkout sheet with validation + COD + coupon + map placeholder
+   - Checkout sheet with validation + COD + coupon
    - Order confirmation
    ---------------------------------------------------------------------
-   Google Maps integration:
-     1) Visit https://console.cloud.google.com/  → create a project
-     2) Enable: "Maps JavaScript API", "Places API", "Geocoding API"
-     3) Create an API key (APIs & Services → Credentials)
-     4) Restrict the key by HTTP referrer to your domain
-     5) Drop the key below in GOOGLE_MAPS_API_KEY
-     The free tier ($200/mo credit) covers thousands of map loads.
+   Google Maps is intentionally OFF. We capture the customer's GPS via
+   the browser (free, no API key) and accept an optional pasted Maps
+   link — both get attached to the order for the rider.
+   To enable an embedded map later: set GOOGLE_MAPS_API_KEY below to
+   your Maps Embed API key.
    ===================================================================== */
 
-const GOOGLE_MAPS_API_KEY = ""; // <-- paste your key here when ready
+const GOOGLE_MAPS_API_KEY = ""; // leave empty — GPS capture works without it
 
 const DELIVERY_AREAS = [
   "Capital Enclave",
