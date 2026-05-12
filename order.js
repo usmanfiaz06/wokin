@@ -83,6 +83,18 @@ const COUPONS = {
 
 const fmtPKR = n => "Rs. " + Math.round(n).toLocaleString("en-PK");
 
+// Apply a dish photo URL to a .img element, with a guaranteed Asian-food
+// fallback if the per-dish file isn't uploaded yet.
+function applyDishBg(el, url){
+  if (!el) return;
+  el.style.backgroundImage = `url("${url}")`;
+  const probe = new Image();
+  probe.src = url;
+  probe.onerror = () => {
+    el.style.backgroundImage = `url("${window.FALLBACK_DISH_IMG || "Assorted_Chinese_food_set.jpg.webp"}")`;
+  };
+}
+
 /* ------------------------------------------------------------------ */
 /*  STATE (persisted in localStorage)                                  */
 /* ------------------------------------------------------------------ */
@@ -331,12 +343,8 @@ function dishCard(dish, cat, idx){
     </div>
   `;
 
-  // image load fallback — hide broken image so the typographic backdrop shows
-  const imgEl = new Image();
-  imgEl.src = img;
-  imgEl.onerror = () => {
-    card.querySelector(".img").style.backgroundImage = "none";
-  };
+  // load primary dish photo with auto-fallback to the universal image
+  applyDishBg(card.querySelector(".img"), img);
 
   // wire add button
   refreshDishAction(card, dish, cat);
@@ -431,7 +439,7 @@ function renderPopular(){
     const card = document.createElement("div");
     card.className = "pop-card";
     card.innerHTML = `
-      <div class="img" style="background-image:url('${img}')"></div>
+      <div class="img"></div>
       <div class="pad">
         <h4>${dish.name}</h4>
         <p style="font-size:11px; color:var(--mute); margin:2px 0 0;">${(dish.desc||"").slice(0,68)}…</p>
@@ -441,6 +449,7 @@ function renderPopular(){
         </div>
       </div>
     `;
+    applyDishBg(card.querySelector(".img"), img);
     card.querySelector(".add").addEventListener("click", () => {
       addToCart(dish, cat);
       bumpCartIcon();
@@ -564,7 +573,7 @@ function recalcCart(){
     const row = document.createElement("div");
     row.className = "cart-item";
     row.innerHTML = `
-      <div class="img" style="background-image:url('${item.image}')"></div>
+      <div class="img"></div>
       <div class="info">
         <b>${item.name}</b>
         ${item.desc?`<small>${item.desc}</small>`:""}
@@ -579,6 +588,7 @@ function recalcCart(){
         <button data-id="${item.id}" data-d="1">+</button>
       </div>
     `;
+    applyDishBg(row.querySelector(".img"), item.image);
     list.appendChild(row);
   });
   list.querySelectorAll(".stepper button").forEach(b => {
@@ -636,7 +646,7 @@ function renderUpsell(){
     const card = document.createElement("div");
     card.className = "up-card";
     card.innerHTML = `
-      <div class="img" style="background-image:url('${getDishImage(dish.name, cat.id)}')"></div>
+      <div class="img"></div>
       <div class="pad">
         <b>${dish.name}</b>
         <div class="row">
@@ -645,6 +655,7 @@ function renderUpsell(){
         </div>
       </div>
     `;
+    applyDishBg(card.querySelector(".img"), getDishImage(dish.name, cat.id));
     card.querySelector(".add").addEventListener("click", () => addToCart(dish, cat));
     scroll.appendChild(card);
   });
@@ -728,13 +739,14 @@ function doSearch(q){
     const card = document.createElement("div");
     card.className = "pop-card";
     card.innerHTML = `
-      <div class="img" style="background-image:url('${getDishImage(dish.name, cat.id)}')"></div>
+      <div class="img"></div>
       <div class="pad">
         <h4>${dish.name}</h4>
         <p style="font-size:11px; color:var(--mute); margin:2px 0 0;">${(dish.desc||"").slice(0,76)}…</p>
         <div class="price"><b>${fmtPKR(dish.price)}</b><button class="add">+</button></div>
       </div>
     `;
+    applyDishBg(card.querySelector(".img"), getDishImage(dish.name, cat.id));
     card.querySelector(".add").addEventListener("click", () => addToCart(dish, cat));
     results.appendChild(card);
   });

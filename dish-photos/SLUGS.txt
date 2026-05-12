@@ -1,0 +1,145 @@
+# WOK!N · DISH PHOTO UPLOAD GUIDE
+# ===============================
+# Drop your photos in this folder (dish-photos/) using the
+# filename shown to the right of each dish. Format: JPG (.jpg)
+# Recommended size: 800x600 (or any landscape, ~4:3).
+#
+
+# === STARTERS ===
+Crispy Finger Fish                                =>  crispy-finger-fish.jpg
+Dynamite Chicken                                  =>  dynamite-chicken.jpg
+Spicy Honey Chicken Wings                         =>  spicy-honey-chicken-wings.jpg
+Sesame Honey Chilli Chicken                       =>  sesame-honey-chilli-chicken.jpg
+Dynamite Prawns                                   =>  dynamite-prawns.jpg
+Prawn Tempura                                     =>  prawn-tempura.jpg
+Golden Silk Prawns                                =>  golden-silk-prawns.jpg
+Chinese Spring Rolls                              =>  chinese-spring-rolls.jpg
+Steamed Chicken Dumplings                         =>  steamed-chicken-dumplings.jpg
+Chilli Wings                                      =>  chilli-wings.jpg
+
+# === FRIES ===
+Plain Fries                                       =>  plain-fries.jpg
+Masala Fries                                      =>  masala-fries.jpg
+Cheese Fries                                      =>  cheese-fries.jpg
+
+# === SOUP ===
+Wokin Special Soup                                =>  wokin-special-soup.jpg
+Hot 'N' Sour Soup                                 =>  hot-n-sour-soup.jpg
+Chicken Corn Soup                                 =>  chicken-corn-soup.jpg
+Hot Szechuan Soup                                 =>  hot-szechuan-soup.jpg
+Thai Chicken Soup                                 =>  thai-chicken-soup.jpg
+Chef's Special Soup                               =>  chef-s-special-soup.jpg
+Chicken Noodle Soup                               =>  chicken-noodle-soup.jpg
+Mix Seafood Soup                                  =>  mix-seafood-soup.jpg
+Clear Vegetable Soup                              =>  clear-vegetable-soup.jpg
+Clear Chicken Vegetable Soup                      =>  clear-chicken-vegetable-soup.jpg
+
+# === POULTRY ===
+Sesame Sliced Chicken                             =>  sesame-sliced-chicken.jpg
+Shanghai Special Chicken                          =>  shanghai-special-chicken.jpg
+Chilli Chicken Ginger                             =>  chilli-chicken-ginger.jpg
+Yajua Chicken                                     =>  yajua-chicken.jpg
+Hot and Spicy Braised Chicken                     =>  hot-and-spicy-braised-chicken.jpg
+Shu Shi Chicken                                   =>  shu-shi-chicken.jpg
+Chicken with Baby Corn                            =>  chicken-with-baby-corn.jpg
+Peanut Chicken                                    =>  peanut-chicken.jpg
+Chicken Drumsticks                                =>  chicken-drumsticks.jpg
+Chicken Manchurian                                =>  chicken-manchurian.jpg
+Kung Pao Chicken                                  =>  kung-pao-chicken.jpg
+Szechuan Chicken                                  =>  szechuan-chicken.jpg
+Wokin Special Chicken with Pineapple              =>  wokin-special-chicken-with-pineapple.jpg
+Chicken with Chillies (Dry)                       =>  chicken-with-chillies-dry.jpg
+Chicken with Chillies and Onions                  =>  chicken-with-chillies-and-onions.jpg
+Chicken in Hot Garlic Sauce                       =>  chicken-in-hot-garlic-sauce.jpg
+Chicken in Garlic Sauce                           =>  chicken-in-garlic-sauce.jpg
+Chicken and Mix Vegetables                        =>  chicken-and-mix-vegetables.jpg
+Chicken with Cashew Nuts (Szechuan Style)         =>  chicken-with-cashew-nuts-szechuan-style.jpg
+Mongolian Chicken                                 =>  mongolian-chicken.jpg
+Chicken with Roasted Almonds                      =>  chicken-with-roasted-almonds.jpg
+Black Pepper Chicken                              =>  black-pepper-chicken.jpg
+Lemon Chicken                                     =>  lemon-chicken.jpg
+Mandarin Chicken                                  =>  mandarin-chicken.jpg
+Chef's Special Sesame Chicken                     =>  chef-s-special-sesame-chicken.jpg
+Chilli Oyster Chicken                             =>  chilli-oyster-chicken.jpg
+
+# === SEAFOOD PRAWNS ===
+Hot and Spicy Braised Prawns                      =>  hot-and-spicy-braised-prawns.jpg
+Prawn Manchurian                                  =>  prawn-manchurian.jpg
+Prawn with Chillies (Dry)                         =>  prawn-with-chillies-dry.jpg
+Szechuan Prawns                                   =>  szechuan-prawns.jpg
+Prawns with Chillies and Vegetables               =>  prawns-with-chillies-and-vegetables.jpg
+Prawns in Hot Garlic Sauce                        =>  prawns-in-hot-garlic-sauce.jpg
+Prawns in Garlic Sauce                            =>  prawns-in-garlic-sauce.jpg
+Mongolian Prawns                                  =>  mongolian-prawns.jpg
+Kung Pao Prawns                                   =>  kung-pao-prawns.jpg
+Stir-Fried Prawns                                 =>  stir-fried-prawns.jpg
+Honey Chilli Sesame Prawns                        =>  honey-chilli-sesame-prawns.jpg
+
+# === FISH ===
+Hot and Spicy Braised Fish                        =>  hot-and-spicy-braised-fish.jpg
+Wokin Special Fish (with Choice of Sauce)         =>  wokin-special-fish-with-choice-of-sauce.jpg
+Fish with Chillies (Dry)                          =>  fish-with-chillies-dry.jpg
+Fish in Hot Garlic Sauce                          =>  fish-in-hot-garlic-sauce.jpg
+Kung Pao Fish                                     =>  kung-pao-fish.jpg
+Fish with Chillies and Vegetables                 =>  fish-with-chillies-and-vegetables.jpg
+Szechuan Fish                                     =>  szechuan-fish.jpg
+Mongolian Fish                                    =>  mongolian-fish.jpg
+Fish with Chilli Garlic Sauce                     =>  fish-with-chilli-garlic-sauce.jpg
+
+# === LOBSTER ===
+Lobster (with Choice of Sauce)                    =>  lobster-with-choice-of-sauce.jpg
+
+# === BEEF ===
+Hot and Spicy Braised Beef                        =>  hot-and-spicy-braised-beef.jpg
+Shu Shi Beef                                      =>  shu-shi-beef.jpg
+Beef in Garlic Sauce                              =>  beef-in-garlic-sauce.jpg
+Wokin Special Beef                                =>  wokin-special-beef.jpg
+Beef Chilli Vegetables                            =>  beef-chilli-vegetables.jpg
+Beef with Chillies (Dry)                          =>  beef-with-chillies-dry.jpg
+Beef with Chillies and Onions                     =>  beef-with-chillies-and-onions.jpg
+Mongolian Beef                                    =>  mongolian-beef.jpg
+Chilli Oyster Beef                                =>  chilli-oyster-beef.jpg
+
+# === RICE ===
+Chicken Masala Rice                               =>  chicken-masala-rice.jpg
+Prawn Masala Rice                                 =>  prawn-masala-rice.jpg
+Vegetable Fried Rice                              =>  vegetable-fried-rice.jpg
+Egg Fried Rice                                    =>  egg-fried-rice.jpg
+Chicken Fried Rice                                =>  chicken-fried-rice.jpg
+Wokin Special Rice                                =>  wokin-special-rice.jpg
+Steamed Rice                                      =>  steamed-rice.jpg
+Prawn Fried Rice                                  =>  prawn-fried-rice.jpg
+Garlic Fried Rice                                 =>  garlic-fried-rice.jpg
+
+# === CHOPSUEY & NOODLES ===
+American Chop Suey                                =>  american-chop-suey.jpg
+Chicken Chop Suey                                 =>  chicken-chop-suey.jpg
+Vegetable Chow Mein                               =>  vegetable-chow-mein.jpg
+Chicken Chow Mein                                 =>  chicken-chow-mein.jpg
+Wokin Special Chow Mein                           =>  wokin-special-chow-mein.jpg
+Beef Chow Mein                                    =>  beef-chow-mein.jpg
+
+# === VEGETABLES ===
+Stir-Fried Vegetables                             =>  stir-fried-vegetables.jpg
+Mushrooms in Garlic Sauce                         =>  mushrooms-in-garlic-sauce.jpg
+Sweet 'N' Sour Vegetables                         =>  sweet-n-sour-vegetables.jpg
+
+# === KIDS MEAL ===
+Option 1                                          =>  option-1.jpg
+Option 2                                          =>  option-2.jpg
+
+# === BEVERAGES ===
+Soft Drinks                                       =>  soft-drinks.jpg
+Frosted Mint Lemonade                             =>  frosted-mint-lemonade.jpg
+Blue Lagoon                                       =>  blue-lagoon.jpg
+Pina Colada                                       =>  pina-colada.jpg
+Sparkling Water (Perrier)                         =>  sparkling-water-perrier.jpg
+Mineral Water (L)                                 =>  mineral-water-l.jpg
+Mineral Water (S)                                 =>  mineral-water-s.jpg
+Karak Tea                                         =>  karak-tea.jpg
+Green Tea                                         =>  green-tea.jpg
+Mint Margarita                                    =>  mint-margarita.jpg
+Strawberry Margarita                              =>  strawberry-margarita.jpg
+Lemon Margarita                                   =>  lemon-margarita.jpg
+Peach Margarita                                   =>  peach-margarita.jpg
+Wokin Special Drink                               =>  wokin-special-drink.jpg
