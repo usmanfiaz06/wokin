@@ -927,51 +927,83 @@ function mountMap(){
   }
 }
 
-function placeOrder(){
-  const order = {
-    id: "WK" + Date.now().toString(36).toUpperCase().slice(-6),
-    when: new Date().toISOString(),
-    type: state.type,
-    area: document.getElementById("coArea").value,
-    customer: {
-      name:      document.getElementById("coName").value.trim(),
-      phone:     document.getElementById("coPhone").value.trim(),
-      phoneAlt:  document.getElementById("coPhoneAlt").value.trim(),
-      email:     document.getElementById("coEmail").value.trim(),
-    },
-    delivery: {
-      address:   document.getElementById("coAddress").value.trim(),
-      landmark:  document.getElementById("coLandmark").value.trim(),
-      mapLink:   document.getElementById("coMap").value.trim(),
-      gps:       state.gps || null,
-      instructions: document.getElementById("coInstr").value.trim(),
-    },
-    payment: {
-      method:        "cash-on-delivery",
-      changeRequest: document.getElementById("coChange").value.trim(),
-    },
-    coupon: state.coupon || null,
-    items:  state.cart,
-    totals: cartTotals(),
-    eta:    state.type === "pickup" ? 20 : ETA_MIN,
+async function placeOrder(){
+  const btn = document.getElementById("placeOrderBtn");
+  const originalLabel = btn ? btn.innerHTML : "";
+  if (btn){ btn.disabled = true; btn.innerHTML = "PLACING ORDER…"; }
+
+  const t = cartTotals();
+  const eta = state.type === "pickup" ? 20 : ETA_MIN;
+
+  const orderRow = {
+    order_type:             state.type,
+    area:                   document.getElementById("coArea").value,
+    customer_name:          document.getElementById("coName").value.trim(),
+    customer_phone:         document.getElementById("coPhone").value.trim(),
+    customer_phone_alt:     document.getElementById("coPhoneAlt").value.trim() || null,
+    customer_email:         document.getElementById("coEmail").value.trim() || null,
+
+    delivery_address:       document.getElementById("coAddress").value.trim() || null,
+    delivery_landmark:      document.getElementById("coLandmark").value.trim() || null,
+    delivery_map_link:      document.getElementById("coMap").value.trim() || null,
+    delivery_gps_lat:       state.gps?.lat || null,
+    delivery_gps_lng:       state.gps?.lng || null,
+    delivery_instructions:  document.getElementById("coInstr").value.trim() || null,
+
+    payment_method:         "cash-on-delivery",
+    change_request:         document.getElementById("coChange").value.trim() || null,
+
+    subtotal:               Math.round(t.sub),
+    tax:                    Math.round(t.tax),
+    delivery_fee:           Math.round(t.del),
+    coupon_code:            state.coupon || null,
+    coupon_discount:        Math.round(t.discount),
+    total:                  Math.round(t.grand),
+
+    estimated_minutes:      eta,
   };
 
-  // Persist last order so admin side can pick it up later (next task)
   try {
-    const all = JSON.parse(localStorage.getItem("wokin_orders") || "[]");
-    all.push(order);
-    localStorage.setItem("wokin_orders", JSON.stringify(all));
-  } catch(e){}
+    if (!window.db) throw new Error("Supabase not initialised. Reload the page.");
 
-  // Clear cart
-  state.cart = [];
-  state.coupon = null;
-  saveState();
-  recalcCart();
+    // 1. insert the order, get back generated id + order_number
+    const { data: order, error: orderErr } = await window.db
+      .from("orders")
+      .insert(orderRow)
+      .select("id, order_number")
+      .single();
+    if (orderErr) throw orderErr;
 
-  // Show confirmation
-  document.getElementById("confirmId").textContent = order.id;
-  document.getElementById("confirm").hidden = false;
-  document.body.classList.add("state-locked");
-  console.log("[WOK!N] order placed →", order);
+    // 2. insert line items in a single batch
+    const itemsRows = state.cart.map((c, idx) => ({
+      order_id:      order.id,
+      dish_name:     c.name,
+      dish_category: c.id?.split("::")[0] || null,
+      variant:       c.variant || null,
+      unit_price:    Math.round(c.price),
+      quantity:      c.qty,
+      line_total:    Math.round(c.price * c.qty),
+      position:      idx,
+    }));
+    const { error: itemsErr } = await window.db.from("order_items").insert(itemsRows);
+    if (itemsErr) throw itemsErr;
+
+    // Clear cart + show confirmation
+    state.cart = [];
+    state.coupon = null;
+    saveState();
+    recalcCart();
+
+    document.getElementById("confirmId").textContent = order.order_number;
+    document.getElementById("confirm").hidden = false;
+    document.body.classList.add("state-locked");
+    console.log("[WOK!N] order placed →", order);
+  } catch (err) {
+    console.error("[WOK!N] order failed:", err);
+    alert("Sorry — we couldn't place the order:\n\n" +
+          (err.message || err) +
+          "\n\nPlease try again or call us.");
+  } finally {
+    if (btn){ btn.disabled = false; btn.innerHTML = originalLabel; }
+  }
 }
