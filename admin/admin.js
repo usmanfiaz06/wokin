@@ -126,7 +126,9 @@ async function onSignIn(e){
     const { data, error } = await window.db.auth.signInWithPassword({ email, password });
     if (error) throw error;
     if (!data?.session) throw new Error("Signed in but no session returned. Check API key permissions.");
-    // success — onAuthStateChange listener will switch to dashboard
+    console.log("[admin] sign-in OK, entering app with session for", data.user?.email);
+    // Don't rely on onAuthStateChange — call enterApp directly.
+    await enterApp(data.session);
   } catch (err) {
     console.error("[admin] sign-in failed:", err);
     _showAuthErr((err && err.message) ? err.message : "Couldn't sign in.");
@@ -145,12 +147,23 @@ function showAuth(){
   document.getElementById("appScreen").hidden = true;
 }
 async function enterApp(session){
-  document.getElementById("authScreen").hidden = true;
-  document.getElementById("appScreen").hidden = false;
-  document.getElementById("whoami").textContent = session.user.email;
+  try {
+    console.log("[admin] enterApp called for", session?.user?.email);
+    document.getElementById("authScreen").hidden = true;
+    document.getElementById("appScreen").hidden = false;
+    document.getElementById("whoami").textContent = session.user.email;
 
-  await refreshAll();
-  subscribeRealtime();
+    // Even if these fail, we stay on the dashboard
+    await refreshAll().catch(err => {
+      console.error("[admin] refreshAll failed:", err);
+      toast("Couldn't load orders: " + (err.message || err));
+    });
+    try { subscribeRealtime(); }
+    catch(err){ console.error("[admin] subscribeRealtime failed:", err); }
+  } catch (err) {
+    console.error("[admin] enterApp blew up:", err);
+    _showAuthErr("Signed in but dashboard failed to load: " + (err.message || err));
+  }
 }
 
 function teardown(){
