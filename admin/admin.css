@@ -61,6 +61,10 @@ input{ font:inherit; color:inherit; }
 /* =====================================================================
    AUTH SCREEN
 ===================================================================== */
+/* CSS display rules with class selectors silently override the
+   HTML [hidden] attribute, so we re-assert it for our wrappers. */
+.auth[hidden], .app[hidden]{ display:none !important; }
+
 .auth{ min-height:100vh; display:grid; place-items:center; padding:24px;
   background:radial-gradient(circle at 30% 30%, #2a1010, #0a0606 60%);
 }
