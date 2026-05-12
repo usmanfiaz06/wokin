@@ -84,17 +84,24 @@ async function onSignIn(e){
   const originalText = btn.textContent;
   btn.textContent = "SIGNING IN…";
 
-  const { data, error } = await window.db.auth.signInWithPassword({ email, password });
-
-  btn.disabled = false;
-  btn.textContent = originalText;
-
-  if (error){
-    errEl.textContent = error.message || "Couldn't sign in. Check email & password.";
+  try {
+    if (!window.db) throw new Error("Supabase client not loaded. Reload the page.");
+    if (!window.db.auth || !window.db.auth.signInWithPassword)
+      throw new Error("Supabase auth module missing. Wrong SDK version?");
+    const { data, error } = await window.db.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    if (!data?.session) throw new Error("Signed in but no session returned. Check API key permissions.");
+    // success — onAuthStateChange listener will switch to dashboard
+  } catch (err) {
+    console.error("[admin] sign-in failed:", err);
+    errEl.textContent = (err && err.message)
+      ? err.message
+      : "Couldn't sign in. Check the browser console for details.";
     errEl.hidden = false;
-    return;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalText;
   }
-  // onAuthStateChange listener will pick it up
 }
 
 async function onSignOut(){

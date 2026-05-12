@@ -62,10 +62,19 @@ async function onSignIn(e){
   btn.disabled = true;
   const orig = btn.textContent;
   btn.textContent = "SIGNING IN…";
-  const { error } = await window.db.auth.signInWithPassword({ email, password });
-  btn.disabled = false;
-  btn.textContent = orig;
-  if (error){ errEl.textContent = error.message; errEl.hidden = false; }
+  try {
+    if (!window.db) throw new Error("Supabase client not loaded. Reload the page.");
+    const { data, error } = await window.db.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    if (!data?.session) throw new Error("Signed in but no session returned. Check API key permissions.");
+  } catch (err){
+    console.error("[admin/menu] sign-in failed:", err);
+    errEl.textContent = (err && err.message) ? err.message : "Couldn't sign in.";
+    errEl.hidden = false;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
 }
 
 function showAuth(){
