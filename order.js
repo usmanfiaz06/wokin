@@ -146,11 +146,13 @@ function openLocModal(){
   // render area list with active selection
   renderAreaList(document.getElementById("areaSearch").value || "");
   updateLocGoState();
+  recalcCart();
 }
 
 function closeLocModal(){
   document.getElementById("locModal").classList.add("is-hidden");
   document.body.classList.remove("state-locked");
+  recalcCart();
 }
 
 function updateLocAreaLabel(){
@@ -249,6 +251,7 @@ function bindTopBar(){
     document.querySelector(".popular")?.scrollIntoView({ behavior:"smooth" });
   });
   document.getElementById("footerCart").addEventListener("click", openCart);
+  document.getElementById("fabCart").addEventListener("click", openCart);
 }
 
 
@@ -523,6 +526,17 @@ function recalcCart(){
   badge.textContent = qty;
   badge.classList.toggle("is-empty", qty === 0);
 
+  // floating view-cart pill
+  const fab = document.getElementById("fabCart");
+  if (fab){
+    const drawerOpen = document.getElementById("cartDrawer")?.classList.contains("is-on");
+    const coOpen     = !document.getElementById("checkout")?.hidden;
+    const blocked    = drawerOpen || coOpen || document.body.classList.contains("state-locked");
+    fab.hidden = qty === 0 || blocked;
+    document.getElementById("fabCount").textContent = qty;
+    document.getElementById("fabTotal").textContent = fmtPKR(t.grand);
+  }
+
   // drawer
   const empty = document.getElementById("cartEmpty");
   const list  = document.getElementById("cartList");
@@ -641,12 +655,14 @@ function openCart(){
   document.getElementById("scrim").hidden = false;
   setTimeout(() => document.getElementById("scrim").classList.add("is-on"), 10);
   document.body.classList.add("state-locked");
+  recalcCart();
 }
 function closeCart(){
   document.getElementById("cartDrawer").classList.remove("is-on");
   document.getElementById("scrim").classList.remove("is-on");
   setTimeout(() => { document.getElementById("scrim").hidden = true; }, 280);
   document.body.classList.remove("state-locked");
+  recalcCart();
 }
 function bindCart(){
   document.getElementById("cartClose").addEventListener("click", closeCart);
@@ -745,10 +761,12 @@ function openCheckout(){
   document.getElementById("checkout").scrollTo(0,0);
   renderCheckoutSummary();
   mountMap();
+  recalcCart();
 }
 function closeCheckout(){
   document.getElementById("checkout").hidden = true;
   document.body.classList.remove("state-locked");
+  recalcCart();
 }
 
 function bindCheckout(){

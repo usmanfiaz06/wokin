@@ -285,9 +285,16 @@
 =================================================================== -->
 <section class="checkout" id="checkout" hidden aria-hidden="true">
   <header class="co-head">
-    <button class="co-back" id="coBack">◂ BACK TO CART</button>
+    <a href="/" class="co-brand">
+      <img src="Wokin.- logo.jpeg" alt="WOK!N" />
+      <span class="co-cn">炒</span>
+      <span class="co-brand-text">
+        <b>WOK!N</b>
+        <em>MODERN PAN-ASIAN</em>
+      </span>
+    </a>
     <h2>CHECK <em>OUT</em></h2>
-    <span class="co-step">STEP 2 OF 2</span>
+    <button class="co-back" id="coBack">◂ BACK TO CART</button>
   </header>
 
   <div class="co-grid">
@@ -383,25 +390,23 @@
         </div>
       </fieldset>
 
-      <fieldset class="co-fs">
-        <legend><i>04</i> COUPON CODE</legend>
-        <div class="coupon-row">
-          <input type="text" id="coCoupon" name="coupon" placeholder="Enter coupon code" autocapitalize="characters" />
-          <button type="button" class="btn-primary small" id="couponApply">APPLY</button>
-        </div>
-        <p class="coupon-msg" id="couponMsg"></p>
-      </fieldset>
-
-      <button type="submit" class="btn-primary big co-place" id="placeOrderBtn">
-        PLACE ORDER <span id="coPlaceTotal">RS. 0</span>
-      </button>
-      <p class="co-disclaimer">By placing the order you confirm your address and phone number are correct.</p>
     </form>
 
     <!-- summary rail -->
     <aside class="co-summary">
       <h3>YOUR <em>ORDER</em></h3>
       <div class="co-sum-list" id="coSumList"></div>
+
+      <!-- coupon block -->
+      <div class="co-coupon">
+        <label for="coCoupon">★ HAVE A COUPON?</label>
+        <div class="coupon-row">
+          <input type="text" id="coCoupon" name="coupon" placeholder="Enter code" autocapitalize="characters" />
+          <button type="button" class="btn-primary small" id="couponApply">APPLY</button>
+        </div>
+        <p class="coupon-msg" id="couponMsg"></p>
+      </div>
+
       <div class="co-sum-tot">
         <div class="tot-row"><span>Subtotal</span><span id="coSub">Rs. 0</span></div>
         <div class="tot-row"><span>Tax (15%)</span><span id="coTax">Rs. 0</span></div>
@@ -409,10 +414,16 @@
         <div class="tot-row tot-discount" id="coDiscRow" hidden><span>Coupon discount</span><span id="coDisc">−Rs. 0</span></div>
         <div class="tot-row tot-grand"><span>TOTAL</span><span id="coGrand">Rs. 0</span></div>
       </div>
+
       <p class="eta-chip standalone">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
         Arrives in <b>~45 min</b>
       </p>
+
+      <button type="submit" form="coForm" class="btn-primary big co-place" id="placeOrderBtn">
+        PLACE ORDER <span id="coPlaceTotal">RS. 0</span>
+      </button>
+      <p class="co-disclaimer">By placing the order you confirm your address and phone number are correct. Cash on delivery only.</p>
     </aside>
   </div>
 </section>
@@ -433,6 +444,23 @@
     <button class="btn-primary" id="confirmDone">BACK TO MENU</button>
   </div>
 </div>
+
+<!-- ===================================================================
+     7.  FLOATING VIEW-CART PILL  (only visible when cart has items)
+=================================================================== -->
+<button class="fab-cart" id="fabCart" type="button" aria-label="View cart" hidden>
+  <span class="fab-cart-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+      <path d="M3 5h3l2 12h11l2-8H7"/><circle cx="9" cy="20" r="1.6"/><circle cx="18" cy="20" r="1.6"/>
+    </svg>
+    <b id="fabCount">0</b>
+  </span>
+  <span class="fab-cart-mid">
+    <em>VIEW CART</em>
+    <strong id="fabTotal">Rs. 0</strong>
+  </span>
+  <span class="fab-cart-arrow">→</span>
+</button>
 
 <script src="menu-data.js"></script>
 <script src="dish-images.js"></script>
