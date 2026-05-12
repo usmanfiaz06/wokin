@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>WOK!N — Order Now</title>
+<meta name="theme-color" content="#E31B23" />
+<link rel="icon" type="image/jpeg" href="Wokin.- logo.jpeg" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800;900&family=Permanent+Marker&family=Caveat:wght@500;700&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="order.css">
+</head>
+<body class="state-locked">
+
+<!-- ===================================================================
+     1.  LOCATION MODAL  (appears on first visit, dismissed once user
+         chooses delivery type + area)
+=================================================================== -->
+<div class="loc-modal" id="locModal" role="dialog" aria-modal="true" aria-labelledby="locTitle">
+  <div class="loc-noise"></div>
+  <div class="loc-card">
+
+    <!-- decorative -->
+    <span class="loc-aster a1">✱</span>
+    <span class="loc-aster a2">✱</span>
+    <span class="loc-aster a3">✱</span>
+
+    <div class="loc-head">
+      <img src="Wokin.- logo.jpeg" alt="WOK!N" class="loc-logo" />
+      <div class="loc-cn">炒</div>
+    </div>
+
+    <!-- STEP 1 — order type -->
+    <div class="loc-step" data-step="1" id="locStep1">
+      <p class="loc-eyebrow">BEFORE WE GET COOKING…</p>
+      <h1 class="loc-title" id="locTitle">How are you eating <em>tonight?</em></h1>
+      <p class="loc-sub">Pick one. You can change it any time from the top bar.</p>
+
+      <div class="loc-types">
+        <button class="type-card" data-type="delivery">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M3 7h11v8H3z"/><path d="M14 10h4l3 3v2h-7z"/>
+            <circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>
+          </svg>
+          <span class="type-label">DELIVERY</span>
+          <span class="type-desc">Hot to your door · approx. 45 min</span>
+          <span class="type-tag">FREE OVER RS. 1,800</span>
+        </button>
+
+        <button class="type-card" data-type="pickup">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M6 7h12l-1 13H7z"/><path d="M9 7V5a3 3 0 016 0v2"/>
+          </svg>
+          <span class="type-label">PICK-UP</span>
+          <span class="type-desc">Skip the queue · ready in 20 min</span>
+          <span class="type-tag">SAVE THE FEE</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 2 — location -->
+    <div class="loc-step" data-step="2" id="locStep2" hidden>
+      <button class="loc-back" id="locBack">◂ BACK</button>
+      <p class="loc-eyebrow"><span id="locType2Echo">DELIVERY</span> · WHERE TO?</p>
+      <h1 class="loc-title">Where are <em>you?</em></h1>
+      <p class="loc-sub">We deliver across these neighbourhoods. Outside the list? Call us.</p>
+
+      <button class="loc-gps" id="locGpsBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/>
+          <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+        </svg>
+        <span><b>USE MY CURRENT LOCATION</b><em>We'll detect your nearest area</em></span>
+        <span class="loc-gps-arrow">→</span>
+      </button>
+
+      <div class="loc-or"><span>OR PICK FROM THE LIST</span></div>
+
+      <div class="loc-search-wrap">
+        <svg class="loc-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+        </svg>
+        <input type="text" id="areaSearch" class="loc-search" placeholder="Search your area…" autocomplete="off" />
+      </div>
+
+      <ul class="area-list" id="areaList" role="listbox" aria-label="Delivery areas"></ul>
+
+      <p class="loc-foot">By continuing you agree to our delivery T&amp;Cs.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===================================================================
+     2.  TOP BAR  (sticky)
+=================================================================== -->
+<header class="top-bar" id="topBar">
+  <div class="bar-inner">
+    <a href="#top" class="bar-logo">
+      <img src="Wokin.- logo.jpeg" alt="WOK!N" />
+      <span class="bar-logo-cn">炒</span>
+    </a>
+
+    <button class="bar-loc" id="barLocBtn">
+      <span class="bar-loc-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M12 22s-7-8-7-13a7 7 0 0114 0c0 5-7 13-7 13z"/><circle cx="12" cy="9" r="2.5"/>
+        </svg>
+      </span>
+      <span class="bar-loc-text">
+        <em id="barTypeLabel">DELIVERY TO</em>
+        <b id="barAreaLabel">— pick an area —</b>
+      </span>
+      <span class="bar-loc-chev">▾</span>
+    </button>
+
+    <div class="bar-actions">
+      <button class="bar-icon-btn" id="searchBtn" aria-label="Search menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+        </svg>
+      </button>
+      <button class="bar-cart" id="cartBtn" aria-label="Cart">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M3 5h3l2 12h11l2-8H7"/><circle cx="9" cy="20" r="1.6"/><circle cx="18" cy="20" r="1.6"/>
+        </svg>
+        <span class="bar-cart-text">CART</span>
+        <span class="bar-cart-badge" id="cartBadge">0</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="bar-strip" aria-hidden="true">
+    <span>✱ FRESH WOK FIRE ✱ HAND-TOSSED NOODLES ✱ NEVER FROZEN ✱ MODERN PAN-ASIAN ✱ FRESH WOK FIRE ✱ HAND-TOSSED NOODLES ✱ NEVER FROZEN ✱ MODERN PAN-ASIAN ✱</span>
+    <span aria-hidden="true">✱ FRESH WOK FIRE ✱ HAND-TOSSED NOODLES ✱ NEVER FROZEN ✱ MODERN PAN-ASIAN ✱ FRESH WOK FIRE ✱ HAND-TOSSED NOODLES ✱ NEVER FROZEN ✱ MODERN PAN-ASIAN ✱</span>
+  </div>
+</header>
+
+
+<!-- ===================================================================
+     3.  HERO  +  CATEGORY NAV
+=================================================================== -->
+<main id="top">
+  <section class="hero">
+    <div class="hero-noise"></div>
+    <span class="hero-aster a1">✱</span>
+    <span class="hero-aster a2">✱</span>
+    <span class="hero-aster a3">✱</span>
+
+    <div class="hero-grid">
+      <div class="hero-text">
+        <p class="hero-eyebrow">EST. 2024 · MODERN PAN-ASIAN KITCHEN</p>
+        <h1 class="hero-title">
+          <span class="line1">FIRED.</span>
+          <span class="line2">TOSSED.</span>
+          <span class="line3">DELIVERED.</span>
+        </h1>
+        <p class="hero-tag">Hand-tossed in a screaming-hot wok. Out the door in <b>45 minutes flat.</b></p>
+        <div class="hero-cta">
+          <button class="btn-primary" id="ctaOrder">START ORDER ↓</button>
+          <a href="#popular" class="btn-ghost">SEE WHAT'S POPULAR</a>
+        </div>
+      </div>
+      <div class="hero-stamp">
+        <div class="stamp-circle">
+          <svg viewBox="0 0 200 200">
+            <defs>
+              <path id="hcurve" d="M 100,100 m -78,0 a 78,78 0 1,1 156,0 a 78,78 0 1,1 -156,0" />
+            </defs>
+            <text font-family="Bebas Neue" font-size="22" fill="currentColor" letter-spacing="6">
+              <textPath href="#hcurve">FRESH · WOK · FIRE · FRESH · WOK · FIRE · </textPath>
+            </text>
+          </svg>
+          <div class="stamp-core">
+            <span class="stamp-top">WOK!N</span>
+            <span class="stamp-cn">炒</span>
+            <span class="stamp-bot">EST. 2024</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ticker -->
+  <div class="ticker">
+    <div class="ticker-row">
+      <span>★ NEW · HOUSE COUPON  <code>WOKIN10</code>  10% OFF YOUR FIRST ORDER</span>
+      <span>★ FREE DELIVERY OVER RS. 1,800</span>
+      <span>★ CASH ON DELIVERY ONLY</span>
+      <span>★ APPROX. 45 MIN TO YOUR DOOR</span>
+      <span>★ NEW · HOUSE COUPON  <code>WOKIN10</code>  10% OFF YOUR FIRST ORDER</span>
+      <span>★ FREE DELIVERY OVER RS. 1,800</span>
+      <span>★ CASH ON DELIVERY ONLY</span>
+      <span>★ APPROX. 45 MIN TO YOUR DOOR</span>
+    </div>
+  </div>
+
+  <!-- category chips -->
+  <nav class="cat-nav" id="catNav" aria-label="Menu categories">
+    <div class="cat-nav-inner" id="catNavInner"></div>
+  </nav>
+
+  <!-- search overlay -->
+  <div class="search-overlay" id="searchOverlay" hidden>
+    <div class="search-inner">
+      <input type="text" id="searchInput" placeholder="Search the wok…  (e.g. prawn, manchurian, rice)" />
+      <button class="search-close" id="searchClose" aria-label="Close search">✕</button>
+    </div>
+    <div class="search-results" id="searchResults"></div>
+  </div>
+
+  <!-- popular row -->
+  <section class="popular" id="popular">
+    <div class="popular-head">
+      <p class="sec-eyebrow">★ MOST ORDERED ★ THIS WEEK ★</p>
+      <h2 class="sec-title">CROWD <em>FAVOURITES</em></h2>
+    </div>
+    <div class="popular-scroll" id="popularScroll"></div>
+  </section>
+
+  <!-- full menu -->
+  <section class="menu-wrap">
+    <div id="menuRoot"></div>
+  </section>
+
+  <!-- big footer poster -->
+  <section class="poster-footer">
+    <div class="hero-noise"></div>
+    <p class="pf-eyebrow">★ ORDER FRESH · ORDER OFTEN ★</p>
+    <h2 class="pf-title">TRY <em>ANYTHING.</em><br>DEFINITELY <em>RETURN.</em></h2>
+    <p class="pf-tag">Bold aroma. Spicy kick. Unforgettable taste.<br>Try it once and you'll be back for more.</p>
+    <button class="btn-primary big" id="footerCart">VIEW MY CART</button>
+    <p class="pf-foot">WOK!N · MODERN PAN-ASIAN KITCHEN · ISLAMABAD</p>
+  </section>
+</main>
+
+
+<!-- ===================================================================
+     4.  CART DRAWER
+=================================================================== -->
+<aside class="cart-drawer" id="cartDrawer" aria-hidden="true">
+  <div class="cart-head">
+    <button class="cart-close" id="cartClose" aria-label="Close cart">✕</button>
+    <h3>YOUR <em>CART</em></h3>
+    <p class="cart-sub" id="cartSub">0 items · pick something delicious</p>
+  </div>
+
+  <div class="cart-body" id="cartBody">
+    <!-- empty state -->
+    <div class="cart-empty" id="cartEmpty">
+      <div class="empty-bowl">🥡</div>
+      <p class="empty-line">Your cart is hungry.</p>
+      <p class="empty-sub">Add a dish — we'll get the wok going.</p>
+      <button class="btn-primary" id="emptyBrowseBtn">BROWSE MENU</button>
+    </div>
+
+    <!-- populated state -->
+    <div class="cart-list" id="cartList"></div>
+
+    <div class="cart-upsell" id="cartUpsell" hidden>
+      <p class="upsell-title">★ ADD ONE MORE? Popular with this order:</p>
+      <div class="upsell-scroll" id="upsellScroll"></div>
+    </div>
+
+    <div class="cart-freebar" id="cartFreebar" hidden>
+      <div class="freebar-row">
+        <span class="freebar-lbl" id="freebarLbl">Add Rs. 1,800 for FREE delivery</span>
+        <span class="freebar-icon" id="freebarIcon">🛵</span>
+      </div>
+      <div class="freebar-track"><div class="freebar-fill" id="freebarFill"></div></div>
+    </div>
+
+    <div class="cart-totals" id="cartTotals" hidden>
+      <div class="tot-row"><span>Subtotal</span><span id="totSub">Rs. 0</span></div>
+      <div class="tot-row"><span>Sales Tax (15%)</span><span id="totTax">Rs. 0</span></div>
+      <div class="tot-row"><span>Delivery <em id="totDelEta">· ~45 min</em></span><span id="totDel">Rs. 100</span></div>
+      <div class="tot-row tot-grand"><span>TOTAL</span><span id="totGrand">Rs. 0</span></div>
+    </div>
+  </div>
+
+  <div class="cart-foot" id="cartFoot" hidden>
+    <p class="eta-chip">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+      Your order will arrive in <b>approx. 45 minutes</b>
+    </p>
+    <button class="btn-primary big" id="checkoutBtn">CHECKOUT →</button>
+  </div>
+</aside>
+<div class="scrim" id="scrim" hidden></div>
+
+
+<!-- ===================================================================
+     5.  CHECKOUT SHEET  (slides up full screen)
+=================================================================== -->
+<section class="checkout" id="checkout" hidden aria-hidden="true">
+  <header class="co-head">
+    <button class="co-back" id="coBack">◂ BACK TO CART</button>
+    <h2>CHECK <em>OUT</em></h2>
+    <span class="co-step">STEP 2 OF 2</span>
+  </header>
+
+  <div class="co-grid">
+    <!-- form -->
+    <form class="co-form" id="coForm" novalidate>
+
+      <fieldset class="co-fs">
+        <legend><i>01</i> CONTACT</legend>
+        <div class="field">
+          <label for="coName">Full name <span class="req">*</span></label>
+          <input type="text" id="coName" name="name" required placeholder="e.g. Usman Fiaz" autocomplete="name" />
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="coPhone">Mobile number <span class="req">*</span></label>
+            <input type="tel" id="coPhone" name="phone" required placeholder="03XX-XXXXXXX" maxlength="12" inputmode="numeric" autocomplete="tel" />
+            <span class="hint">Format: 03XX-XXXXXXX</span>
+          </div>
+          <div class="field">
+            <label for="coPhoneAlt">Alternate mobile <span class="opt">optional</span></label>
+            <input type="tel" id="coPhoneAlt" name="phoneAlt" placeholder="03XX-XXXXXXX" maxlength="12" inputmode="numeric" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="coEmail">Email <span class="req">*</span></label>
+          <input type="email" id="coEmail" name="email" required placeholder="you@example.com" autocomplete="email" />
+        </div>
+      </fieldset>
+
+      <fieldset class="co-fs">
+        <legend><i>02</i> DELIVERY ADDRESS</legend>
+        <div class="field">
+          <label for="coArea">Area <span class="req">*</span></label>
+          <div class="area-display" id="areaDisplay">
+            <select id="coArea" name="area" required></select>
+            <button type="button" class="area-change" id="areaChangeBtn">Change</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="coAddress">Complete address <span class="req">*</span></label>
+          <textarea id="coAddress" name="address" required rows="2" placeholder="House #, street, block / sector, any details we need to find you"></textarea>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="coLandmark">Nearest landmark <span class="opt">helps the rider</span></label>
+            <input type="text" id="coLandmark" name="landmark" placeholder="e.g. next to Total petrol pump" />
+          </div>
+          <div class="field">
+            <label for="coMap">Google Maps link <span class="opt">optional</span></label>
+            <input type="url" id="coMap" name="mapLink" placeholder="paste maps.google.com/… link" />
+          </div>
+        </div>
+
+        <!-- gps capture -->
+        <div class="map-picker" id="mapPicker">
+          <div class="map-box" id="mapBox">
+            <div class="map-fallback" id="mapFallback">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                <path d="M12 22s-7-8-7-13a7 7 0 0114 0c0 5-7 13-7 13z"/><circle cx="12" cy="9" r="2.5"/>
+              </svg>
+              <p><b>Help the rider find you fast</b></p>
+              <p class="mf-sub">Share your GPS once — we'll send the exact pin to the rider along with your address.</p>
+              <button type="button" class="btn-ghost small" id="useGpsBtn">📍 SHARE MY GPS</button>
+            </div>
+          </div>
+          <p class="map-coord" id="mapCoord" hidden>📍 <span></span></p>
+        </div>
+
+        <div class="field">
+          <label for="coInstr">Delivery instructions <span class="opt">optional</span></label>
+          <textarea id="coInstr" name="instructions" rows="2" placeholder="e.g. Ring twice, leave with guard, don't ring the bell — baby sleeping"></textarea>
+        </div>
+      </fieldset>
+
+      <fieldset class="co-fs">
+        <legend><i>03</i> PAYMENT</legend>
+        <div class="pay-card">
+          <div class="pay-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/>
+              <path d="M6 10h.01M18 14h.01"/>
+            </svg>
+          </div>
+          <div class="pay-text">
+            <b>CASH ON DELIVERY</b>
+            <span>Pay the rider when your order arrives. Only payment method right now.</span>
+          </div>
+          <span class="pay-tick">✓</span>
+        </div>
+        <div class="field">
+          <label for="coChange">Change request <span class="opt">we'll bring change for…</span></label>
+          <input type="text" id="coChange" name="change" placeholder="e.g. bring change for Rs. 5,000" />
+        </div>
+      </fieldset>
+
+      <fieldset class="co-fs">
+        <legend><i>04</i> COUPON CODE</legend>
+        <div class="coupon-row">
+          <input type="text" id="coCoupon" name="coupon" placeholder="Enter coupon code" autocapitalize="characters" />
+          <button type="button" class="btn-primary small" id="couponApply">APPLY</button>
+        </div>
+        <p class="coupon-msg" id="couponMsg"></p>
+      </fieldset>
+
+      <button type="submit" class="btn-primary big co-place" id="placeOrderBtn">
+        PLACE ORDER <span id="coPlaceTotal">RS. 0</span>
+      </button>
+      <p class="co-disclaimer">By placing the order you confirm your address and phone number are correct.</p>
+    </form>
+
+    <!-- summary rail -->
+    <aside class="co-summary">
+      <h3>YOUR <em>ORDER</em></h3>
+      <div class="co-sum-list" id="coSumList"></div>
+      <div class="co-sum-tot">
+        <div class="tot-row"><span>Subtotal</span><span id="coSub">Rs. 0</span></div>
+        <div class="tot-row"><span>Tax (15%)</span><span id="coTax">Rs. 0</span></div>
+        <div class="tot-row"><span>Delivery</span><span id="coDel">Rs. 100</span></div>
+        <div class="tot-row tot-discount" id="coDiscRow" hidden><span>Coupon discount</span><span id="coDisc">−Rs. 0</span></div>
+        <div class="tot-row tot-grand"><span>TOTAL</span><span id="coGrand">Rs. 0</span></div>
+      </div>
+      <p class="eta-chip standalone">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        Arrives in <b>~45 min</b>
+      </p>
+    </aside>
+  </div>
+</section>
+
+
+<!-- ===================================================================
+     6.  ORDER CONFIRMATION
+=================================================================== -->
+<div class="confirm" id="confirm" hidden>
+  <div class="confirm-card">
+    <span class="confirm-aster a1">✱</span>
+    <span class="confirm-aster a2">✱</span>
+    <div class="confirm-bowl">🥡</div>
+    <p class="confirm-eyebrow">ORDER PLACED · WOK IS FIRED UP</p>
+    <h2>SEE YOU IN <em>~45 MIN</em></h2>
+    <p class="confirm-id">Order #<b id="confirmId">—</b></p>
+    <p class="confirm-text">A confirmation is on its way to your email. Our rider will call when they're close. Have your <b>cash</b> ready 🙌</p>
+    <button class="btn-primary" id="confirmDone">BACK TO MENU</button>
+  </div>
+</div>
+
+<script src="menu-data.js"></script>
+<script src="dish-images.js"></script>
+<script src="order.js"></script>
+</body>
+</html>
