@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>WOK!N · Admin</title>
+<meta name="robots" content="noindex, nofollow" />
+<meta name="theme-color" content="#1A1A1A" />
+<link rel="icon" type="image/jpeg" href="../Wokin.- logo.jpeg" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&family=Caveat:wght@500;700&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<!-- ===================================================================
+     LOGIN SCREEN
+=================================================================== -->
+<div class="auth" id="authScreen">
+  <div class="auth-card">
+    <div class="auth-head">
+      <img src="../Wokin.- logo.jpeg" alt="WOK!N" />
+      <div>
+        <span class="cn">炒</span>
+        <b>WOK!N</b>
+        <em>ADMIN · BACK-OF-HOUSE</em>
+      </div>
+    </div>
+    <h1>Sign <em>in.</em></h1>
+    <p class="auth-sub">Restaurant staff only. Use your Supabase admin email + password.</p>
+
+    <form id="loginForm" class="auth-form" novalidate action="javascript:void(0)">
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" id="email" required autocomplete="username" />
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" required autocomplete="current-password" />
+      </div>
+      <p class="auth-err" id="authErr" hidden></p>
+      <button type="button" id="loginBtn" class="btn-primary big">SIGN IN →</button>
+    </form>
+  </div>
+</div>
+
+
+<!-- ===================================================================
+     DASHBOARD
+=================================================================== -->
+<div class="app" id="appScreen" hidden>
+
+  <header class="top">
+    <a href="../" class="brand">
+      <img src="../Wokin.- logo.jpeg" alt="WOK!N" />
+      <span class="cn">炒</span>
+      <span class="brand-text">
+        <b>WOK!N</b>
+        <em>ADMIN</em>
+      </span>
+    </a>
+
+    <nav class="top-nav">
+      <a href="./" class="is-on">★ ORDERS</a>
+      <a href="./menu.html">MENU</a>
+    </nav>
+
+    <div class="top-mid">
+      <span class="live-dot"></span>
+      <span class="live-text">LIVE</span>
+      <span class="separator">·</span>
+      <span id="clockNow">--:--</span>
+    </div>
+
+    <div class="top-right">
+      <span class="who" id="whoami">—</span>
+      <button class="btn-ghost small" id="signOut">SIGN OUT</button>
+    </div>
+  </header>
+
+  <!-- Today's summary stats -->
+  <section class="stats">
+    <div class="stat">
+      <span class="lbl">★ TODAY · ORDERS</span>
+      <b class="big" id="statCount">0</b>
+    </div>
+    <div class="stat">
+      <span class="lbl">★ REVENUE</span>
+      <b class="big" id="statRevenue">Rs. 0</b>
+    </div>
+    <div class="stat">
+      <span class="lbl">★ AVG TICKET</span>
+      <b class="big" id="statAvg">Rs. 0</b>
+    </div>
+    <div class="stat">
+      <span class="lbl">★ DELIVERED</span>
+      <b class="big" id="statDelivered">0</b>
+    </div>
+    <div class="stat">
+      <span class="lbl">★ CANCELLED</span>
+      <b class="big" id="statCancelled">0</b>
+    </div>
+  </section>
+
+  <!-- Status board -->
+  <main class="board" id="board">
+    <!-- 6 columns rendered by admin.js: NEW / ACCEPTED / COOKING / READY / OUT / DELIVERED -->
+  </main>
+
+</div>
+
+
+<!-- ===================================================================
+     ORDER DETAIL MODAL
+=================================================================== -->
+<div class="modal" id="orderModal" hidden>
+  <div class="modal-card">
+    <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
+    <div class="modal-head">
+      <div class="mh-left">
+        <span class="mh-eyebrow">ORDER</span>
+        <h2 id="mOrderNum">—</h2>
+        <span class="mh-meta" id="mOrderMeta">—</span>
+      </div>
+      <span class="mh-status" id="mStatus">NEW</span>
+    </div>
+
+    <div class="modal-body">
+      <section class="m-section">
+        <h3>★ CUSTOMER</h3>
+        <dl id="mCustomer"></dl>
+      </section>
+
+      <section class="m-section">
+        <h3 id="mDeliveryTitle">★ DELIVERY</h3>
+        <dl id="mDelivery"></dl>
+      </section>
+
+      <section class="m-section">
+        <h3>★ ITEMS</h3>
+        <div class="m-items" id="mItems"></div>
+        <div class="m-totals" id="mTotals"></div>
+      </section>
+
+      <section class="m-section">
+        <h3>★ PAYMENT</h3>
+        <dl id="mPayment"></dl>
+      </section>
+    </div>
+
+    <div class="modal-actions" id="mActions"></div>
+  </div>
+</div>
+
+
+<!-- ===================================================================
+     TOAST
+=================================================================== -->
+<div class="toast" id="toast" hidden></div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase-client.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>

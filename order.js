@@ -83,6 +83,18 @@ const COUPONS = {
 
 const fmtPKR = n => "Rs. " + Math.round(n).toLocaleString("en-PK");
 
+// Apply a dish photo URL to a .img element, with a guaranteed Asian-food
+// fallback if the per-dish file isn't uploaded yet.
+function applyDishBg(el, url){
+  if (!el) return;
+  el.style.backgroundImage = `url("${url}")`;
+  const probe = new Image();
+  probe.src = url;
+  probe.onerror = () => {
+    el.style.backgroundImage = `url("${window.FALLBACK_DISH_IMG || "Assorted_Chinese_food_set.jpg.webp"}")`;
+  };
+}
+
 /* ------------------------------------------------------------------ */
 /*  STATE (persisted in localStorage)                                  */
 /* ------------------------------------------------------------------ */
@@ -106,73 +118,151 @@ function loadState(){
 /* ------------------------------------------------------------------ */
 /*  STARTUP                                                           */
 /* ------------------------------------------------------------------ */
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   populateAreaSelect();
   bindLocationModal();
   bindTopBar();
   bindCart();
   bindSearch();
   bindCheckout();
+
+  // Apply live menu overrides (availability / pricing) before render
+  await loadMenuOverrides();
+
   renderMenu();
   renderPopular();
   syncBarLocation();
   recalcCart();
+  subscribeMenuOverrides();
 
-  if (state.type && state.area) {
-    closeLocModal();
-  } else {
-    openLocModal();
+  // User lands on the site freely; pop-up rises 1.5s later
+  // (only the very first time — once they've picked, we skip)
+  if (!(state.type && state.area)) {
+    setTimeout(openLocModal, 1500);
   }
 });
 
 
 /* ==================================================================
-   LOCATION MODAL
+   LIVE MENU OVERRIDES
 =================================================================== */
-function openLocModal(){
-  document.getElementById("locModal").classList.remove("is-hidden");
-  document.body.classList.add("state-locked");
-  // restore prior choices if any
-  if (state.type) selectTypeCard(state.type, false);
-  if (state.area) {
-    showLocStep(2);
-    highlightArea(state.area);
-  } else {
-    showLocStep(1);
+const menuOverrides = new Map();   // dish_slug -> override row
+
+async function loadMenuOverrides(){
+  if (!window.db || !window.slugifyDish) return;
+  try {
+    const { data, error } = await window.db.from("menu_overrides").select("*");
+    if (error) throw error;
+    menuOverrides.clear();
+    (data || []).forEach(row => menuOverrides.set(row.dish_slug, row));
+    applyOverridesToMenu();
+  } catch (e){
+    console.warn("[wokin] menu overrides fetch failed (using static menu):", e.message);
   }
 }
+
+function applyOverridesToMenu(){
+  if (typeof MENU_DATA === "undefined" || !window.slugifyDish) return;
+  MENU_DATA.forEach(cat => {
+    cat.items.forEach(d => {
+      const slug = window.slugifyDish(d.name);
+      const o = menuOverrides.get(slug);
+      d._available = o ? o.is_available !== false : true;
+      d._price     = (o && o.price_override     != null) ? Number(o.price_override)     : d.price;
+      d._priceFull = (o && o.price_full_override!= null) ? Number(o.price_full_override) : d.priceFull;
+      d._desc      = (o && o.description_override) ? o.description_override : d.desc;
+      d._pcs       = (o && o.pcs_override)         ? o.pcs_override         : d.pcs;
+    });
+  });
+}
+
+function subscribeMenuOverrides(){
+  if (!window.db) return;
+  window.db
+    .channel("menu-overrides-customer")
+    .on("postgres_changes",
+        { event: "*", schema: "public", table: "menu_overrides" },
+        () => {
+          loadMenuOverrides().then(() => {
+            // re-render visible menu so customers see live changes
+            const root = document.getElementById("menuRoot");
+            const nav  = document.getElementById("catNavInner");
+            if (root) root.innerHTML = "";
+            if (nav)  nav.innerHTML  = "";
+            renderMenu();
+          });
+        })
+    .subscribe();
+}
+
+
+/* ==================================================================
+   LOCATION MODAL  (single screen, no GPS)
+=================================================================== */
+let _locDraft = { type: null, area: null };
+
+function openLocModal(){
+  _locDraft = { type: state.type || "delivery", area: state.area || null };
+
+  document.getElementById("locModal").classList.remove("is-hidden");
+  document.body.classList.add("state-locked");
+
+  // reflect selection in pill toggle
+  document.querySelectorAll(".loc-pill").forEach(p => {
+    p.classList.toggle("is-on", p.dataset.type === _locDraft.type);
+  });
+  updateLocAreaLabel();
+
+  // render area list with active selection
+  renderAreaList(document.getElementById("areaSearch").value || "");
+  updateLocGoState();
+  recalcCart();
+}
+
 function closeLocModal(){
   document.getElementById("locModal").classList.add("is-hidden");
   document.body.classList.remove("state-locked");
+  recalcCart();
 }
 
-function showLocStep(n){
-  document.querySelectorAll(".loc-step").forEach(el => {
-    el.hidden = (Number(el.dataset.step) !== n);
-  });
+function updateLocAreaLabel(){
+  const lbl = document.getElementById("locAreaLabel");
+  if (lbl) lbl.textContent = _locDraft.type === "pickup" ? "WHICH BRANCH FOR PICK-UP?" : "WHICH AREA?";
 }
-function selectTypeCard(type, advance = true){
-  state.type = type;
-  saveState();
-  document.querySelectorAll(".type-card").forEach(c => {
-    c.classList.toggle("is-selected", c.dataset.type === type);
-  });
-  document.getElementById("locType2Echo").textContent = type === "pickup" ? "PICK-UP" : "DELIVERY";
-  document.getElementById("barTypeLabel").textContent = type === "pickup" ? "PICK-UP FROM" : "DELIVERY TO";
-  if (advance) setTimeout(() => showLocStep(2), 220);
+
+function updateLocGoState(){
+  const btn = document.getElementById("locGo");
+  if (!btn) return;
+  btn.disabled = !(_locDraft.type && _locDraft.area);
 }
 
 function bindLocationModal(){
-  document.querySelectorAll(".type-card").forEach(card => {
-    card.addEventListener("click", () => selectTypeCard(card.dataset.type, true));
+  document.querySelectorAll(".loc-pill").forEach(pill => {
+    pill.addEventListener("click", () => {
+      _locDraft.type = pill.dataset.type;
+      document.querySelectorAll(".loc-pill").forEach(p =>
+        p.classList.toggle("is-on", p === pill));
+      updateLocAreaLabel();
+      updateLocGoState();
+    });
   });
-  document.getElementById("locBack").addEventListener("click", () => showLocStep(1));
 
-  document.getElementById("locGpsBtn").addEventListener("click", handleGps);
+  document.getElementById("locDismiss").addEventListener("click", closeLocModal);
 
-  // search filter
   document.getElementById("areaSearch").addEventListener("input", e => {
     renderAreaList(e.target.value);
+  });
+
+  document.getElementById("locGo").addEventListener("click", () => {
+    if (!_locDraft.type || !_locDraft.area) return;
+    state.type = _locDraft.type;
+    state.area = _locDraft.area;
+    saveState();
+    syncBarLocation();
+    const sel = document.getElementById("coArea");
+    if (sel) sel.value = state.area;
+    recalcCart();
+    closeLocModal();
   });
 
   renderAreaList("");
@@ -193,55 +283,16 @@ function renderAreaList(filter){
   matches.forEach(area => {
     const li = document.createElement("li");
     li.dataset.area = area;
-    li.innerHTML = `<span>${area}</span><small>Tap to select →</small>`;
-    if (state.area === area) li.classList.add("is-active");
-    li.addEventListener("click", () => chooseArea(area));
+    li.innerHTML = `<span>${area}</span><small>Tap to select</small>`;
+    if (_locDraft.area === area) li.classList.add("is-active");
+    li.addEventListener("click", () => {
+      _locDraft.area = area;
+      document.querySelectorAll("#areaList li").forEach(x =>
+        x.classList.toggle("is-active", x.dataset.area === area));
+      updateLocGoState();
+    });
     ul.appendChild(li);
   });
-}
-
-function highlightArea(area){
-  document.querySelectorAll("#areaList li").forEach(li => {
-    li.classList.toggle("is-active", li.dataset.area === area);
-  });
-}
-
-function chooseArea(area){
-  state.area = area;
-  saveState();
-  syncBarLocation();
-  // also reflect in checkout select if rendered
-  const sel = document.getElementById("coArea");
-  if (sel) sel.value = area;
-  setTimeout(closeLocModal, 220);
-}
-
-function handleGps(){
-  const btn = document.getElementById("locGpsBtn");
-  if (!navigator.geolocation){
-    alert("Your browser doesn't support location detection — please pick from the list.");
-    return;
-  }
-  btn.querySelector("b").textContent = "FINDING YOU…";
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      // For now we don't reverse-geocode (would need Google Maps API key).
-      // We pick the first area in the list and let the user confirm/change.
-      btn.querySelector("b").textContent = "USE MY CURRENT LOCATION";
-      const guess = DELIVERY_AREAS[0];
-      const ok = confirm(`We've got your location.\nNearest serviceable area we deliver to: ${guess}.\n\nUse this area? You can change it later in checkout.`);
-      if (ok) {
-        // store coords for checkout map
-        state.gps = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        chooseArea(guess);
-      }
-    },
-    err => {
-      btn.querySelector("b").textContent = "USE MY CURRENT LOCATION";
-      alert("Couldn't get your location: " + err.message + "\nPick from the list instead.");
-    },
-    { enableHighAccuracy:true, timeout:8000 }
-  );
 }
 
 function syncBarLocation(){
@@ -270,6 +321,7 @@ function bindTopBar(){
     document.querySelector(".popular")?.scrollIntoView({ behavior:"smooth" });
   });
   document.getElementById("footerCart").addEventListener("click", openCart);
+  document.getElementById("fabCart").addEventListener("click", openCart);
 }
 
 
@@ -323,40 +375,43 @@ function dishCard(dish, cat, idx){
   const id = makeDishId(dish, cat);
   const img = getDishImage(dish.name, cat.id);
   const initial = dish.name.charAt(0);
+
+  // resolve effective values from live overrides (falls back to static)
+  const available = dish._available !== false;
+  const price     = dish._price     != null ? dish._price     : dish.price;
+  const priceFull = dish._priceFull != null ? dish._priceFull : dish.priceFull;
+  const desc      = dish._desc      != null ? dish._desc      : (dish.desc || "");
+  const pcs       = dish._pcs       != null ? dish._pcs       : dish.pcs;
+
   const tagsHtml = (dish.tags||[]).map(t => `<span class="dish-tag ${t}">${tagLabel(t)}</span>`).join("");
+  const soldOutChip = available ? "" : `<span class="dish-tag sold-out">SOLD OUT</span>`;
 
   const card = document.createElement("article");
-  card.className = "dish-card";
+  card.className = "dish-card" + (available ? "" : " is-sold-out");
   card.dataset.id = id;
 
-  const hasFull = dish.priceFull && dish.priceFull !== dish.price;
+  const hasFull = priceFull && priceFull !== price;
 
   card.innerHTML = `
-    <div class="img" data-initial="${initial}" style="background-image:url('${img}')">
-      <div class="img-tags">${tagsHtml}</div>
+    <div class="img" data-initial="${initial}">
+      <div class="img-tags">${soldOutChip}${tagsHtml}</div>
     </div>
     <div class="pad">
       <h3>${dish.name}</h3>
-      ${dish.pcs ? `<span class="pcs">${dish.pcs}</span>`:""}
-      <p>${dish.desc||""}</p>
+      ${pcs ? `<span class="pcs">${pcs}</span>`:""}
+      <p>${desc}</p>
       <div class="foot">
         <div class="prices">
-          <span class="price-half">${fmtPKR(dish.price)}${dish.smallLabel?` <em>· ${dish.smallLabel}</em>`:""}</span>
-          ${hasFull ? `<span class="price-full">Full ${fmtPKR(dish.priceFull)}</span>`:""}
+          <span class="price-half">${fmtPKR(price)}${dish.smallLabel?` <em>· ${dish.smallLabel}</em>`:""}</span>
+          ${hasFull ? `<span class="price-full">Full ${fmtPKR(priceFull)}</span>`:""}
         </div>
         <div class="action"></div>
       </div>
     </div>
   `;
+  applyDishBg(card.querySelector(".img"), img);
 
-  // image load fallback — hide broken image so the typographic backdrop shows
-  const imgEl = new Image();
-  imgEl.src = img;
-  imgEl.onerror = () => {
-    card.querySelector(".img").style.backgroundImage = "none";
-  };
-
-  // wire add button
+  // wire add button (or sold-out badge instead)
   refreshDishAction(card, dish, cat);
   return card;
 }
@@ -367,16 +422,34 @@ function refreshDishAction(card, dish, cat){
   const action = card.querySelector(".action");
   action.innerHTML = "";
 
+  // sold-out wins over everything else
+  if (dish._available === false){
+    const tag = document.createElement("span");
+    tag.className = "sold-out-pill";
+    tag.textContent = "SOLD OUT";
+    action.appendChild(tag);
+    return;
+  }
+
   if (item){
     const stepper = document.createElement("div");
     stepper.className = "stepper";
     stepper.innerHTML = `
       <button aria-label="Decrease">−</button>
       <b>${item.qty}</b>
+      <span class="step-lbl">added ✓</span>
       <button aria-label="Increase">+</button>
     `;
-    stepper.querySelectorAll("button")[0].addEventListener("click", () => { changeQty(id, -1); refreshDishAction(card, dish, cat); });
-    stepper.querySelectorAll("button")[1].addEventListener("click", () => { changeQty(id, +1); refreshDishAction(card, dish, cat); });
+    stepper.querySelectorAll("button")[0].addEventListener("click", e => {
+      e.stopPropagation();
+      changeQty(id, -1);
+      refreshDishAction(card, dish, cat);
+    });
+    stepper.querySelectorAll("button")[1].addEventListener("click", e => {
+      e.stopPropagation();
+      changeQty(id, +1);
+      refreshDishAction(card, dish, cat);
+    });
     action.appendChild(stepper);
   } else {
     const btn = document.createElement("button");
@@ -386,6 +459,9 @@ function refreshDishAction(card, dish, cat){
       addToCart(dish, cat);
       refreshDishAction(card, dish, cat);
       bumpCartIcon();
+      // brief flash on the card so user sees the add
+      card.classList.add("is-flash");
+      setTimeout(() => card.classList.remove("is-flash"), 600);
     });
     action.appendChild(btn);
   }
@@ -437,7 +513,7 @@ function renderPopular(){
     const card = document.createElement("div");
     card.className = "pop-card";
     card.innerHTML = `
-      <div class="img" style="background-image:url('${img}')"></div>
+      <div class="img"></div>
       <div class="pad">
         <h4>${dish.name}</h4>
         <p style="font-size:11px; color:var(--mute); margin:2px 0 0;">${(dish.desc||"").slice(0,68)}…</p>
@@ -447,6 +523,7 @@ function renderPopular(){
         </div>
       </div>
     `;
+    applyDishBg(card.querySelector(".img"), img);
     card.querySelector(".add").addEventListener("click", () => {
       addToCart(dish, cat);
       bumpCartIcon();
@@ -460,16 +537,21 @@ function renderPopular(){
    CART
 =================================================================== */
 function addToCart(dish, cat){
+  if (dish._available === false){
+    return; // shouldn't be reachable, but guard anyway
+  }
   const id = makeDishId(dish, cat);
+  const price = dish._price != null ? dish._price : dish.price;
+  const desc  = dish._pcs   != null ? dish._pcs   : (dish.pcs || "");
   const existing = state.cart.find(c => c.id === id);
   if (existing){ existing.qty += 1; }
   else {
     state.cart.push({
       id,
       name: dish.name,
-      desc: dish.pcs || "",
+      desc,
       image: getDishImage(dish.name, cat.id),
-      price: dish.price,
+      price,
       qty: 1,
     });
   }
@@ -532,6 +614,17 @@ function recalcCart(){
   badge.textContent = qty;
   badge.classList.toggle("is-empty", qty === 0);
 
+  // floating view-cart pill
+  const fab = document.getElementById("fabCart");
+  if (fab){
+    const drawerOpen = document.getElementById("cartDrawer")?.classList.contains("is-on");
+    const coOpen     = !document.getElementById("checkout")?.hidden;
+    const blocked    = drawerOpen || coOpen || document.body.classList.contains("state-locked");
+    fab.hidden = qty === 0 || blocked;
+    document.getElementById("fabCount").textContent = qty;
+    document.getElementById("fabTotal").textContent = fmtPKR(t.grand);
+  }
+
   // drawer
   const empty = document.getElementById("cartEmpty");
   const list  = document.getElementById("cartList");
@@ -559,7 +652,7 @@ function recalcCart(){
     const row = document.createElement("div");
     row.className = "cart-item";
     row.innerHTML = `
-      <div class="img" style="background-image:url('${item.image}')"></div>
+      <div class="img"></div>
       <div class="info">
         <b>${item.name}</b>
         ${item.desc?`<small>${item.desc}</small>`:""}
@@ -574,6 +667,7 @@ function recalcCart(){
         <button data-id="${item.id}" data-d="1">+</button>
       </div>
     `;
+    applyDishBg(row.querySelector(".img"), item.image);
     list.appendChild(row);
   });
   list.querySelectorAll(".stepper button").forEach(b => {
@@ -631,7 +725,7 @@ function renderUpsell(){
     const card = document.createElement("div");
     card.className = "up-card";
     card.innerHTML = `
-      <div class="img" style="background-image:url('${getDishImage(dish.name, cat.id)}')"></div>
+      <div class="img"></div>
       <div class="pad">
         <b>${dish.name}</b>
         <div class="row">
@@ -640,6 +734,7 @@ function renderUpsell(){
         </div>
       </div>
     `;
+    applyDishBg(card.querySelector(".img"), getDishImage(dish.name, cat.id));
     card.querySelector(".add").addEventListener("click", () => addToCart(dish, cat));
     scroll.appendChild(card);
   });
@@ -650,12 +745,14 @@ function openCart(){
   document.getElementById("scrim").hidden = false;
   setTimeout(() => document.getElementById("scrim").classList.add("is-on"), 10);
   document.body.classList.add("state-locked");
+  recalcCart();
 }
 function closeCart(){
   document.getElementById("cartDrawer").classList.remove("is-on");
   document.getElementById("scrim").classList.remove("is-on");
   setTimeout(() => { document.getElementById("scrim").hidden = true; }, 280);
   document.body.classList.remove("state-locked");
+  recalcCart();
 }
 function bindCart(){
   document.getElementById("cartClose").addEventListener("click", closeCart);
@@ -721,13 +818,14 @@ function doSearch(q){
     const card = document.createElement("div");
     card.className = "pop-card";
     card.innerHTML = `
-      <div class="img" style="background-image:url('${getDishImage(dish.name, cat.id)}')"></div>
+      <div class="img"></div>
       <div class="pad">
         <h4>${dish.name}</h4>
         <p style="font-size:11px; color:var(--mute); margin:2px 0 0;">${(dish.desc||"").slice(0,76)}…</p>
         <div class="price"><b>${fmtPKR(dish.price)}</b><button class="add">+</button></div>
       </div>
     `;
+    applyDishBg(card.querySelector(".img"), getDishImage(dish.name, cat.id));
     card.querySelector(".add").addEventListener("click", () => addToCart(dish, cat));
     results.appendChild(card);
   });
@@ -754,10 +852,12 @@ function openCheckout(){
   document.getElementById("checkout").scrollTo(0,0);
   renderCheckoutSummary();
   mountMap();
+  recalcCart();
 }
 function closeCheckout(){
   document.getElementById("checkout").hidden = true;
   document.body.classList.remove("state-locked");
+  recalcCart();
 }
 
 function bindCheckout(){
@@ -906,51 +1006,83 @@ function mountMap(){
   }
 }
 
-function placeOrder(){
-  const order = {
-    id: "WK" + Date.now().toString(36).toUpperCase().slice(-6),
-    when: new Date().toISOString(),
-    type: state.type,
-    area: document.getElementById("coArea").value,
-    customer: {
-      name:      document.getElementById("coName").value.trim(),
-      phone:     document.getElementById("coPhone").value.trim(),
-      phoneAlt:  document.getElementById("coPhoneAlt").value.trim(),
-      email:     document.getElementById("coEmail").value.trim(),
-    },
-    delivery: {
-      address:   document.getElementById("coAddress").value.trim(),
-      landmark:  document.getElementById("coLandmark").value.trim(),
-      mapLink:   document.getElementById("coMap").value.trim(),
-      gps:       state.gps || null,
-      instructions: document.getElementById("coInstr").value.trim(),
-    },
-    payment: {
-      method:        "cash-on-delivery",
-      changeRequest: document.getElementById("coChange").value.trim(),
-    },
-    coupon: state.coupon || null,
-    items:  state.cart,
-    totals: cartTotals(),
-    eta:    state.type === "pickup" ? 20 : ETA_MIN,
+async function placeOrder(){
+  const btn = document.getElementById("placeOrderBtn");
+  const originalLabel = btn ? btn.innerHTML : "";
+  if (btn){ btn.disabled = true; btn.innerHTML = "PLACING ORDER…"; }
+
+  const t = cartTotals();
+  const eta = state.type === "pickup" ? 20 : ETA_MIN;
+
+  const orderRow = {
+    order_type:             state.type,
+    area:                   document.getElementById("coArea").value,
+    customer_name:          document.getElementById("coName").value.trim(),
+    customer_phone:         document.getElementById("coPhone").value.trim(),
+    customer_phone_alt:     document.getElementById("coPhoneAlt").value.trim() || null,
+    customer_email:         document.getElementById("coEmail").value.trim() || null,
+
+    delivery_address:       document.getElementById("coAddress").value.trim() || null,
+    delivery_landmark:      document.getElementById("coLandmark").value.trim() || null,
+    delivery_map_link:      document.getElementById("coMap").value.trim() || null,
+    delivery_gps_lat:       state.gps?.lat || null,
+    delivery_gps_lng:       state.gps?.lng || null,
+    delivery_instructions:  document.getElementById("coInstr").value.trim() || null,
+
+    payment_method:         "cash-on-delivery",
+    change_request:         document.getElementById("coChange").value.trim() || null,
+
+    subtotal:               Math.round(t.sub),
+    tax:                    Math.round(t.tax),
+    delivery_fee:           Math.round(t.del),
+    coupon_code:            state.coupon || null,
+    coupon_discount:        Math.round(t.discount),
+    total:                  Math.round(t.grand),
+
+    estimated_minutes:      eta,
   };
 
-  // Persist last order so admin side can pick it up later (next task)
   try {
-    const all = JSON.parse(localStorage.getItem("wokin_orders") || "[]");
-    all.push(order);
-    localStorage.setItem("wokin_orders", JSON.stringify(all));
-  } catch(e){}
+    if (!window.db) throw new Error("Supabase not initialised. Reload the page.");
 
-  // Clear cart
-  state.cart = [];
-  state.coupon = null;
-  saveState();
-  recalcCart();
+    // 1. insert the order, get back generated id + order_number
+    const { data: order, error: orderErr } = await window.db
+      .from("orders")
+      .insert(orderRow)
+      .select("id, order_number")
+      .single();
+    if (orderErr) throw orderErr;
 
-  // Show confirmation
-  document.getElementById("confirmId").textContent = order.id;
-  document.getElementById("confirm").hidden = false;
-  document.body.classList.add("state-locked");
-  console.log("[WOK!N] order placed →", order);
+    // 2. insert line items in a single batch
+    const itemsRows = state.cart.map((c, idx) => ({
+      order_id:      order.id,
+      dish_name:     c.name,
+      dish_category: c.id?.split("::")[0] || null,
+      variant:       c.variant || null,
+      unit_price:    Math.round(c.price),
+      quantity:      c.qty,
+      line_total:    Math.round(c.price * c.qty),
+      position:      idx,
+    }));
+    const { error: itemsErr } = await window.db.from("order_items").insert(itemsRows);
+    if (itemsErr) throw itemsErr;
+
+    // Clear cart + show confirmation
+    state.cart = [];
+    state.coupon = null;
+    saveState();
+    recalcCart();
+
+    document.getElementById("confirmId").textContent = order.order_number;
+    document.getElementById("confirm").hidden = false;
+    document.body.classList.add("state-locked");
+    console.log("[WOK!N] order placed →", order);
+  } catch (err) {
+    console.error("[WOK!N] order failed:", err);
+    alert("Sorry — we couldn't place the order:\n\n" +
+          (err.message || err) +
+          "\n\nPlease try again or call us.");
+  } finally {
+    if (btn){ btn.disabled = false; btn.innerHTML = originalLabel; }
+  }
 }
