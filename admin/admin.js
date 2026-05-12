@@ -58,6 +58,7 @@ const state = {
   itemsByOrder: new Map(), // order_id → [items]
   realtime: null,
   currentModalId: null,
+  dayFilter: "today",   // today | yesterday | 7days | all | "YYYY-MM-DD"
 };
 
 /* ------------------------------------------------------------------ */
@@ -78,6 +79,24 @@ async function init(){
   });
   document.getElementById("signOut").addEventListener("click", onSignOut);
   document.getElementById("modalClose").addEventListener("click", closeModal);
+
+  // Day filter chips
+  document.querySelectorAll(".df-chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      state.dayFilter = chip.dataset.day;
+      document.querySelectorAll(".df-chip").forEach(c => c.classList.toggle("is-on", c === chip));
+      document.getElementById("dfDate").value = "";
+      renderBoard();
+      renderStats();
+    });
+  });
+  document.getElementById("dfDate").addEventListener("change", e => {
+    if (!e.target.value) return;
+    state.dayFilter = e.target.value;
+    document.querySelectorAll(".df-chip").forEach(c => c.classList.remove("is-on"));
+    renderBoard();
+    renderStats();
+  });
   document.getElementById("orderModal").addEventListener("click", e => {
     if (e.target.id === "orderModal") closeModal();
   });
@@ -278,6 +297,45 @@ function playDing(){
 }
 
 /* ------------------------------------------------------------------ */
+/*  DAY FILTER                                                        */
+/* ------------------------------------------------------------------ */
+function _startOfDayPKT(d = new Date()){
+  // PKT is UTC+5, no DST
+  const offsetMs = 5 * 3600 * 1000;
+  const pkt = new Date(d.getTime() + offsetMs);
+  pkt.setUTCHours(0,0,0,0);
+  return new Date(pkt.getTime() - offsetMs);
+}
+function filterByDay(orders){
+  const day = state.dayFilter;
+  if (day === "all") return orders;
+  const todayStart = _startOfDayPKT();
+  if (day === "today")      return orders.filter(o => new Date(o.created_at) >= todayStart);
+  if (day === "yesterday"){
+    const ystStart = new Date(todayStart.getTime() - 86400000);
+    return orders.filter(o => {
+      const t = new Date(o.created_at);
+      return t >= ystStart && t < todayStart;
+    });
+  }
+  if (day === "7days"){
+    const weekAgo = new Date(todayStart.getTime() - 7 * 86400000);
+    return orders.filter(o => new Date(o.created_at) >= weekAgo);
+  }
+  // explicit date "YYYY-MM-DD"
+  if (/^\d{4}-\d{2}-\d{2}$/.test(day)){
+    const [y,m,d2] = day.split("-").map(Number);
+    const dayStart = _startOfDayPKT(new Date(Date.UTC(y, m-1, d2, 12)));
+    const dayEnd   = new Date(dayStart.getTime() + 86400000);
+    return orders.filter(o => {
+      const t = new Date(o.created_at);
+      return t >= dayStart && t < dayEnd;
+    });
+  }
+  return orders;
+}
+
+/* ------------------------------------------------------------------ */
 /*  RENDER  ·  BOARD                                                  */
 /* ------------------------------------------------------------------ */
 function renderBoard({ flashId } = {}){
@@ -287,10 +345,9 @@ function renderBoard({ flashId } = {}){
   const buckets = {};
   STATUSES.forEach(s => buckets[s.key] = []);
 
-  // sort orders by created_at desc, partition by status
-  const allOrders = [...state.orders.values()].sort(
-    (a,b) => new Date(b.created_at) - new Date(a.created_at)
-  );
+  // Apply day filter then sort by created_at desc
+  const allOrders = filterByDay([...state.orders.values()])
+    .sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
   for (const o of allOrders){
     (buckets[o.status] || (buckets[o.status] = [])).push(o);
   }
@@ -309,10 +366,36 @@ function renderBoard({ flashId } = {}){
     `;
     const body = col.querySelector("[data-body]");
     if (!list.length){
-      body.innerHTML = `<div class="empty-col">— EMPTY —</div>`;
+      body.innerHTML = `<div class="empty-col">— EMPTY · drop here —</div>`;
     } else {
       list.forEach(o => body.appendChild(orderCard(o, flashId === o.id)));
     }
+
+    // drag-and-drop drop target
+    col.addEventListener("dragover", e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      col.classList.add("is-drop-target");
+    });
+    col.addEventListener("dragleave", e => {
+      if (!col.contains(e.relatedTarget)) col.classList.remove("is-drop-target");
+    });
+    col.addEventListener("drop", e => {
+      e.preventDefault();
+      col.classList.remove("is-drop-target");
+      const orderId = e.dataTransfer.getData("text/plain");
+      if (!orderId) return;
+      const order = state.orders.get(orderId);
+      if (!order) return;
+      if (order.status === s.key) return; // dropped onto same column
+      // Pickup orders skip out_for_delivery; bounce that
+      if (order.order_type === "pickup" && s.key === "out_for_delivery"){
+        toast("Pick-up orders skip OUT-FOR-DELIVERY · use READY → DELIVERED");
+        return;
+      }
+      updateStatus(orderId, s.key);
+    });
+
     board.appendChild(col);
   });
 }
@@ -326,24 +409,58 @@ function orderCard(o, flash){
     ? items.slice(0,3).map(i => `${i.quantity}× ${i.dish_name}`).join(", ")
       + (items.length > 3 ? `, +${items.length - 3} more` : "")
     : "(items loading…)";
+
+  // figure out the next status for the one-click button
+  const isPickup = o.order_type === "pickup";
+  let next     = STATUSES.find(s => s.key === o.status)?.next;
+  let nextHint = STATUSES.find(s => s.key === o.status)?.nextLabel;
+  if (isPickup && PICKUP_NEXT[o.status]) { next = PICKUP_NEXT[o.status]; nextHint = "MARK PICKED UP"; }
+
   card.innerHTML = `
+    ${next ? `<button class="oc-advance" data-next="${next}" title="${nextHint}" aria-label="${nextHint}">▸</button>` : ""}
     <div class="oc-top">
       <span class="oc-num">${o.order_number}</span>
       <span class="oc-time">${minutesAgo(o.created_at)}m ago</span>
     </div>
     <div class="oc-cust">${o.customer_name}</div>
     <div class="oc-meta">
-      <span class="pill ${o.order_type}">${o.order_type === "pickup" ? "PICK-UP" : "DELIVERY"}</span>
+      <span class="pill ${o.order_type}">${isPickup ? "PICK-UP" : "DELIVERY"}</span>
       ${o.area ? `<span class="pill">${o.area}</span>`:""}
       <span class="pill">${o.customer_phone}</span>
     </div>
     <div class="oc-items">${itemsLabel}</div>
     <div class="oc-foot">
       <span class="oc-total">${fmtPKR(o.total)}</span>
-      <span class="oc-arrow">›</span>
     </div>
   `;
-  card.addEventListener("click", () => openModal(o.id));
+
+  // open modal on card body click — but not when clicking the advance btn
+  card.addEventListener("click", e => {
+    if (e.target.closest(".oc-advance")) return;
+    openModal(o.id);
+  });
+  const advBtn = card.querySelector(".oc-advance");
+  if (advBtn){
+    advBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      updateStatus(o.id, advBtn.dataset.next);
+    });
+  }
+
+  // ---- drag and drop ----------------------------------------------
+  card.draggable = true;
+  card.dataset.orderId = o.id;
+  card.addEventListener("dragstart", e => {
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", o.id);
+    card.classList.add("is-dragging");
+  });
+  card.addEventListener("dragend", () => {
+    card.classList.remove("is-dragging");
+    document.querySelectorAll(".col.is-drop-target")
+      .forEach(c => c.classList.remove("is-drop-target"));
+  });
+
   return card;
 }
 
@@ -351,16 +468,8 @@ function orderCard(o, flash){
 /*  RENDER  ·  STATS                                                  */
 /* ------------------------------------------------------------------ */
 function renderStats(){
-  // today (Asia/Karachi)
-  const offsetMs = 5 * 3600 * 1000; // PKT is UTC+5, no DST
-  const now = new Date();
-  const pktNow = new Date(now.getTime() + offsetMs);
-  pktNow.setUTCHours(0,0,0,0);
-  const startOfDay = new Date(pktNow.getTime() - offsetMs);
-
-  const today = [...state.orders.values()].filter(
-    o => new Date(o.created_at) >= startOfDay
-  );
+  // stats follow the same day filter as the board
+  const today = filterByDay([...state.orders.values()]);
 
   const validForRevenue = today.filter(o => o.status !== "cancelled");
   const revenue = validForRevenue.reduce((s,o) => s + Number(o.total||0), 0);

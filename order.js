@@ -128,6 +128,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Apply live menu overrides (availability / pricing) before render
   await loadMenuOverrides();
+  await loadCustomDishes();
 
   renderMenu();
   renderPopular();
@@ -176,22 +177,56 @@ function applyOverridesToMenu(){
   });
 }
 
+async function loadCustomDishes(){
+  if (!window.db || typeof MENU_DATA === "undefined") return;
+  try {
+    const { data, error } = await window.db
+      .from("custom_dishes")
+      .select("*")
+      .eq("is_available", true)
+      .order("position", { ascending: true });
+    if (error) throw error;
+
+    // Strip out any previously-merged custom dishes before re-adding
+    MENU_DATA.forEach(cat => { cat.items = cat.items.filter(d => !d._custom); });
+
+    (data || []).forEach(d => {
+      const cat = MENU_DATA.find(c => c.id === d.category_id);
+      if (!cat) return;
+      cat.items.push({
+        name: d.name,
+        desc: d.description || "",
+        pcs: d.pcs || undefined,
+        price: Number(d.price),
+        priceFull: d.price_full != null ? Number(d.price_full) : undefined,
+        smallLabel: d.small_label || undefined,
+        tags: d.tags || [],
+        _custom: true,            // marker so we can re-merge cleanly
+        _available: true,         // already filtered server-side
+      });
+    });
+  } catch (e){
+    console.warn("[wokin] custom_dishes fetch failed:", e.message);
+  }
+}
+
 function subscribeMenuOverrides(){
   if (!window.db) return;
+  const rerender = () => {
+    const root = document.getElementById("menuRoot");
+    const nav  = document.getElementById("catNavInner");
+    if (root) root.innerHTML = "";
+    if (nav)  nav.innerHTML  = "";
+    renderMenu();
+  };
   window.db
     .channel("menu-overrides-customer")
     .on("postgres_changes",
         { event: "*", schema: "public", table: "menu_overrides" },
-        () => {
-          loadMenuOverrides().then(() => {
-            // re-render visible menu so customers see live changes
-            const root = document.getElementById("menuRoot");
-            const nav  = document.getElementById("catNavInner");
-            if (root) root.innerHTML = "";
-            if (nav)  nav.innerHTML  = "";
-            renderMenu();
-          });
-        })
+        () => loadMenuOverrides().then(rerender))
+    .on("postgres_changes",
+        { event: "*", schema: "public", table: "custom_dishes" },
+        () => loadCustomDishes().then(rerender))
     .subscribe();
 }
 

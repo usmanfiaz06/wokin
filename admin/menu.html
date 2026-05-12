@@ -87,6 +87,7 @@
         <input type="checkbox" id="filterSoldOut" />
         <span>Show only sold out</span>
       </label>
+      <button class="btn-primary small" id="addDishBtn">+ ADD DISH</button>
       <button class="btn-ghost small" id="resetAll" title="Restore every dish to available, clear all overrides">RESET ALL OVERRIDES</button>
     </div>
   </div>
@@ -152,6 +153,62 @@
   </div>
 </div>
 
+
+<!-- ADD NEW DISH MODAL -->
+<div class="modal" id="newDishModal" hidden>
+  <div class="modal-card edit">
+    <button class="modal-close" id="newDishClose" aria-label="Close">✕</button>
+    <div class="modal-head">
+      <div class="mh-left">
+        <span class="mh-eyebrow">NEW DISH</span>
+        <h2>Add a <em>fresh</em> one.</h2>
+        <span class="mh-meta">Custom dishes show up alongside the standard menu.</span>
+      </div>
+    </div>
+    <form id="newDishForm" class="edit-form">
+      <div class="field">
+        <label for="ndCategory">Category <span class="req">*</span></label>
+        <select id="ndCategory" required></select>
+      </div>
+      <div class="field">
+        <label for="ndName">Dish name <span class="req">*</span></label>
+        <input type="text" id="ndName" required placeholder="e.g. Wok-Smoked Lamb Chops" />
+      </div>
+      <div class="field">
+        <label for="ndDesc">Description</label>
+        <textarea id="ndDesc" rows="2" placeholder="One short sentence — what's in it, how it tastes"></textarea>
+      </div>
+      <div class="field-row" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div class="field">
+          <label for="ndPrice">Price <span class="req">*</span> (Rs.)</label>
+          <input type="number" id="ndPrice" required step="5" min="0" />
+        </div>
+        <div class="field">
+          <label for="ndPriceFull">Full size price (optional)</label>
+          <input type="number" id="ndPriceFull" step="5" min="0" />
+        </div>
+      </div>
+      <div class="field">
+        <label for="ndPcs">Portion label</label>
+        <input type="text" id="ndPcs" placeholder='e.g. "8 Pcs", "300gm"' />
+      </div>
+      <div class="field">
+        <label>Tags</label>
+        <div class="m-tags">
+          <label class="m-checkbox"><input type="checkbox" value="chef"  data-tag /> <span>Chef's Pick</span></label>
+          <label class="m-checkbox"><input type="checkbox" value="spicy" data-tag /> <span>Spicy</span></label>
+          <label class="m-checkbox"><input type="checkbox" value="veg"   data-tag /> <span>Veg</span></label>
+          <label class="m-checkbox"><input type="checkbox" value="mild"  data-tag /> <span>Mild</span></label>
+        </div>
+      </div>
+      <p class="auth-err" id="ndErr" hidden></p>
+      <div class="modal-actions inline">
+        <button type="button" class="act-cancel" id="newDishCancel">CANCEL</button>
+        <button type="submit" class="act-go">+ ADD TO MENU</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <!-- TOAST -->
 <div class="toast" id="toast" hidden></div>
