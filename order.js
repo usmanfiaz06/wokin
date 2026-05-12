@@ -118,17 +118,22 @@ function loadState(){
 /* ------------------------------------------------------------------ */
 /*  STARTUP                                                           */
 /* ------------------------------------------------------------------ */
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   populateAreaSelect();
   bindLocationModal();
   bindTopBar();
   bindCart();
   bindSearch();
   bindCheckout();
+
+  // Apply live menu overrides (availability / pricing) before render
+  await loadMenuOverrides();
+
   renderMenu();
   renderPopular();
   syncBarLocation();
   recalcCart();
+  subscribeMenuOverrides();
 
   // User lands on the site freely; pop-up rises 1.5s later
   // (only the very first time — once they've picked, we skip)
@@ -136,6 +141,59 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(openLocModal, 1500);
   }
 });
+
+
+/* ==================================================================
+   LIVE MENU OVERRIDES
+=================================================================== */
+const menuOverrides = new Map();   // dish_slug -> override row
+
+async function loadMenuOverrides(){
+  if (!window.db || !window.slugifyDish) return;
+  try {
+    const { data, error } = await window.db.from("menu_overrides").select("*");
+    if (error) throw error;
+    menuOverrides.clear();
+    (data || []).forEach(row => menuOverrides.set(row.dish_slug, row));
+    applyOverridesToMenu();
+  } catch (e){
+    console.warn("[wokin] menu overrides fetch failed (using static menu):", e.message);
+  }
+}
+
+function applyOverridesToMenu(){
+  if (typeof MENU_DATA === "undefined" || !window.slugifyDish) return;
+  MENU_DATA.forEach(cat => {
+    cat.items.forEach(d => {
+      const slug = window.slugifyDish(d.name);
+      const o = menuOverrides.get(slug);
+      d._available = o ? o.is_available !== false : true;
+      d._price     = (o && o.price_override     != null) ? Number(o.price_override)     : d.price;
+      d._priceFull = (o && o.price_full_override!= null) ? Number(o.price_full_override) : d.priceFull;
+      d._desc      = (o && o.description_override) ? o.description_override : d.desc;
+      d._pcs       = (o && o.pcs_override)         ? o.pcs_override         : d.pcs;
+    });
+  });
+}
+
+function subscribeMenuOverrides(){
+  if (!window.db) return;
+  window.db
+    .channel("menu-overrides-customer")
+    .on("postgres_changes",
+        { event: "*", schema: "public", table: "menu_overrides" },
+        () => {
+          loadMenuOverrides().then(() => {
+            // re-render visible menu so customers see live changes
+            const root = document.getElementById("menuRoot");
+            const nav  = document.getElementById("catNavInner");
+            if (root) root.innerHTML = "";
+            if (nav)  nav.innerHTML  = "";
+            renderMenu();
+          });
+        })
+    .subscribe();
+}
 
 
 /* ==================================================================
@@ -317,36 +375,43 @@ function dishCard(dish, cat, idx){
   const id = makeDishId(dish, cat);
   const img = getDishImage(dish.name, cat.id);
   const initial = dish.name.charAt(0);
+
+  // resolve effective values from live overrides (falls back to static)
+  const available = dish._available !== false;
+  const price     = dish._price     != null ? dish._price     : dish.price;
+  const priceFull = dish._priceFull != null ? dish._priceFull : dish.priceFull;
+  const desc      = dish._desc      != null ? dish._desc      : (dish.desc || "");
+  const pcs       = dish._pcs       != null ? dish._pcs       : dish.pcs;
+
   const tagsHtml = (dish.tags||[]).map(t => `<span class="dish-tag ${t}">${tagLabel(t)}</span>`).join("");
+  const soldOutChip = available ? "" : `<span class="dish-tag sold-out">SOLD OUT</span>`;
 
   const card = document.createElement("article");
-  card.className = "dish-card";
+  card.className = "dish-card" + (available ? "" : " is-sold-out");
   card.dataset.id = id;
 
-  const hasFull = dish.priceFull && dish.priceFull !== dish.price;
+  const hasFull = priceFull && priceFull !== price;
 
   card.innerHTML = `
-    <div class="img" data-initial="${initial}" style="background-image:url('${img}')">
-      <div class="img-tags">${tagsHtml}</div>
+    <div class="img" data-initial="${initial}">
+      <div class="img-tags">${soldOutChip}${tagsHtml}</div>
     </div>
     <div class="pad">
       <h3>${dish.name}</h3>
-      ${dish.pcs ? `<span class="pcs">${dish.pcs}</span>`:""}
-      <p>${dish.desc||""}</p>
+      ${pcs ? `<span class="pcs">${pcs}</span>`:""}
+      <p>${desc}</p>
       <div class="foot">
         <div class="prices">
-          <span class="price-half">${fmtPKR(dish.price)}${dish.smallLabel?` <em>· ${dish.smallLabel}</em>`:""}</span>
-          ${hasFull ? `<span class="price-full">Full ${fmtPKR(dish.priceFull)}</span>`:""}
+          <span class="price-half">${fmtPKR(price)}${dish.smallLabel?` <em>· ${dish.smallLabel}</em>`:""}</span>
+          ${hasFull ? `<span class="price-full">Full ${fmtPKR(priceFull)}</span>`:""}
         </div>
         <div class="action"></div>
       </div>
     </div>
   `;
-
-  // load primary dish photo with auto-fallback to the universal image
   applyDishBg(card.querySelector(".img"), img);
 
-  // wire add button
+  // wire add button (or sold-out badge instead)
   refreshDishAction(card, dish, cat);
   return card;
 }
@@ -356,6 +421,15 @@ function refreshDishAction(card, dish, cat){
   const item   = state.cart.find(c => c.id === id);
   const action = card.querySelector(".action");
   action.innerHTML = "";
+
+  // sold-out wins over everything else
+  if (dish._available === false){
+    const tag = document.createElement("span");
+    tag.className = "sold-out-pill";
+    tag.textContent = "SOLD OUT";
+    action.appendChild(tag);
+    return;
+  }
 
   if (item){
     const stepper = document.createElement("div");
@@ -463,16 +537,21 @@ function renderPopular(){
    CART
 =================================================================== */
 function addToCart(dish, cat){
+  if (dish._available === false){
+    return; // shouldn't be reachable, but guard anyway
+  }
   const id = makeDishId(dish, cat);
+  const price = dish._price != null ? dish._price : dish.price;
+  const desc  = dish._pcs   != null ? dish._pcs   : (dish.pcs || "");
   const existing = state.cart.find(c => c.id === id);
   if (existing){ existing.qty += 1; }
   else {
     state.cart.push({
       id,
       name: dish.name,
-      desc: dish.pcs || "",
+      desc,
       image: getDishImage(dish.name, cat.id),
-      price: dish.price,
+      price,
       qty: 1,
     });
   }

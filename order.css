@@ -446,6 +446,20 @@ input,textarea,select{ font:inherit; color:inherit; }
 }
 
 /* added flash */
+/* sold-out state */
+.dish-card.is-sold-out{ opacity:.72; }
+.dish-card.is-sold-out .img{ filter:grayscale(.9) brightness(.7); }
+.dish-card.is-sold-out h3{ color:var(--mute); }
+.dish-card.is-sold-out p{ color:var(--mute); }
+.dish-card.is-sold-out .price-half{ color:var(--mute); text-decoration:line-through;}
+.dish-card.is-sold-out .price-full{ display:none; }
+.dish-tag.sold-out{ background:var(--ink); color:#fff;}
+.sold-out-pill{
+  padding:11px 18px; border-radius:var(--r-pill);
+  background:var(--cream); border:2px dashed var(--ink); color:var(--ink);
+  font-family:'Bebas Neue',sans-serif; letter-spacing:.18em; font-size:13px;
+}
+
 .dish-card.is-flash{ animation:flash 0.6s ease both;}
 @keyframes flash{
   0%{ box-shadow:0 0 0 0 rgba(46,139,87,.5);}
