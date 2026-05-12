@@ -118,61 +118,79 @@ document.addEventListener("DOMContentLoaded", () => {
   syncBarLocation();
   recalcCart();
 
-  if (state.type && state.area) {
-    closeLocModal();
-  } else {
-    openLocModal();
+  // User lands on the site freely; pop-up rises 1.5s later
+  // (only the very first time — once they've picked, we skip)
+  if (!(state.type && state.area)) {
+    setTimeout(openLocModal, 1500);
   }
 });
 
 
 /* ==================================================================
-   LOCATION MODAL
+   LOCATION MODAL  (single screen, no GPS)
 =================================================================== */
+let _locDraft = { type: null, area: null };
+
 function openLocModal(){
+  _locDraft = { type: state.type || "delivery", area: state.area || null };
+
   document.getElementById("locModal").classList.remove("is-hidden");
   document.body.classList.add("state-locked");
-  // restore prior choices if any
-  if (state.type) selectTypeCard(state.type, false);
-  if (state.area) {
-    showLocStep(2);
-    highlightArea(state.area);
-  } else {
-    showLocStep(1);
-  }
+
+  // reflect selection in pill toggle
+  document.querySelectorAll(".loc-pill").forEach(p => {
+    p.classList.toggle("is-on", p.dataset.type === _locDraft.type);
+  });
+  updateLocAreaLabel();
+
+  // render area list with active selection
+  renderAreaList(document.getElementById("areaSearch").value || "");
+  updateLocGoState();
 }
+
 function closeLocModal(){
   document.getElementById("locModal").classList.add("is-hidden");
   document.body.classList.remove("state-locked");
 }
 
-function showLocStep(n){
-  document.querySelectorAll(".loc-step").forEach(el => {
-    el.hidden = (Number(el.dataset.step) !== n);
-  });
+function updateLocAreaLabel(){
+  const lbl = document.getElementById("locAreaLabel");
+  if (lbl) lbl.textContent = _locDraft.type === "pickup" ? "WHICH BRANCH FOR PICK-UP?" : "WHICH AREA?";
 }
-function selectTypeCard(type, advance = true){
-  state.type = type;
-  saveState();
-  document.querySelectorAll(".type-card").forEach(c => {
-    c.classList.toggle("is-selected", c.dataset.type === type);
-  });
-  document.getElementById("locType2Echo").textContent = type === "pickup" ? "PICK-UP" : "DELIVERY";
-  document.getElementById("barTypeLabel").textContent = type === "pickup" ? "PICK-UP FROM" : "DELIVERY TO";
-  if (advance) setTimeout(() => showLocStep(2), 220);
+
+function updateLocGoState(){
+  const btn = document.getElementById("locGo");
+  if (!btn) return;
+  btn.disabled = !(_locDraft.type && _locDraft.area);
 }
 
 function bindLocationModal(){
-  document.querySelectorAll(".type-card").forEach(card => {
-    card.addEventListener("click", () => selectTypeCard(card.dataset.type, true));
+  document.querySelectorAll(".loc-pill").forEach(pill => {
+    pill.addEventListener("click", () => {
+      _locDraft.type = pill.dataset.type;
+      document.querySelectorAll(".loc-pill").forEach(p =>
+        p.classList.toggle("is-on", p === pill));
+      updateLocAreaLabel();
+      updateLocGoState();
+    });
   });
-  document.getElementById("locBack").addEventListener("click", () => showLocStep(1));
 
-  document.getElementById("locGpsBtn").addEventListener("click", handleGps);
+  document.getElementById("locDismiss").addEventListener("click", closeLocModal);
 
-  // search filter
   document.getElementById("areaSearch").addEventListener("input", e => {
     renderAreaList(e.target.value);
+  });
+
+  document.getElementById("locGo").addEventListener("click", () => {
+    if (!_locDraft.type || !_locDraft.area) return;
+    state.type = _locDraft.type;
+    state.area = _locDraft.area;
+    saveState();
+    syncBarLocation();
+    const sel = document.getElementById("coArea");
+    if (sel) sel.value = state.area;
+    recalcCart();
+    closeLocModal();
   });
 
   renderAreaList("");
@@ -193,55 +211,16 @@ function renderAreaList(filter){
   matches.forEach(area => {
     const li = document.createElement("li");
     li.dataset.area = area;
-    li.innerHTML = `<span>${area}</span><small>Tap to select →</small>`;
-    if (state.area === area) li.classList.add("is-active");
-    li.addEventListener("click", () => chooseArea(area));
+    li.innerHTML = `<span>${area}</span><small>Tap to select</small>`;
+    if (_locDraft.area === area) li.classList.add("is-active");
+    li.addEventListener("click", () => {
+      _locDraft.area = area;
+      document.querySelectorAll("#areaList li").forEach(x =>
+        x.classList.toggle("is-active", x.dataset.area === area));
+      updateLocGoState();
+    });
     ul.appendChild(li);
   });
-}
-
-function highlightArea(area){
-  document.querySelectorAll("#areaList li").forEach(li => {
-    li.classList.toggle("is-active", li.dataset.area === area);
-  });
-}
-
-function chooseArea(area){
-  state.area = area;
-  saveState();
-  syncBarLocation();
-  // also reflect in checkout select if rendered
-  const sel = document.getElementById("coArea");
-  if (sel) sel.value = area;
-  setTimeout(closeLocModal, 220);
-}
-
-function handleGps(){
-  const btn = document.getElementById("locGpsBtn");
-  if (!navigator.geolocation){
-    alert("Your browser doesn't support location detection — please pick from the list.");
-    return;
-  }
-  btn.querySelector("b").textContent = "FINDING YOU…";
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      // For now we don't reverse-geocode (would need Google Maps API key).
-      // We pick the first area in the list and let the user confirm/change.
-      btn.querySelector("b").textContent = "USE MY CURRENT LOCATION";
-      const guess = DELIVERY_AREAS[0];
-      const ok = confirm(`We've got your location.\nNearest serviceable area we deliver to: ${guess}.\n\nUse this area? You can change it later in checkout.`);
-      if (ok) {
-        // store coords for checkout map
-        state.gps = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        chooseArea(guess);
-      }
-    },
-    err => {
-      btn.querySelector("b").textContent = "USE MY CURRENT LOCATION";
-      alert("Couldn't get your location: " + err.message + "\nPick from the list instead.");
-    },
-    { enableHighAccuracy:true, timeout:8000 }
-  );
 }
 
 function syncBarLocation(){
@@ -373,10 +352,19 @@ function refreshDishAction(card, dish, cat){
     stepper.innerHTML = `
       <button aria-label="Decrease">−</button>
       <b>${item.qty}</b>
+      <span class="step-lbl">added ✓</span>
       <button aria-label="Increase">+</button>
     `;
-    stepper.querySelectorAll("button")[0].addEventListener("click", () => { changeQty(id, -1); refreshDishAction(card, dish, cat); });
-    stepper.querySelectorAll("button")[1].addEventListener("click", () => { changeQty(id, +1); refreshDishAction(card, dish, cat); });
+    stepper.querySelectorAll("button")[0].addEventListener("click", e => {
+      e.stopPropagation();
+      changeQty(id, -1);
+      refreshDishAction(card, dish, cat);
+    });
+    stepper.querySelectorAll("button")[1].addEventListener("click", e => {
+      e.stopPropagation();
+      changeQty(id, +1);
+      refreshDishAction(card, dish, cat);
+    });
     action.appendChild(stepper);
   } else {
     const btn = document.createElement("button");
@@ -386,6 +374,9 @@ function refreshDishAction(card, dish, cat){
       addToCart(dish, cat);
       refreshDishAction(card, dish, cat);
       bumpCartIcon();
+      // brief flash on the card so user sees the add
+      card.classList.add("is-flash");
+      setTimeout(() => card.classList.remove("is-flash"), 600);
     });
     action.appendChild(btn);
   }
