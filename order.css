@@ -222,29 +222,29 @@ input,textarea,select{ font:inherit; color:inherit; }
    HERO
 ===================================================================== */
 .hero{
-  position:relative; background:var(--red); color:#fff; padding:64px 24px 72px;
+  position:relative; background:var(--red-deep); color:#fff; padding:64px 24px 72px;
   border-bottom:3px solid var(--ink); overflow:hidden;
 }
 .hero-bg{
   position:absolute; inset:0; pointer-events:none; z-index:0;
-  background-image:url("https://images.unsplash.com/photo-1552566626-52f8b828add9?w=1600&q=80&auto=format&fit=crop");
-  background-size:cover; background-position:center;
-  filter:saturate(1.15);
+  background-image:url("https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1600&q=80&auto=format&fit=crop");
+  background-size:cover; background-position:center 40%;
+  filter:saturate(1.15) contrast(1.05);
 }
 .hero-overlay{
   position:absolute; inset:0; pointer-events:none; z-index:1;
   background:
-    linear-gradient(120deg, rgba(227,27,35,.92) 0%, rgba(183,20,25,.78) 45%, rgba(142,14,18,.65) 100%),
-    radial-gradient(circle at 70% 30%, rgba(0,0,0,.0), rgba(0,0,0,.35) 80%);
+    linear-gradient(105deg, rgba(142,14,18,.94) 0%, rgba(183,20,25,.82) 38%, rgba(227,27,35,.58) 65%, rgba(142,14,18,.40) 100%),
+    radial-gradient(circle at 78% 35%, rgba(0,0,0,0), rgba(0,0,0,.45) 80%);
 }
 .hero > *:not(.hero-bg):not(.hero-overlay){ position:relative; z-index:2; }
 .hero-aster{
-  position:absolute; font-family:'Bebas Neue'; color:var(--gold-bright);
-  pointer-events:none; user-select:none; line-height:1;
+  position:absolute; font-family:'Bebas Neue'; pointer-events:none;
+  user-select:none; line-height:1; z-index:1;
 }
-.hero-aster.a1{ top:30px; left:6%; font-size:90px; color:var(--gold-bright); transform:rotate(-18deg);}
-.hero-aster.a2{ top:65%; left:48%; font-size:130px; color:rgba(0,0,0,.15); transform:rotate(14deg);}
-.hero-aster.a3{ bottom:40px; right:8%; font-size:70px; color:#fff; transform:rotate(22deg);}
+.hero-aster.a1{ top:30%;   right:42%; font-size:90px;  color:var(--gold-bright); transform:rotate(-18deg); opacity:.55;}
+.hero-aster.a2{ bottom:18%; right:34%; font-size:130px; color:rgba(0,0,0,.18);    transform:rotate(14deg);}
+.hero-aster.a3{ top:14%;   right:6%;  font-size:60px;  color:#fff;                transform:rotate(22deg); opacity:.55;}
 .hero-grid{
   position:relative; max-width:1500px; margin:0 auto;
   display:grid; grid-template-columns:1.4fr .8fr; gap:48px; align-items:center;
