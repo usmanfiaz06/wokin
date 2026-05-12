@@ -27,7 +27,7 @@
     </div>
     <h1>Sign <em>in.</em></h1>
     <p class="auth-sub">Restaurant staff only.</p>
-    <form id="loginForm" class="auth-form" novalidate>
+    <form id="loginForm" class="auth-form" novalidate action="javascript:void(0)">
       <div class="field">
         <label for="email">Email</label>
         <input type="email" id="email" required autocomplete="username" />
@@ -37,7 +37,7 @@
         <input type="password" id="password" required autocomplete="current-password" />
       </div>
       <p class="auth-err" id="authErr" hidden></p>
-      <button type="submit" class="btn-primary big">SIGN IN →</button>
+      <button type="button" id="loginBtn" class="btn-primary big">SIGN IN →</button>
     </form>
   </div>
 </div>

@@ -9,6 +9,25 @@
    - Print-friendly receipt via browser print
    ===================================================================== */
 
+// ---- Surface ALL JS errors to the visible auth-error box so the user
+//      never has to open dev tools to see what broke. -------------------
+function _showAuthErr(msg, isOk = false){
+  const el = document.getElementById("authErr");
+  if (!el) return;
+  el.hidden = false;
+  el.style.background = isOk ? "rgba(46,139,87,.18)" : "rgba(227,27,35,.18)";
+  el.style.color      = isOk ? "#9DE0B6" : "#FFB1B6";
+  el.textContent = msg;
+}
+window.addEventListener("error", e => {
+  _showAuthErr("JS ERROR · " + e.message + (e.filename ? " (" + e.filename.split("/").pop() + ":" + e.lineno + ")" : ""));
+});
+window.addEventListener("unhandledrejection", e => {
+  const reason = e.reason && (e.reason.message || JSON.stringify(e.reason));
+  _showAuthErr("ASYNC ERROR · " + reason);
+});
+console.log("[wokin/admin] script loaded · supabase global?", typeof window.supabase, "· db?", !!window.db);
+
 const STATUSES = [
   { key:"new",              label:"NEW",              next:"accepted",         nextLabel:"ACCEPT ORDER"   },
   { key:"accepted",         label:"ACCEPTED",         next:"cooking",          nextLabel:"START COOKING"  },
@@ -45,8 +64,18 @@ const state = {
 /*  AUTH                                                              */
 /* ------------------------------------------------------------------ */
 async function init(){
-  // bind login form
-  document.getElementById("loginForm").addEventListener("submit", onSignIn);
+  // bind login (click on the button, not form submit, to avoid page reloads)
+  const loginBtn = document.getElementById("loginBtn");
+  const loginForm = document.getElementById("loginForm");
+  if (loginBtn) loginBtn.addEventListener("click", onSignIn);
+  if (loginForm) loginForm.addEventListener("submit", onSignIn);
+  // Enter on either field submits too
+  ["email","password"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener("keydown", e => {
+      if (e.key === "Enter") { e.preventDefault(); onSignIn(e); }
+    });
+  });
   document.getElementById("signOut").addEventListener("click", onSignOut);
   document.getElementById("modalClose").addEventListener("click", closeModal);
   document.getElementById("orderModal").addEventListener("click", e => {
@@ -74,12 +103,18 @@ async function init(){
 }
 
 async function onSignIn(e){
-  e.preventDefault();
+  if (e && e.preventDefault) e.preventDefault();
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
   const errEl = document.getElementById("authErr");
   errEl.hidden = true;
-  const btn = e.target.querySelector("button[type='submit']");
+  errEl.style.background = ""; errEl.style.color = ""; // reset visual override
+
+  if (!email || !password){
+    _showAuthErr("Enter email + password.");
+    return;
+  }
+  const btn = document.getElementById("loginBtn");
   btn.disabled = true;
   const originalText = btn.textContent;
   btn.textContent = "SIGNING IN…";
@@ -94,10 +129,7 @@ async function onSignIn(e){
     // success — onAuthStateChange listener will switch to dashboard
   } catch (err) {
     console.error("[admin] sign-in failed:", err);
-    errEl.textContent = (err && err.message)
-      ? err.message
-      : "Couldn't sign in. Check the browser console for details.";
-    errEl.hidden = false;
+    _showAuthErr((err && err.message) ? err.message : "Couldn't sign in.");
   } finally {
     btn.disabled = false;
     btn.textContent = originalText;

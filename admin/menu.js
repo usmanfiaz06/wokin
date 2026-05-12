@@ -24,7 +24,16 @@ const state = {
 /*  STARTUP                                                           */
 /* ------------------------------------------------------------------ */
 document.addEventListener("DOMContentLoaded", async () => {
-  document.getElementById("loginForm").addEventListener("submit", onSignIn);
+  const loginBtn = document.getElementById("loginBtn");
+  const loginForm = document.getElementById("loginForm");
+  if (loginBtn) loginBtn.addEventListener("click", onSignIn);
+  if (loginForm) loginForm.addEventListener("submit", onSignIn);
+  ["email","password"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener("keydown", e => {
+      if (e.key === "Enter") { e.preventDefault(); onSignIn(e); }
+    });
+  });
   document.getElementById("signOut").addEventListener("click", () => window.db.auth.signOut());
   document.getElementById("editClose").addEventListener("click", closeEdit);
   document.getElementById("editForm").addEventListener("submit", onEditSave);
@@ -53,12 +62,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 async function onSignIn(e){
-  e.preventDefault();
+  if (e && e.preventDefault) e.preventDefault();
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
   const errEl = document.getElementById("authErr");
   errEl.hidden = true;
-  const btn = e.target.querySelector("button[type='submit']");
+  if (!email || !password){
+    errEl.textContent = "Enter email + password.";
+    errEl.hidden = false;
+    return;
+  }
+  const btn = document.getElementById("loginBtn");
   btn.disabled = true;
   const orig = btn.textContent;
   btn.textContent = "SIGNING IN…";
