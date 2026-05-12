@@ -12,7 +12,7 @@
    ===================================================================== */
 
 const SUPABASE_URL = "https://awzakqhczixzwqhkhpfr.supabase.co";
-const SUPABASE_KEY = "sb_publishable_Qoaaf36kJGCIfnJxMbsk-A_Mqa-_ZAo";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3emFrcWhjeml4endxaGtocGZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODc4NzMsImV4cCI6MjA5NDE2Mzg3M30.9OSzMPLLp5eqAl1_jXCuVjdTTCnLOW6ysRh5MccSoLA";
 
 window.db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: {
