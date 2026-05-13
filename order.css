@@ -901,6 +901,23 @@ body.is-store-closed .fab-cart-mid strong{ color:#aaa; }
   .cat-head h2{ font-size:48px;}
   .field-row{ grid-template-columns:1fr;}
 }
+@media (max-width: 600px){
+  /* Compact header: logo | location chip | [phone] [cart] */
+  .bar-inner{ display:flex; align-items:center; gap:8px; padding:8px 12px; }
+  .bar-logo-cn{ display:none; }              /* hide 炒 character */
+  .bar-logo img{ width:38px; height:38px; }
+  .bar-loc{
+    flex:1; min-width:0; padding:7px 10px; gap:6px;
+    max-width:none;
+  }
+  .bar-loc-text em{ display:none; }          /* hide "DELIVERY TO" label */
+  .bar-loc-text b{ font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .bar-actions{ gap:6px; flex-shrink:0; }
+  .bar-track-btn{ display:none; }            /* hide TRACK on mobile (accessible from confirmation) */
+  .bar-phone-btn{ padding:8px 10px; }
+  .bar-icon-btn{ display:none; }             /* hide search icon to save space */
+  .bar-cart{ padding:8px 12px; gap:6px; }
+}
 @media (max-width: 540px){
   .loc-card{ padding:28px 22px;}
   .hero{ padding:42px 18px 56px;}
