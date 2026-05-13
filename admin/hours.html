@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>WOK!N · Admin · Hours</title>
+<meta name="robots" content="noindex, nofollow" />
+<meta name="theme-color" content="#1A1A1A" />
+<link rel="icon" type="image/jpeg" href="/Wokin.- logo.jpeg" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&family=Caveat:wght@500;700&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="auth" id="authScreen">
+  <div class="auth-card">
+    <div class="auth-head">
+      <img src="/Wokin.- logo.jpeg" alt="WOK!N" />
+      <div>
+        <span class="cn">炒</span>
+        <b>WOK!N</b>
+        <em>ADMIN · BACK-OF-HOUSE</em>
+      </div>
+    </div>
+    <h1>Sign <em>in.</em></h1>
+    <p class="auth-sub">Restaurant staff only.</p>
+    <form id="loginForm" class="auth-form" novalidate action="javascript:void(0)">
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" id="email" required autocomplete="username" />
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" required autocomplete="current-password" />
+      </div>
+      <p class="auth-err" id="authErr" hidden></p>
+      <button type="button" id="loginBtn" class="btn-primary big">SIGN IN →</button>
+    </form>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="appScreen" hidden>
+
+  <header class="top">
+    <a href="/" class="brand">
+      <img src="/Wokin.- logo.jpeg" alt="WOK!N" />
+      <span class="cn">炒</span>
+      <span class="brand-text">
+        <b>WOK!N</b>
+        <em>ADMIN</em>
+      </span>
+    </a>
+
+    <nav class="top-nav">
+      <a href="/admin/">ORDERS</a>
+      <a href="/admin/menu.html">MENU</a>
+      <a href="/admin/coupons.html">COUPONS</a>
+      <a href="/admin/hours.html" class="is-on">★ HOURS</a>
+    </nav>
+
+    <div class="top-mid">
+      <span class="live-dot" id="liveDot"></span>
+      <span class="live-text" id="liveText">OPEN</span>
+      <span class="separator">·</span>
+      <span id="pktClock">--:--</span>
+      <span class="separator">·</span>
+      <span style="color:rgba(244,233,212,.5)">PKT</span>
+    </div>
+
+    <div class="top-right">
+      <span class="who" id="whoami">—</span>
+      <button class="btn-ghost small" id="signOut">SIGN OUT</button>
+    </div>
+  </header>
+
+  <!-- Force-closed (kill-switch) -->
+  <section class="hr-kill">
+    <div class="hr-kill-text">
+      <p class="cm-section" style="margin:0">★ KILL SWITCH</p>
+      <h2 id="killHeadline">We are <em>OPEN</em></h2>
+      <p class="hr-kill-sub">Turn this on to immediately close the store regardless of opening hours. Customers see a banner and cannot place orders.</p>
+    </div>
+    <div class="hr-kill-controls">
+      <label class="m-toggle big">
+        <input type="checkbox" id="forceClosed" />
+        <span class="m-toggle-track"></span>
+        <span class="m-toggle-text">
+          <b id="forceLabel">Force closed</b>
+          <em>Overrides all hours below</em>
+        </span>
+      </label>
+      <div class="field" style="margin-top:14px">
+        <label for="closedMessage">Closed banner message</label>
+        <textarea id="closedMessage" rows="2" placeholder="We're closed right now. Open again at 10:00 AM."></textarea>
+        <span class="hint">Customers see this on the banner when the store is closed.</span>
+      </div>
+      <button class="btn-primary small" id="saveSettings">SAVE</button>
+    </div>
+  </section>
+
+  <!-- Weekly schedule -->
+  <section class="hours-wrap">
+    <header class="hours-head">
+      <h2><span class="em">🕒</span> Weekly hours <small>· Pakistan Standard Time</small></h2>
+      <button class="btn-ghost small" id="copyMonHours" title="Copy Monday's hours to every other open day">↳ APPLY MONDAY TO ALL</button>
+    </header>
+    <div class="hours-grid" id="hoursGrid"></div>
+    <p class="hr-tip">Tip: if a day closes after midnight (e.g. opens 18:00, closes 02:00), the close time can be earlier than open time — we'll handle it.</p>
+  </section>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/supabase-client.js"></script>
+<script src="/admin/hours.js"></script>
+</body>
+</html>

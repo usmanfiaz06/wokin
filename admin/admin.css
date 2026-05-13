@@ -489,6 +489,80 @@ input{ font:inherit; color:inherit; }
 
 
 /* =====================================================================
+   HOURS ADMIN
+===================================================================== */
+.hr-kill{
+  margin:18px 22px; padding:22px;
+  background:linear-gradient(135deg, var(--ink-2) 0%, #2a1010 100%);
+  border:1.5px solid var(--ink); border-radius:14px;
+  display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start;
+  transition:border-color var(--t);
+}
+.hr-kill.is-armed{
+  border-color:var(--red); background:linear-gradient(135deg, #3a1010, #5e1414);
+}
+.hr-kill-text h2{ font-family:'Bebas Neue',sans-serif; font-size:32px;
+  letter-spacing:.02em; line-height:1; margin-top:6px;}
+.hr-kill-text h2 em{ font-family:'Caveat',cursive; font-style:italic; font-weight:700;
+  color:var(--gold-bright); font-size:32px;}
+.hr-kill.is-armed h2 em{ color:#ffb3b3;}
+.hr-kill-sub{ margin-top:10px; font-size:13px; color:rgba(244,233,212,.65); line-height:1.5;}
+.hr-kill-controls{ display:flex; flex-direction:column; gap:6px;}
+.hr-kill-controls textarea{
+  padding:11px 14px; background:var(--ink-3); border:1.5px solid rgba(244,233,212,.18);
+  border-radius:10px; color:var(--cream); font-size:14px; font-family:inherit;
+  width:100%; resize:vertical;
+}
+.hr-kill-controls textarea:focus{ outline:none; border-color:var(--gold-bright);}
+.hr-kill-controls .btn-primary{ align-self:flex-start; margin-top:8px;}
+
+.m-toggle.big .m-toggle-track{ width:60px; height:32px; border-radius:32px;}
+.m-toggle.big .m-toggle-track::after{ width:26px; height:26px; top:3px; left:3px;}
+.m-toggle.big input:checked + .m-toggle-track::after{ transform:translateX(28px);}
+.hr-kill.is-armed .m-toggle.big input:checked + .m-toggle-track{ background:var(--red);}
+
+.hours-wrap{ margin:22px;}
+.hours-head{ display:flex; justify-content:space-between; align-items:center;
+  padding-bottom:14px; border-bottom:1.5px solid var(--ink); margin-bottom:14px;
+  flex-wrap:wrap; gap:10px;}
+.hours-head h2{ font-family:'Bebas Neue',sans-serif; font-size:26px; letter-spacing:.04em;}
+.hours-head .em{ margin-right:6px;}
+.hours-head small{ font-family:'Inter'; font-weight:400; font-size:13px;
+  color:rgba(244,233,212,.5); letter-spacing:0; text-transform:none; margin-left:6px;}
+
+.hours-grid{ display:flex; flex-direction:column; gap:8px;}
+.day-row{
+  display:grid; grid-template-columns:140px 1fr auto; gap:14px; align-items:center;
+  padding:14px 18px; background:var(--ink-2); border:1px solid var(--ink); border-radius:10px;
+  transition:border-color var(--t);
+}
+.day-row.is-today{ border-color:var(--gold-bright); }
+.day-row.is-off{ opacity:.65; }
+.day-label b{ font-family:'Bebas Neue'; font-size:18px; letter-spacing:.04em;}
+.day-label{ display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+.today-pill{ background:var(--gold-bright); color:var(--ink);
+  padding:2px 8px; border-radius:var(--r-pill);
+  font-family:'Bebas Neue'; letter-spacing:.18em; font-size:10px;}
+.day-fields{ display:flex; align-items:center; gap:18px; flex-wrap:wrap;}
+.m-toggle.inline{ display:inline-flex; align-items:center; gap:8px; cursor:pointer; user-select:none;}
+.m-toggle.inline input{ position:absolute; opacity:0; width:0; height:0;}
+.m-toggle.inline .m-toggle-track{ width:42px; height:24px; }
+.m-toggle.inline .m-toggle-track::after{ width:18px; height:18px; top:3px; left:3px;}
+.m-toggle.inline input:checked + .m-toggle-track::after{ transform:translateX(18px);}
+.time-pair{ display:flex; align-items:center; gap:8px;}
+.time-pair input[type="time"]{
+  padding:8px 12px; background:var(--ink-3); border:1.5px solid rgba(244,233,212,.18);
+  border-radius:8px; color:var(--cream); font-size:14px;
+  color-scheme:dark; font-family:'Bebas Neue'; letter-spacing:.06em;
+  min-width:110px;
+}
+.time-pair input[type="time"]:focus{ outline:none; border-color:var(--gold-bright);}
+.time-pair input[type="time"]:disabled{ opacity:.4; cursor:not-allowed;}
+.time-pair .dash{ font-family:'Bebas Neue'; color:rgba(244,233,212,.5); letter-spacing:.12em;}
+.hr-tip{ margin-top:14px; font-size:12px; color:rgba(244,233,212,.5); font-style:italic;}
+
+
+/* =====================================================================
    ORDER DETAIL MODAL
 ===================================================================== */
 .modal{ position:fixed; inset:0; z-index:60; background:rgba(0,0,0,.7);
@@ -722,6 +796,16 @@ input{ font:inherit; color:inherit; }
   .cc-grid{ grid-template-columns:88px 1fr; }
   .cc-code{ font-size:18px; }
   .cc-value{ font-size:18px; }
+
+  /* Hours admin */
+  .hr-kill{ grid-template-columns:1fr; padding:16px; margin:12px 14px; gap:16px;}
+  .hours-wrap{ margin:14px; }
+  .day-row{ grid-template-columns:1fr; gap:10px; padding:14px;}
+  .day-fields{ gap:12px; }
+  .time-pair input[type="time"]{ min-width:0; flex:1; }
+  .day-row [data-save]{ width:100%; }
+  .hours-head h2{ font-size:22px; }
+  .hr-kill .m-toggle.big{ padding-left:0;}
 }
 
 /* — Tiny phones — */

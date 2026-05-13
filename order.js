@@ -133,6 +133,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadMenuOverrides();
   await loadCustomDishes();
   await loadAutoPromos();
+  await loadBusinessHours();
+  startStoreStatusClock();
 
   renderMenu();
   renderPopular();
@@ -180,6 +182,149 @@ function applyOverridesToMenu(){
     });
   });
 }
+
+/* ==================================================================
+   BUSINESS HOURS  (PKT, UTC+5, no DST)
+=================================================================== */
+const storeStatus = {
+  hours:    [],     // 7 business_hours rows
+  settings: null,   // app_settings row
+};
+
+const _PKT_DAYS_LONG  = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const _PKT_DAYS_SHORT = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+function _pktDate(){ return new Date(Date.now() + 5 * 3600 * 1000); }
+function _pktDay(){  return _pktDate().getUTCDay(); }
+function _pktMinutes(){ const d = _pktDate(); return d.getUTCHours() * 60 + d.getUTCMinutes(); }
+
+function _fmt12(time /* "HH:MM(:SS)?" */){
+  if (!time) return "—";
+  const [hStr, mStr] = time.split(":");
+  let h = parseInt(hStr, 10);
+  const m = mStr || "00";
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12 || 12;
+  return m === "00" ? `${h} ${ampm}` : `${h}:${m} ${ampm}`;
+}
+
+async function loadBusinessHours(){
+  if (!window.db) return;
+  try {
+    const [{ data: h }, { data: s }] = await Promise.all([
+      window.db.from("business_hours").select("*").order("day_of_week"),
+      window.db.from("app_settings").select("*").eq("id", 1).maybeSingle(),
+    ]);
+    storeStatus.hours    = h || [];
+    storeStatus.settings = s || { force_closed:false, closed_message:null };
+    applyStoreStatus();
+  } catch (e){
+    console.warn("[wokin] business-hours fetch failed:", e.message);
+  }
+}
+
+function evaluateStoreStatus(){
+  if (!storeStatus.hours.length){
+    return { open: true, why: "loading" };
+  }
+  if (storeStatus.settings?.force_closed){
+    return {
+      open: false,
+      why:  "force",
+      message: storeStatus.settings.closed_message || "We're closed right now — back soon."
+    };
+  }
+  const day = _pktDay();
+  const cur = _pktMinutes();
+  const today = storeStatus.hours.find(h => h.day_of_week === day);
+
+  if (today && !today.is_closed){
+    const [oh,om] = today.opens_at.split(":").map(Number);
+    let   [ch,cm] = today.closes_at.split(":").map(Number);
+    const open  = oh*60 + om;
+    let   close = ch*60 + cm;
+    if (close <= open) close += 24*60; // crosses midnight
+    const curAdj = cur < open && close > 24*60 ? cur + 24*60 : cur;
+    if (curAdj >= open && curAdj < close){
+      return { open:true, today, opens_at: today.opens_at, closes_at: today.closes_at };
+    }
+  }
+
+  // Find next opening
+  const next = _findNextOpening();
+  return { open:false, why:"hours", today, next };
+}
+
+function _findNextOpening(){
+  if (!storeStatus.hours.length) return null;
+  const day  = _pktDay();
+  const cur  = _pktMinutes();
+  for (let i = 0; i < 7; i++){
+    const d = (day + i) % 7;
+    const row = storeStatus.hours.find(h => h.day_of_week === d);
+    if (!row || row.is_closed) continue;
+    const [oh,om] = row.opens_at.split(":").map(Number);
+    const openMin = oh*60 + om;
+    if (i === 0 && cur < openMin){
+      return { day: d, opens_at: row.opens_at, label: "today" };
+    }
+    if (i > 0){
+      return {
+        day: d,
+        opens_at: row.opens_at,
+        label: i === 1 ? "tomorrow" : _PKT_DAYS_LONG[d]
+      };
+    }
+  }
+  return null;
+}
+
+function applyStoreStatus(){
+  const status = evaluateStoreStatus();
+  const banner = document.getElementById("closedBanner");
+  if (!banner) return;
+
+  if (status.open){
+    banner.hidden = true;
+    document.body.classList.remove("is-store-closed");
+    return;
+  }
+
+  // build message
+  let head = "We're closed right now";
+  let sub  = "";
+  if (status.why === "force"){
+    head = "We're taking a quick break";
+    sub  = status.message || "Back shortly!";
+  } else if (status.next){
+    sub = `Opens ${status.next.label} at ${_fmt12(status.next.opens_at)}`;
+  } else {
+    sub = "Check back soon";
+  }
+
+  document.getElementById("cbHeadline").textContent = head;
+  document.getElementById("cbSub").innerHTML        = sub;
+  banner.hidden = false;
+  document.body.classList.add("is-store-closed");
+}
+
+function startStoreStatusClock(){
+  // re-evaluate every 30s so banner flips around opening / closing time
+  setInterval(applyStoreStatus, 30000);
+
+  // Realtime — admin edits propagate immediately
+  if (!window.db) return;
+  window.db
+    .channel("hours-customer")
+    .on("postgres_changes",
+        { event:"*", schema:"public", table:"business_hours" },
+        () => loadBusinessHours())
+    .on("postgres_changes",
+        { event:"*", schema:"public", table:"app_settings" },
+        () => loadBusinessHours())
+    .subscribe();
+}
+
 
 /* ==================================================================
    AUTO-APPLY PROMOTIONS  (no code needed; shown as crossed-out price)
@@ -968,6 +1113,16 @@ function doSearch(q){
 function openCheckout(){
   if (!state.cart.length){
     alert("Your cart is empty. Add something tasty first.");
+    return;
+  }
+  // Block checkout when closed (kill-switch OR outside hours)
+  const status = evaluateStoreStatus();
+  if (!status.open){
+    let when = "shortly";
+    if (status.next) when = `${status.next.label} at ${_fmt12(status.next.opens_at)}`;
+    alert("Sorry, we're closed right now.\n\n" +
+          "You can finish placing this order " + when + ".\n" +
+          "Your cart is saved.");
     return;
   }
   if (!state.area && state.type !== "pickup"){
