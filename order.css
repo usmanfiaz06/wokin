@@ -232,6 +232,13 @@ body.is-store-closed .fab-cart-mid strong{ color:#aaa; }
 }
 .bar-icon-btn:hover{ background:var(--ink); color:var(--cream);}
 .bar-icon-btn svg{ width:18px; height:18px; }
+.bar-track-btn{
+  display:flex; align-items:center; gap:6px; padding:8px 14px;
+  background:transparent; color:var(--ink); border:2px solid var(--ink); border-radius:var(--r-pill);
+  font-family:'Bebas Neue',sans-serif; letter-spacing:.14em; font-size:14px; text-decoration:none;
+  transition:background .15s,color .15s;
+}
+.bar-track-btn:hover{ background:var(--ink); color:var(--cream);}
 .bar-cart{
   position:relative; display:flex; align-items:center; gap:8px; padding:8px 16px;
   background:var(--red); color:#fff; border:2px solid var(--ink); border-radius:var(--r-pill);
@@ -880,6 +887,7 @@ body.is-store-closed .fab-cart-mid strong{ color:#aaa; }
   .loc-title em{ font-size:48px;}
   .bar-loc{ max-width:none; justify-self:stretch;}
   .bar-cart-text{ display:none;}
+  .bar-track-btn span{ display:none;}
   .bar-inner{ grid-template-columns:auto 1fr auto; gap:10px; padding:10px 14px;}
   .sec-title, .sec-title em{ font-size:44px;}
   .cat-head h2{ font-size:48px;}
