@@ -167,8 +167,16 @@ function refreshTypeHint(){
   const type = document.getElementById("cmType").value;
   const value = document.getElementById("cmValue").value;
   const hint = document.getElementById("cmValueHint");
-  if (type === "percent") hint.textContent = (value || 10) + "% off the subtotal";
-  else hint.textContent  = "Rs. " + (value || 0) + " off the subtotal";
+  if (type === "percent"){
+    hint.textContent = (value || 10) + "% off the applicable subtotal";
+    document.getElementById("cmValue").placeholder = "10";
+    document.getElementById("cmMaxDiscount").parentElement.style.opacity = "1";
+  } else {
+    hint.textContent = "Rs. " + (value || 250) + " off the applicable subtotal";
+    document.getElementById("cmValue").placeholder = "250";
+    // Max-discount is meaningless for flat
+    document.getElementById("cmMaxDiscount").parentElement.style.opacity = "0.4";
+  }
 }
 
 function render(){

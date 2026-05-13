@@ -109,19 +109,27 @@
       </div>
     </div>
     <form id="couponForm" class="edit-form">
-      <div class="field-row" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+
+      <!-- ── BASICS ─────────────────────────────────── -->
+      <p class="cm-section">① BASICS</p>
+      <div class="field-row">
         <div class="field">
           <label for="cmCode">Code <span class="req">*</span></label>
           <input type="text" id="cmCode" required maxlength="32" style="text-transform:uppercase;" placeholder="WOKIN10" />
+          <span class="hint">Customers type this exactly. Letters + numbers, no spaces.</span>
         </div>
         <div class="field">
-          <label for="cmLabel">Public label <span class="req">*</span></label>
+          <label for="cmLabel">Customer-facing label <span class="req">*</span></label>
           <input type="text" id="cmLabel" required placeholder="10% off your meal" />
+          <span class="hint">Shown to the customer when applied.</span>
         </div>
       </div>
-      <div class="field-row" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+
+      <!-- ── DISCOUNT ───────────────────────────────── -->
+      <p class="cm-section">② DISCOUNT</p>
+      <div class="field-row">
         <div class="field">
-          <label for="cmType">Discount type <span class="req">*</span></label>
+          <label for="cmType">Type <span class="req">*</span></label>
           <select id="cmType">
             <option value="percent">Percent off (%)</option>
             <option value="flat">Flat off (Rs.)</option>
@@ -129,59 +137,61 @@
         </div>
         <div class="field">
           <label for="cmValue">Value <span class="req">*</span></label>
-          <input type="number" id="cmValue" required step="1" min="1" />
-          <span class="hint" id="cmValueHint">10 = 10%</span>
+          <input type="number" id="cmValue" required step="1" min="1" placeholder="10" />
+          <span class="hint" id="cmValueHint">10 = 10% off</span>
         </div>
       </div>
 
-      <!-- Auto-apply toggle -->
       <div class="field">
         <label class="m-toggle">
           <input type="checkbox" id="cmAutoApply" />
           <span class="m-toggle-track"></span>
           <span class="m-toggle-text">
             <b>Auto-apply (no code needed)</b>
-            <em>If on, this discount is shown on the menu as a crossed-out price. If off, customers must type the code at checkout.</em>
+            <em>Shown on the menu as a crossed-out price.<br>OFF = customer must type the code at checkout.</em>
           </span>
         </label>
       </div>
 
-      <!-- Scope picker -->
+      <!-- ── SCOPE ──────────────────────────────────── -->
+      <p class="cm-section">③ APPLIES TO</p>
       <div class="field">
-        <label for="cmScope">Applies to <span class="req">*</span></label>
+        <label for="cmScope">Scope <span class="req">*</span></label>
         <select id="cmScope">
-          <option value="order">Whole order (subtotal)</option>
-          <option value="category">A whole category</option>
-          <option value="dish_static">One static menu dish</option>
-          <option value="dish_custom">One custom dish</option>
+          <option value="order">★ The whole order subtotal</option>
+          <option value="category">A whole category (e.g. all Poultry)</option>
+          <option value="dish_static">One specific dish from the menu</option>
+          <option value="dish_custom">One specific custom dish</option>
         </select>
       </div>
-
-      <!-- Scope target — shown conditionally -->
       <div class="field" id="cmScopeCategoryWrap" hidden>
-        <label for="cmScopeCategory">Category</label>
+        <label for="cmScopeCategory">Which category?</label>
         <select id="cmScopeCategory"></select>
       </div>
       <div class="field" id="cmScopeDishStaticWrap" hidden>
-        <label for="cmScopeDishStatic">Static menu dish</label>
+        <label for="cmScopeDishStatic">Which dish?</label>
         <select id="cmScopeDishStatic"></select>
       </div>
       <div class="field" id="cmScopeDishCustomWrap" hidden>
-        <label for="cmScopeDishCustom">Custom dish</label>
+        <label for="cmScopeDishCustom">Which custom dish?</label>
         <select id="cmScopeDishCustom"></select>
       </div>
-      <div class="field-row" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+
+      <!-- ── RULES ──────────────────────────────────── -->
+      <p class="cm-section">④ RULES <em>(all optional)</em></p>
+      <div class="field-row">
         <div class="field">
           <label for="cmMinOrder">Minimum order (Rs.)</label>
           <input type="number" id="cmMinOrder" step="50" min="0" placeholder="0" />
+          <span class="hint">Order must reach this subtotal.</span>
         </div>
         <div class="field">
           <label for="cmMaxDiscount">Max discount cap (Rs.)</label>
-          <input type="number" id="cmMaxDiscount" step="50" min="0" placeholder="(unlimited)" />
-          <span class="hint">Only applies to percent type</span>
+          <input type="number" id="cmMaxDiscount" step="50" min="0" placeholder="No cap" />
+          <span class="hint">Caps a percent discount.</span>
         </div>
       </div>
-      <div class="field-row" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+      <div class="field-row">
         <div class="field">
           <label for="cmValidFrom">Valid from</label>
           <input type="datetime-local" id="cmValidFrom" />
@@ -192,12 +202,13 @@
         </div>
       </div>
       <div class="field">
-        <label for="cmUsageLimit">Total usage limit (blank = unlimited)</label>
-        <input type="number" id="cmUsageLimit" step="1" min="1" placeholder="(unlimited)" />
+        <label for="cmUsageLimit">Total redemptions allowed</label>
+        <input type="number" id="cmUsageLimit" step="1" min="1" placeholder="Unlimited" />
+        <span class="hint">Leave blank for unlimited use.</span>
       </div>
       <div class="field">
-        <label for="cmDescription">Description (internal)</label>
-        <textarea id="cmDescription" rows="2"></textarea>
+        <label for="cmDescription">Internal note <span class="opt">staff only</span></label>
+        <textarea id="cmDescription" rows="2" placeholder='e.g. "Ramadan promo · approved by Usman"'></textarea>
       </div>
       <div class="field">
         <label class="m-toggle">
@@ -205,7 +216,7 @@
           <span class="m-toggle-track"></span>
           <span class="m-toggle-text">
             <b>Active</b>
-            <em>Customers can apply this code</em>
+            <em>Customers can apply this code right now.</em>
           </span>
         </label>
       </div>
