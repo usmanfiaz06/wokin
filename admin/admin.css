@@ -372,6 +372,76 @@ input{ font:inherit; color:inherit; }
 .m-tags{ display:flex; gap:14px; flex-wrap:wrap; margin-top:4px;}
 .req{ color:var(--red); margin-left:4px; }
 
+/* image uploader */
+.img-uploader{ display:grid; grid-template-columns:120px 1fr; gap:14px; align-items:start;}
+.img-preview{
+  width:120px; height:90px; border-radius:10px; cursor:pointer;
+  background:var(--ink-3); border:2px dashed rgba(244,233,212,.25);
+  display:flex; align-items:center; justify-content:center;
+  background-size:cover; background-position:center;
+  transition:border-color var(--t);
+}
+.img-preview:hover{ border-color:var(--gold-bright);}
+.img-empty{ font-size:11px; color:rgba(244,233,212,.5); letter-spacing:.1em;
+  font-family:'Bebas Neue',sans-serif;}
+.img-actions{ display:flex; flex-direction:column; gap:8px; align-items:flex-start;}
+.img-actions .hint{ font-size:11px; color:rgba(244,233,212,.4); margin-top:auto;}
+
+
+/* =====================================================================
+   COUPON ADMIN PAGE
+===================================================================== */
+.coupon-grid{
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));
+  gap:14px; padding:18px 22px 60px;
+}
+.empty-state{ grid-column:1/-1; text-align:center; padding:60px 0;
+  color:rgba(244,233,212,.5);}
+.empty-state .empty-title{ font-family:'Bebas Neue'; font-size:24px;
+  letter-spacing:.06em; color:var(--cream); margin-bottom:6px;}
+.empty-state .empty-sub{ font-size:13px; color:rgba(244,233,212,.55);}
+
+.coupon-card{
+  background:var(--ink-2); border:1.5px solid var(--ink); border-radius:14px;
+  padding:18px; transition:border-color var(--t), transform var(--t);
+  display:flex; flex-direction:column; gap:10px;
+}
+.coupon-card:hover{ border-color:var(--gold-bright); transform:translateY(-2px);}
+.coupon-card.is-inactive{ opacity:.55;}
+.cc-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
+.cc-code-wrap{ display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+.cc-code{
+  font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:.08em;
+  color:var(--gold-bright); padding:4px 12px;
+  background:rgba(240,188,46,.12); border:1.5px dashed var(--gold);
+  border-radius:6px;
+}
+.cc-inactive{ background:rgba(255,255,255,.08); color:rgba(244,233,212,.6);
+  padding:3px 8px; border-radius:var(--r-pill);
+  font-family:'Bebas Neue'; letter-spacing:.18em; font-size:10px;}
+.cc-auto{ background:var(--green); color:#fff;
+  padding:3px 8px; border-radius:var(--r-pill);
+  font-family:'Bebas Neue'; letter-spacing:.18em; font-size:10px;}
+.cc-value{
+  font-family:'Bebas Neue',sans-serif; letter-spacing:.06em;
+  font-size:22px; color:var(--red); white-space:nowrap;
+}
+.coupon-card.is-inactive .cc-value{ color:rgba(244,233,212,.4);}
+.cc-label{ font-size:14px; color:var(--cream); line-height:1.3;}
+.cc-desc{ font-size:12px; color:rgba(244,233,212,.55);}
+.cc-grid{ display:grid; grid-template-columns:90px 1fr; gap:4px 10px;
+  font-size:12px; border-top:1px dashed var(--line); padding-top:10px;}
+.cc-grid dt{ color:rgba(244,233,212,.5); font-family:'Bebas Neue'; letter-spacing:.1em;}
+.cc-grid dd{ color:var(--cream);}
+.cc-usage{ display:flex; flex-direction:column; gap:6px; padding-top:8px;
+  border-top:1px dashed var(--line); font-size:12px; color:rgba(244,233,212,.7);}
+.cc-usage b{ color:var(--gold-bright); font-family:'Bebas Neue'; font-size:14px;}
+.cc-bar{ height:6px; background:var(--ink-3); border-radius:4px; overflow:hidden;}
+.cc-fill{ height:100%; background:linear-gradient(90deg, var(--red), var(--gold-bright));
+  transition:width var(--t);}
+.cc-actions{ display:flex; justify-content:space-between; align-items:center;
+  padding-top:8px; gap:10px;}
+
 /* custom-dish row visual (admin menu) */
 .mm-row.is-custom{ border-left:3px solid var(--gold-bright); }
 .mm-row .custom-badge{ background:var(--gold-bright); color:var(--ink);

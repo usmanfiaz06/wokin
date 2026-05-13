@@ -446,6 +446,16 @@ input,textarea,select{ font:inherit; color:inherit; }
 }
 
 /* added flash */
+/* promo (auto-apply discount) — crossed-out original price */
+.dish-tag.promo{ background:var(--gold-bright); color:var(--ink); }
+.dish-card.has-promo{ border-color:var(--gold); box-shadow:2px 4px 0 -1px var(--gold);}
+.dish-card .price-was{
+  color:var(--mute); text-decoration:line-through; font-size:14px;
+  font-family:'Bebas Neue',sans-serif; letter-spacing:.02em;
+  margin-right:4px; font-weight:normal;
+}
+.dish-card.has-promo .price-half b{ color:var(--red); }
+
 /* sold-out state */
 .dish-card.is-sold-out{ opacity:.72; }
 .dish-card.is-sold-out .img{ filter:grayscale(.9) brightness(.7); }

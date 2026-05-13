@@ -52,6 +52,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("newDishClose").addEventListener("click", closeNewDishModal);
   document.getElementById("newDishCancel").addEventListener("click", closeNewDishModal);
   document.getElementById("newDishForm").addEventListener("submit", onAddDish);
+  // image upload UI
+  document.getElementById("ndImgPick").addEventListener("click", () =>
+    document.getElementById("ndImgFile").click());
+  document.getElementById("ndImgFile").addEventListener("change", onPickImage);
+  document.getElementById("ndImgClear").addEventListener("click", clearImage);
+  document.getElementById("ndImgPreview").addEventListener("click", () =>
+    document.getElementById("ndImgFile").click());
   document.addEventListener("keydown", e => {
     if (e.key === "Escape") { closeEdit(); closeNewDishModal(); }
   });
@@ -254,7 +261,14 @@ function customDishRow(d, cat){
     </div>
   `;
   const imgEl = row.querySelector(".mm-img");
-  imgEl.style.backgroundImage = `url("../${window.FALLBACK_DISH_IMG || "Assorted_Chinese_food_set.jpg.webp"}")`;
+  const customUrl = d.image_path ? publicImageUrl(d.image_path) : null;
+  const fallback = `/${window.FALLBACK_DISH_IMG || "Assorted_Chinese_food_set.jpg.webp"}`;
+  imgEl.style.backgroundImage = `url("${customUrl || fallback}")`;
+  if (customUrl){
+    const probe = new Image();
+    probe.src = customUrl;
+    probe.onerror = () => { imgEl.style.backgroundImage = `url("${fallback}")`; };
+  }
   row.querySelector("[data-toggle]").addEventListener("change", e =>
     toggleCustomAvailable(d.id, d.name, e.target.checked));
   row.querySelector(".delete-btn").addEventListener("click", () =>
@@ -288,15 +302,70 @@ async function deleteCustomDish(id, name){
   renderMenu();
 }
 
+let _pendingImageFile = null;       // selected but not yet uploaded
+let _pendingImagePath = null;       // uploaded path on Supabase Storage
+
 function openNewDishModal(){
   document.getElementById("newDishForm").reset();
   document.getElementById("ndErr").hidden = true;
+  clearImage();
   document.getElementById("newDishModal").hidden = false;
   document.body.style.overflow = "hidden";
 }
 function closeNewDishModal(){
   document.getElementById("newDishModal").hidden = true;
   document.body.style.overflow = "";
+  clearImage();
+}
+
+function onPickImage(e){
+  const file = e.target.files?.[0];
+  if (!file) return;
+  if (file.size > 3 * 1024 * 1024){
+    toast("Image is over 3 MB — please pick a smaller one");
+    e.target.value = "";
+    return;
+  }
+  _pendingImageFile = file;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const prev = document.getElementById("ndImgPreview");
+    prev.innerHTML = "";
+    prev.style.backgroundImage = `url("${reader.result}")`;
+    document.getElementById("ndImgClear").hidden = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearImage(){
+  _pendingImageFile = null;
+  _pendingImagePath = null;
+  const prev = document.getElementById("ndImgPreview");
+  if (prev){
+    prev.style.backgroundImage = "";
+    prev.innerHTML = `<span class="img-empty">📷  Tap to upload</span>`;
+  }
+  const fi = document.getElementById("ndImgFile");
+  if (fi) fi.value = "";
+  const clr = document.getElementById("ndImgClear");
+  if (clr) clr.hidden = true;
+}
+
+async function uploadPendingImage(){
+  if (!_pendingImageFile) return null;
+  const ext = (_pendingImageFile.name.split(".").pop() || "jpg").toLowerCase();
+  const path = `${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
+  const { error } = await window.db.storage.from("dish-images")
+    .upload(path, _pendingImageFile, { cacheControl: "31536000", upsert: false });
+  if (error) throw error;
+  _pendingImagePath = path;
+  return path;
+}
+
+function publicImageUrl(path){
+  if (!path) return null;
+  const base = (window.SUPABASE_URL || "").replace(/\/$/, "");
+  return `${base}/storage/v1/object/public/dish-images/${path}`;
 }
 
 async function onAddDish(e){
@@ -321,18 +390,35 @@ async function onAddDish(e){
     errEl.hidden = false;
     return;
   }
-  const { data, error } = await window.db
-    .from("custom_dishes").insert(row).select().single();
-  if (error){
-    errEl.textContent = error.message;
+
+  const btn = document.getElementById("newDishSubmit");
+  btn.disabled = true;
+  const orig = btn.textContent;
+
+  try {
+    // upload image first (if any)
+    if (_pendingImageFile){
+      btn.textContent = "UPLOADING IMAGE…";
+      const path = await uploadPendingImage();
+      row.image_path = path;
+    }
+    btn.textContent = "SAVING…";
+    const { data, error } = await window.db
+      .from("custom_dishes").insert(row).select().single();
+    if (error) throw error;
+    state.customs.push(data);
+    bumpSaveCount();
+    toast(`★ ${row.name} ADDED TO MENU`);
+    closeNewDishModal();
+    renderMenu();
+  } catch (err){
+    console.error("[admin/menu] add dish failed:", err);
+    errEl.textContent = err.message || "Save failed";
     errEl.hidden = false;
-    return;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
   }
-  state.customs.push(data);
-  bumpSaveCount();
-  toast(`★ ${row.name} ADDED TO MENU`);
-  closeNewDishModal();
-  renderMenu();
 }
 
 function matchesFilter(dish, cat){

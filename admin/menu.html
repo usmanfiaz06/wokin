@@ -59,6 +59,7 @@
     <nav class="top-nav">
       <a href="/admin/">ORDERS</a>
       <a href="/admin/menu.html" class="is-on">★ MENU</a>
+      <a href="/admin/coupons.html">COUPONS</a>
     </nav>
 
     <div class="top-mid">
@@ -174,6 +175,23 @@
         <label for="ndName">Dish name <span class="req">*</span></label>
         <input type="text" id="ndName" required placeholder="e.g. Wok-Smoked Lamb Chops" />
       </div>
+
+      <!-- IMAGE UPLOAD -->
+      <div class="field">
+        <label>Dish photo</label>
+        <div class="img-uploader" id="ndImgUploader">
+          <div class="img-preview" id="ndImgPreview">
+            <span class="img-empty">📷  Tap to upload</span>
+          </div>
+          <input type="file" id="ndImgFile" accept="image/jpeg,image/png,image/webp" hidden />
+          <div class="img-actions">
+            <button type="button" class="btn-ghost small" id="ndImgPick">CHOOSE FILE</button>
+            <button type="button" class="btn-ghost small" id="ndImgClear" hidden>CLEAR</button>
+            <p class="hint">JPG / PNG / WebP · ideally 800×600 · under 2 MB</p>
+          </div>
+        </div>
+      </div>
+
       <div class="field">
         <label for="ndDesc">Description</label>
         <textarea id="ndDesc" rows="2" placeholder="One short sentence — what's in it, how it tastes"></textarea>
@@ -204,7 +222,7 @@
       <p class="auth-err" id="ndErr" hidden></p>
       <div class="modal-actions inline">
         <button type="button" class="act-cancel" id="newDishCancel">CANCEL</button>
-        <button type="submit" class="act-go">+ ADD TO MENU</button>
+        <button type="submit" class="act-go" id="newDishSubmit">+ ADD TO MENU</button>
       </div>
     </form>
   </div>
