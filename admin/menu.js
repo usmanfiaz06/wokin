@@ -13,6 +13,7 @@ const fmtPKR = n => "Rs. " + Math.round(Number(n)||0).toLocaleString("en-PK");
 
 const state = {
   overrides:   new Map(),   // dish_slug → override row
+  customs:     [],          // custom_dishes rows
   filter:      "",
   onlySoldOut: false,
   realtime:    null,
@@ -47,8 +48,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderMenu();
   });
   document.getElementById("resetAll").addEventListener("click", onResetAll);
+  document.getElementById("addDishBtn").addEventListener("click", openNewDishModal);
+  document.getElementById("newDishClose").addEventListener("click", closeNewDishModal);
+  document.getElementById("newDishCancel").addEventListener("click", closeNewDishModal);
+  document.getElementById("newDishForm").addEventListener("submit", onAddDish);
+  // image upload UI
+  document.getElementById("ndImgPick").addEventListener("click", () =>
+    document.getElementById("ndImgFile").click());
+  document.getElementById("ndImgFile").addEventListener("change", onPickImage);
+  document.getElementById("ndImgClear").addEventListener("click", clearImage);
+  document.getElementById("ndImgPreview").addEventListener("click", () =>
+    document.getElementById("ndImgFile").click());
   document.addEventListener("keydown", e => {
-    if (e.key === "Escape") closeEdit();
+    if (e.key === "Escape") { closeEdit(); closeNewDishModal(); }
   });
 
   const { data: { session } } = await window.db.auth.getSession();
@@ -81,6 +93,7 @@ async function onSignIn(e){
     const { data, error } = await window.db.auth.signInWithPassword({ email, password });
     if (error) throw error;
     if (!data?.session) throw new Error("Signed in but no session returned. Check API key permissions.");
+    await enterApp(data.session);
   } catch (err){
     console.error("[admin/menu] sign-in failed:", err);
     errEl.textContent = (err && err.message) ? err.message : "Couldn't sign in.";
@@ -97,13 +110,31 @@ function showAuth(){
 }
 
 async function enterApp(session){
-  document.getElementById("authScreen").hidden = true;
-  document.getElementById("appScreen").hidden = false;
-  document.getElementById("whoami").textContent = session.user.email;
+  try {
+    console.log("[admin/menu] enterApp called for", session?.user?.email);
+    document.getElementById("authScreen").hidden = true;
+    document.getElementById("appScreen").hidden = false;
+    document.getElementById("whoami").textContent = session.user.email;
 
-  await loadOverrides();
-  renderMenu();
-  subscribeRealtime();
+    await loadOverrides().catch(err => {
+      console.error("[admin/menu] loadOverrides failed:", err);
+      toast("Couldn't load overrides: " + (err.message || err));
+    });
+    await loadCustomDishes().catch(err => {
+      console.warn("[admin/menu] loadCustomDishes failed (custom_dishes table missing?):", err);
+    });
+    populateCategoryDropdown();
+    renderMenu();
+    try { subscribeRealtime(); }
+    catch(err){ console.error("[admin/menu] subscribeRealtime failed:", err); }
+  } catch (err){
+    console.error("[admin/menu] enterApp blew up:", err);
+    const errEl = document.getElementById("authErr");
+    if (errEl){
+      errEl.textContent = "Signed in but page failed to load: " + (err.message || err);
+      errEl.hidden = false;
+    }
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -114,6 +145,20 @@ async function loadOverrides(){
   if (error){ toast("Couldn't load overrides: " + error.message); return; }
   state.overrides.clear();
   (data || []).forEach(r => state.overrides.set(r.dish_slug, r));
+}
+
+async function loadCustomDishes(){
+  const { data, error } = await window.db
+    .from("custom_dishes").select("*").order("position", { ascending: true });
+  if (error) throw error;
+  state.customs = data || [];
+}
+
+function populateCategoryDropdown(){
+  const sel = document.getElementById("ndCategory");
+  if (!sel) return;
+  sel.innerHTML = MENU_DATA
+    .map(c => `<option value="${c.id}">${c.emoji||""} ${c.name}</option>`).join("");
 }
 
 function subscribeRealtime(){
@@ -130,6 +175,19 @@ function subscribeRealtime(){
           }
           renderMenu();
         })
+    .on("postgres_changes",
+        { event: "*", schema: "public", table: "custom_dishes" },
+        payload => {
+          if (payload.eventType === "DELETE"){
+            state.customs = state.customs.filter(d => d.id !== payload.old.id);
+          } else if (payload.eventType === "INSERT"){
+            state.customs.push(payload.new);
+          } else {
+            state.customs = state.customs.map(d =>
+              d.id === payload.new.id ? payload.new : d);
+          }
+          renderMenu();
+        })
     .subscribe();
 }
 
@@ -141,25 +199,225 @@ function renderMenu(){
   root.innerHTML = "";
 
   MENU_DATA.forEach(cat => {
-    const matching = cat.items.filter(d => matchesFilter(d, cat));
-    if (!matching.length) return;
+    const customForCat = state.customs.filter(d => d.category_id === cat.id);
+    const matchingStatic = cat.items.filter(d => matchesFilter(d, cat));
+    const matchingCustom = customForCat.filter(d => matchesCustom(d, cat));
+    const total = matchingStatic.length + matchingCustom.length;
+    if (!total) return;
 
     const sec = document.createElement("section");
     sec.className = "mm-cat";
     sec.innerHTML = `
       <header class="mm-cat-head">
         <h2><span class="em">${cat.emoji||""}</span> ${cat.name}</h2>
-        <span class="mm-cat-count">${matching.length} dish${matching.length===1?"":"es"}</span>
+        <span class="mm-cat-count">${total} dish${total===1?"":"es"}</span>
       </header>
       <div class="mm-grid"></div>
     `;
     const grid = sec.querySelector(".mm-grid");
-    matching.forEach(d => grid.appendChild(dishRow(d, cat)));
+    matchingStatic.forEach(d => grid.appendChild(dishRow(d, cat)));
+    matchingCustom.forEach(d => grid.appendChild(customDishRow(d, cat)));
     root.appendChild(sec);
   });
 
   if (!root.children.length){
     root.innerHTML = `<p class="mm-empty">No dishes match your filter.</p>`;
+  }
+}
+
+function matchesCustom(d, cat){
+  if (state.onlySoldOut && d.is_available !== false) return false;
+  if (state.filter){
+    const hay = (d.name + " " + (d.description||"") + " " + cat.name).toLowerCase();
+    if (!hay.includes(state.filter)) return false;
+  }
+  return true;
+}
+
+function customDishRow(d, cat){
+  const row = document.createElement("article");
+  row.className = "mm-row is-custom" + (d.is_available === false ? " is-sold-out" : "");
+  row.dataset.customId = d.id;
+  row.innerHTML = `
+    <div class="mm-img"></div>
+    <div class="mm-main">
+      <div class="mm-name">
+        <h3>${d.name}<span class="custom-badge">CUSTOM</span></h3>
+        ${d.pcs ? `<span class="mm-pcs">${d.pcs}</span>` : ""}
+      </div>
+      <p class="mm-desc">${d.description || ""}</p>
+    </div>
+    <div class="mm-price">
+      <b>${fmtPKR(d.price)}</b>
+      ${d.price_full && Number(d.price_full) !== Number(d.price) ? `<span>Full ${fmtPKR(d.price_full)}</span>` : ""}
+    </div>
+    <div class="mm-actions">
+      <label class="mm-toggle">
+        <input type="checkbox" ${d.is_available !== false ? "checked" : ""} data-toggle />
+        <span class="mm-toggle-track"></span>
+        <span class="mm-toggle-label">${d.is_available !== false ? "ON" : "OFF"}</span>
+      </label>
+      <button class="delete-btn" title="Delete dish" aria-label="Delete dish">🗑</button>
+    </div>
+  `;
+  const imgEl = row.querySelector(".mm-img");
+  const customUrl = d.image_path ? publicImageUrl(d.image_path) : null;
+  const fallback = `/${window.FALLBACK_DISH_IMG || "Assorted_Chinese_food_set.jpg.webp"}`;
+  imgEl.style.backgroundImage = `url("${customUrl || fallback}")`;
+  if (customUrl){
+    const probe = new Image();
+    probe.src = customUrl;
+    probe.onerror = () => { imgEl.style.backgroundImage = `url("${fallback}")`; };
+  }
+  row.querySelector("[data-toggle]").addEventListener("change", e =>
+    toggleCustomAvailable(d.id, d.name, e.target.checked));
+  row.querySelector(".delete-btn").addEventListener("click", () =>
+    deleteCustomDish(d.id, d.name));
+  return row;
+}
+
+async function toggleCustomAvailable(id, name, isOn){
+  const prev = state.customs.find(d => d.id === id);
+  state.customs = state.customs.map(d => d.id === id ? { ...d, is_available: isOn } : d);
+  renderMenu();
+  const { error } = await window.db.from("custom_dishes")
+    .update({ is_available: isOn }).eq("id", id);
+  if (error){
+    if (prev) state.customs = state.customs.map(d => d.id === id ? prev : d);
+    renderMenu();
+    toast("Save failed: " + error.message);
+    return;
+  }
+  bumpSaveCount();
+  toast(`✓ ${name} · ${isOn ? "AVAILABLE" : "SOLD OUT"}`);
+}
+
+async function deleteCustomDish(id, name){
+  if (!confirm(`Delete "${name}" from the menu permanently?`)) return;
+  const { error } = await window.db.from("custom_dishes").delete().eq("id", id);
+  if (error){ toast("Delete failed: " + error.message); return; }
+  state.customs = state.customs.filter(d => d.id !== id);
+  bumpSaveCount();
+  toast(`🗑 ${name} REMOVED`);
+  renderMenu();
+}
+
+let _pendingImageFile = null;       // selected but not yet uploaded
+let _pendingImagePath = null;       // uploaded path on Supabase Storage
+
+function openNewDishModal(){
+  document.getElementById("newDishForm").reset();
+  document.getElementById("ndErr").hidden = true;
+  clearImage();
+  document.getElementById("newDishModal").hidden = false;
+  document.body.style.overflow = "hidden";
+}
+function closeNewDishModal(){
+  document.getElementById("newDishModal").hidden = true;
+  document.body.style.overflow = "";
+  clearImage();
+}
+
+function onPickImage(e){
+  const file = e.target.files?.[0];
+  if (!file) return;
+  if (file.size > 3 * 1024 * 1024){
+    toast("Image is over 3 MB — please pick a smaller one");
+    e.target.value = "";
+    return;
+  }
+  _pendingImageFile = file;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const prev = document.getElementById("ndImgPreview");
+    prev.innerHTML = "";
+    prev.style.backgroundImage = `url("${reader.result}")`;
+    document.getElementById("ndImgClear").hidden = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearImage(){
+  _pendingImageFile = null;
+  _pendingImagePath = null;
+  const prev = document.getElementById("ndImgPreview");
+  if (prev){
+    prev.style.backgroundImage = "";
+    prev.innerHTML = `<span class="img-empty">📷  Tap to upload</span>`;
+  }
+  const fi = document.getElementById("ndImgFile");
+  if (fi) fi.value = "";
+  const clr = document.getElementById("ndImgClear");
+  if (clr) clr.hidden = true;
+}
+
+async function uploadPendingImage(){
+  if (!_pendingImageFile) return null;
+  const ext = (_pendingImageFile.name.split(".").pop() || "jpg").toLowerCase();
+  const path = `${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
+  const { error } = await window.db.storage.from("dish-images")
+    .upload(path, _pendingImageFile, { cacheControl: "31536000", upsert: false });
+  if (error) throw error;
+  _pendingImagePath = path;
+  return path;
+}
+
+function publicImageUrl(path){
+  if (!path) return null;
+  const base = (window.SUPABASE_URL || "").replace(/\/$/, "");
+  return `${base}/storage/v1/object/public/dish-images/${path}`;
+}
+
+async function onAddDish(e){
+  e.preventDefault();
+  const errEl = document.getElementById("ndErr");
+  errEl.hidden = true;
+  const tags = Array.from(document.querySelectorAll("[data-tag]:checked")).map(c => c.value);
+
+  const row = {
+    category_id:   document.getElementById("ndCategory").value,
+    name:          document.getElementById("ndName").value.trim(),
+    description:   document.getElementById("ndDesc").value.trim() || null,
+    price:         Number(document.getElementById("ndPrice").value),
+    price_full:    document.getElementById("ndPriceFull").value
+                     ? Number(document.getElementById("ndPriceFull").value) : null,
+    pcs:           document.getElementById("ndPcs").value.trim() || null,
+    tags,
+    is_available:  true,
+  };
+  if (!row.name || !row.price || !row.category_id){
+    errEl.textContent = "Pick a category, enter a name and price.";
+    errEl.hidden = false;
+    return;
+  }
+
+  const btn = document.getElementById("newDishSubmit");
+  btn.disabled = true;
+  const orig = btn.textContent;
+
+  try {
+    // upload image first (if any)
+    if (_pendingImageFile){
+      btn.textContent = "UPLOADING IMAGE…";
+      const path = await uploadPendingImage();
+      row.image_path = path;
+    }
+    btn.textContent = "SAVING…";
+    const { data, error } = await window.db
+      .from("custom_dishes").insert(row).select().single();
+    if (error) throw error;
+    state.customs.push(data);
+    bumpSaveCount();
+    toast(`★ ${row.name} ADDED TO MENU`);
+    closeNewDishModal();
+    renderMenu();
+  } catch (err){
+    console.error("[admin/menu] add dish failed:", err);
+    errEl.textContent = err.message || "Save failed";
+    errEl.hidden = false;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
   }
 }
 

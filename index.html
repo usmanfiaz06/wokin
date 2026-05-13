@@ -81,6 +81,20 @@
 <body>
 
 <!-- ===================================================================
+     0. CLOSED BANNER  (sticky at top, shows only when we're closed)
+=================================================================== -->
+<div class="closed-banner" id="closedBanner" hidden>
+  <div class="cb-inner">
+    <span class="cb-dot"></span>
+    <span class="cb-text">
+      <b id="cbHeadline">We're closed right now</b>
+      <em id="cbSub">Browse the menu — you can order again at <span id="cbOpensAt">10:00 AM</span></em>
+    </span>
+  </div>
+</div>
+
+
+<!-- ===================================================================
      1.  LOCATION MODAL  (single-screen, appears 1.5s after landing)
 =================================================================== -->
 <div class="loc-modal is-hidden" id="locModal" role="dialog" aria-modal="true" aria-labelledby="locTitle">
@@ -508,7 +522,10 @@
     <h2>SEE YOU IN <em>~45 MIN</em></h2>
     <p class="confirm-id">Order #<b id="confirmId">—</b></p>
     <p class="confirm-text">A confirmation is on its way to your email. Our rider will call when they're close. Have your <b>cash</b> ready 🙌</p>
-    <button class="btn-primary" id="confirmDone">BACK TO MENU</button>
+    <div class="confirm-actions">
+      <a class="btn-primary" id="confirmTrack" href="#" target="_blank" rel="noopener">★ TRACK MY ORDER</a>
+      <button class="btn-ghost" id="confirmDone">BACK TO MENU</button>
+    </div>
   </div>
 </div>
 

@@ -58,6 +58,7 @@ const state = {
   itemsByOrder: new Map(), // order_id → [items]
   realtime: null,
   currentModalId: null,
+  dayFilter: "today",   // today | yesterday | 7days | all | "YYYY-MM-DD"
 };
 
 /* ------------------------------------------------------------------ */
@@ -78,6 +79,24 @@ async function init(){
   });
   document.getElementById("signOut").addEventListener("click", onSignOut);
   document.getElementById("modalClose").addEventListener("click", closeModal);
+
+  // Day filter chips
+  document.querySelectorAll(".df-chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      state.dayFilter = chip.dataset.day;
+      document.querySelectorAll(".df-chip").forEach(c => c.classList.toggle("is-on", c === chip));
+      document.getElementById("dfDate").value = "";
+      renderBoard();
+      renderStats();
+    });
+  });
+  document.getElementById("dfDate").addEventListener("change", e => {
+    if (!e.target.value) return;
+    state.dayFilter = e.target.value;
+    document.querySelectorAll(".df-chip").forEach(c => c.classList.remove("is-on"));
+    renderBoard();
+    renderStats();
+  });
   document.getElementById("orderModal").addEventListener("click", e => {
     if (e.target.id === "orderModal") closeModal();
   });
@@ -126,7 +145,9 @@ async function onSignIn(e){
     const { data, error } = await window.db.auth.signInWithPassword({ email, password });
     if (error) throw error;
     if (!data?.session) throw new Error("Signed in but no session returned. Check API key permissions.");
-    // success — onAuthStateChange listener will switch to dashboard
+    console.log("[admin] sign-in OK, entering app with session for", data.user?.email);
+    // Don't rely on onAuthStateChange — call enterApp directly.
+    await enterApp(data.session);
   } catch (err) {
     console.error("[admin] sign-in failed:", err);
     _showAuthErr((err && err.message) ? err.message : "Couldn't sign in.");
@@ -145,12 +166,23 @@ function showAuth(){
   document.getElementById("appScreen").hidden = true;
 }
 async function enterApp(session){
-  document.getElementById("authScreen").hidden = true;
-  document.getElementById("appScreen").hidden = false;
-  document.getElementById("whoami").textContent = session.user.email;
+  try {
+    console.log("[admin] enterApp called for", session?.user?.email);
+    document.getElementById("authScreen").hidden = true;
+    document.getElementById("appScreen").hidden = false;
+    document.getElementById("whoami").textContent = session.user.email;
 
-  await refreshAll();
-  subscribeRealtime();
+    // Even if these fail, we stay on the dashboard
+    await refreshAll().catch(err => {
+      console.error("[admin] refreshAll failed:", err);
+      toast("Couldn't load orders: " + (err.message || err));
+    });
+    try { subscribeRealtime(); }
+    catch(err){ console.error("[admin] subscribeRealtime failed:", err); }
+  } catch (err) {
+    console.error("[admin] enterApp blew up:", err);
+    _showAuthErr("Signed in but dashboard failed to load: " + (err.message || err));
+  }
 }
 
 function teardown(){
@@ -265,6 +297,45 @@ function playDing(){
 }
 
 /* ------------------------------------------------------------------ */
+/*  DAY FILTER                                                        */
+/* ------------------------------------------------------------------ */
+function _startOfDayPKT(d = new Date()){
+  // PKT is UTC+5, no DST
+  const offsetMs = 5 * 3600 * 1000;
+  const pkt = new Date(d.getTime() + offsetMs);
+  pkt.setUTCHours(0,0,0,0);
+  return new Date(pkt.getTime() - offsetMs);
+}
+function filterByDay(orders){
+  const day = state.dayFilter;
+  if (day === "all") return orders;
+  const todayStart = _startOfDayPKT();
+  if (day === "today")      return orders.filter(o => new Date(o.created_at) >= todayStart);
+  if (day === "yesterday"){
+    const ystStart = new Date(todayStart.getTime() - 86400000);
+    return orders.filter(o => {
+      const t = new Date(o.created_at);
+      return t >= ystStart && t < todayStart;
+    });
+  }
+  if (day === "7days"){
+    const weekAgo = new Date(todayStart.getTime() - 7 * 86400000);
+    return orders.filter(o => new Date(o.created_at) >= weekAgo);
+  }
+  // explicit date "YYYY-MM-DD"
+  if (/^\d{4}-\d{2}-\d{2}$/.test(day)){
+    const [y,m,d2] = day.split("-").map(Number);
+    const dayStart = _startOfDayPKT(new Date(Date.UTC(y, m-1, d2, 12)));
+    const dayEnd   = new Date(dayStart.getTime() + 86400000);
+    return orders.filter(o => {
+      const t = new Date(o.created_at);
+      return t >= dayStart && t < dayEnd;
+    });
+  }
+  return orders;
+}
+
+/* ------------------------------------------------------------------ */
 /*  RENDER  ·  BOARD                                                  */
 /* ------------------------------------------------------------------ */
 function renderBoard({ flashId } = {}){
@@ -274,10 +345,9 @@ function renderBoard({ flashId } = {}){
   const buckets = {};
   STATUSES.forEach(s => buckets[s.key] = []);
 
-  // sort orders by created_at desc, partition by status
-  const allOrders = [...state.orders.values()].sort(
-    (a,b) => new Date(b.created_at) - new Date(a.created_at)
-  );
+  // Apply day filter then sort by created_at desc
+  const allOrders = filterByDay([...state.orders.values()])
+    .sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
   for (const o of allOrders){
     (buckets[o.status] || (buckets[o.status] = [])).push(o);
   }
@@ -296,10 +366,36 @@ function renderBoard({ flashId } = {}){
     `;
     const body = col.querySelector("[data-body]");
     if (!list.length){
-      body.innerHTML = `<div class="empty-col">— EMPTY —</div>`;
+      body.innerHTML = `<div class="empty-col">— EMPTY · drop here —</div>`;
     } else {
       list.forEach(o => body.appendChild(orderCard(o, flashId === o.id)));
     }
+
+    // drag-and-drop drop target
+    col.addEventListener("dragover", e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      col.classList.add("is-drop-target");
+    });
+    col.addEventListener("dragleave", e => {
+      if (!col.contains(e.relatedTarget)) col.classList.remove("is-drop-target");
+    });
+    col.addEventListener("drop", e => {
+      e.preventDefault();
+      col.classList.remove("is-drop-target");
+      const orderId = e.dataTransfer.getData("text/plain");
+      if (!orderId) return;
+      const order = state.orders.get(orderId);
+      if (!order) return;
+      if (order.status === s.key) return; // dropped onto same column
+      // Pickup orders skip out_for_delivery; bounce that
+      if (order.order_type === "pickup" && s.key === "out_for_delivery"){
+        toast("Pick-up orders skip OUT-FOR-DELIVERY · use READY → DELIVERED");
+        return;
+      }
+      updateStatus(orderId, s.key);
+    });
+
     board.appendChild(col);
   });
 }
@@ -313,24 +409,58 @@ function orderCard(o, flash){
     ? items.slice(0,3).map(i => `${i.quantity}× ${i.dish_name}`).join(", ")
       + (items.length > 3 ? `, +${items.length - 3} more` : "")
     : "(items loading…)";
+
+  // figure out the next status for the one-click button
+  const isPickup = o.order_type === "pickup";
+  let next     = STATUSES.find(s => s.key === o.status)?.next;
+  let nextHint = STATUSES.find(s => s.key === o.status)?.nextLabel;
+  if (isPickup && PICKUP_NEXT[o.status]) { next = PICKUP_NEXT[o.status]; nextHint = "MARK PICKED UP"; }
+
   card.innerHTML = `
+    ${next ? `<button class="oc-advance" data-next="${next}" title="${nextHint}" aria-label="${nextHint}">▸</button>` : ""}
     <div class="oc-top">
       <span class="oc-num">${o.order_number}</span>
       <span class="oc-time">${minutesAgo(o.created_at)}m ago</span>
     </div>
     <div class="oc-cust">${o.customer_name}</div>
     <div class="oc-meta">
-      <span class="pill ${o.order_type}">${o.order_type === "pickup" ? "PICK-UP" : "DELIVERY"}</span>
+      <span class="pill ${o.order_type}">${isPickup ? "PICK-UP" : "DELIVERY"}</span>
       ${o.area ? `<span class="pill">${o.area}</span>`:""}
       <span class="pill">${o.customer_phone}</span>
     </div>
     <div class="oc-items">${itemsLabel}</div>
     <div class="oc-foot">
       <span class="oc-total">${fmtPKR(o.total)}</span>
-      <span class="oc-arrow">›</span>
     </div>
   `;
-  card.addEventListener("click", () => openModal(o.id));
+
+  // open modal on card body click — but not when clicking the advance btn
+  card.addEventListener("click", e => {
+    if (e.target.closest(".oc-advance")) return;
+    openModal(o.id);
+  });
+  const advBtn = card.querySelector(".oc-advance");
+  if (advBtn){
+    advBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      updateStatus(o.id, advBtn.dataset.next);
+    });
+  }
+
+  // ---- drag and drop ----------------------------------------------
+  card.draggable = true;
+  card.dataset.orderId = o.id;
+  card.addEventListener("dragstart", e => {
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", o.id);
+    card.classList.add("is-dragging");
+  });
+  card.addEventListener("dragend", () => {
+    card.classList.remove("is-dragging");
+    document.querySelectorAll(".col.is-drop-target")
+      .forEach(c => c.classList.remove("is-drop-target"));
+  });
+
   return card;
 }
 
@@ -338,16 +468,8 @@ function orderCard(o, flash){
 /*  RENDER  ·  STATS                                                  */
 /* ------------------------------------------------------------------ */
 function renderStats(){
-  // today (Asia/Karachi)
-  const offsetMs = 5 * 3600 * 1000; // PKT is UTC+5, no DST
-  const now = new Date();
-  const pktNow = new Date(now.getTime() + offsetMs);
-  pktNow.setUTCHours(0,0,0,0);
-  const startOfDay = new Date(pktNow.getTime() - offsetMs);
-
-  const today = [...state.orders.values()].filter(
-    o => new Date(o.created_at) >= startOfDay
-  );
+  // stats follow the same day filter as the board
+  const today = filterByDay([...state.orders.values()]);
 
   const validForRevenue = today.filter(o => o.status !== "cancelled");
   const revenue = validForRevenue.reduce((s,o) => s + Number(o.total||0), 0);
@@ -442,8 +564,39 @@ async function openModal(id){
     <dt>Change request</dt><dd>${o.change_request || `<span class="none">—</span>`}</dd>
   `;
 
+  // customer-facing message
+  const msgEl = document.getElementById("mCustomerMessage");
+  msgEl.value = o.customer_message || "";
+  document.getElementById("mMsgHint").textContent =
+    o.customer_message ? "Visible on the customer's tracking page now." : "";
+  const saveBtn = document.getElementById("mSaveMessage");
+  saveBtn.onclick = () => saveCustomerMessage(o.id);
+
   // action buttons depend on current status & order type
   renderActions(o);
+}
+
+async function saveCustomerMessage(orderId){
+  const btn  = document.getElementById("mSaveMessage");
+  const msg  = document.getElementById("mCustomerMessage").value.trim();
+  const hint = document.getElementById("mMsgHint");
+  btn.disabled = true; const orig = btn.textContent; btn.textContent = "SAVING…";
+  try {
+    const { error } = await window.db.from("orders")
+      .update({ customer_message: msg || null }).eq("id", orderId);
+    if (error) throw error;
+    hint.textContent = msg
+      ? "✓ Message saved — customer will see it on the tracking page."
+      : "✓ Message cleared.";
+    toast("✓ Customer message saved");
+    // update local cache
+    const o = state.orders.get(orderId);
+    if (o) state.orders.set(orderId, { ...o, customer_message: msg || null });
+  } catch (err){
+    toast("Save failed: " + err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = orig;
+  }
 }
 
 function renderActions(o){

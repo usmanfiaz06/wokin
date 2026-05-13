@@ -75,11 +75,9 @@ const DELIVERY_FEE   = 100;
 const FREE_THRESHOLD = 1800;
 const ETA_MIN        = 45;
 
-const COUPONS = {
-  WOKIN10:   { type: "percent", value: 10, label: "10% off (welcome)"    },
-  FRESH15:   { type: "percent", value: 15, label: "15% off your meal"    },
-  WOKHOUSE:  { type: "flat",    value: 250, label: "Rs. 250 off"          },
-};
+// Coupons are validated server-side via the validate_coupon RPC.
+// Active auto-apply promotions are fetched on startup and applied
+// to the dish cards (crossed-out original / discounted price).
 
 const fmtPKR = n => "Rs. " + Math.round(n).toLocaleString("en-PK");
 
@@ -102,9 +100,14 @@ const LS_KEY = "wokin_order_state_v1";
 const state = loadState() || {
   type: null,        // 'delivery' | 'pickup'
   area: null,        // string or null
-  cart: [],          // { id, name, desc, image, price, qty, variant }
+  cart: [],          // { id, name, desc, image, price, qty, customId }
   coupon: null,
+  couponDiscount: 0, // Rs value validated by server
+  couponLabel: "",
 };
+// Migrate older state shapes
+if (state.couponDiscount === undefined) state.couponDiscount = 0;
+if (state.couponLabel === undefined)    state.couponLabel = "";
 
 function saveState(){
   try { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
@@ -128,6 +131,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Apply live menu overrides (availability / pricing) before render
   await loadMenuOverrides();
+  await loadCustomDishes();
+  await loadAutoPromos();
+  await loadBusinessHours();
+  startStoreStatusClock();
 
   renderMenu();
   renderPopular();
@@ -176,22 +183,298 @@ function applyOverridesToMenu(){
   });
 }
 
+/* ==================================================================
+   BUSINESS HOURS  (PKT, UTC+5, no DST)
+=================================================================== */
+const storeStatus = {
+  hours:    [],     // 7 business_hours rows
+  settings: null,   // app_settings row
+};
+
+const _PKT_DAYS_LONG  = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const _PKT_DAYS_SHORT = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+function _pktDate(){ return new Date(Date.now() + 5 * 3600 * 1000); }
+function _pktDay(){  return _pktDate().getUTCDay(); }
+function _pktMinutes(){ const d = _pktDate(); return d.getUTCHours() * 60 + d.getUTCMinutes(); }
+
+function _fmt12(time /* "HH:MM(:SS)?" */){
+  if (!time) return "—";
+  const [hStr, mStr] = time.split(":");
+  let h = parseInt(hStr, 10);
+  const m = mStr || "00";
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12 || 12;
+  return m === "00" ? `${h} ${ampm}` : `${h}:${m} ${ampm}`;
+}
+
+async function loadBusinessHours(){
+  if (!window.db) return;
+  try {
+    const [{ data: h }, { data: s }] = await Promise.all([
+      window.db.from("business_hours").select("*").order("day_of_week"),
+      window.db.from("app_settings").select("*").eq("id", 1).maybeSingle(),
+    ]);
+    storeStatus.hours    = h || [];
+    storeStatus.settings = s || { force_closed:false, closed_message:null };
+    applyStoreStatus();
+  } catch (e){
+    console.warn("[wokin] business-hours fetch failed:", e.message);
+  }
+}
+
+function evaluateStoreStatus(){
+  if (!storeStatus.hours.length){
+    return { open: true, why: "loading" };
+  }
+  if (storeStatus.settings?.force_closed){
+    return {
+      open: false,
+      why:  "force",
+      message: storeStatus.settings.closed_message || "We're closed right now — back soon."
+    };
+  }
+  const day = _pktDay();
+  const cur = _pktMinutes();
+  const today = storeStatus.hours.find(h => h.day_of_week === day);
+
+  if (today && !today.is_closed){
+    const [oh,om] = today.opens_at.split(":").map(Number);
+    let   [ch,cm] = today.closes_at.split(":").map(Number);
+    const open  = oh*60 + om;
+    let   close = ch*60 + cm;
+    if (close <= open) close += 24*60; // crosses midnight
+    const curAdj = cur < open && close > 24*60 ? cur + 24*60 : cur;
+    if (curAdj >= open && curAdj < close){
+      return { open:true, today, opens_at: today.opens_at, closes_at: today.closes_at };
+    }
+  }
+
+  // Find next opening
+  const next = _findNextOpening();
+  return { open:false, why:"hours", today, next };
+}
+
+function _findNextOpening(){
+  if (!storeStatus.hours.length) return null;
+  const day  = _pktDay();
+  const cur  = _pktMinutes();
+  for (let i = 0; i < 7; i++){
+    const d = (day + i) % 7;
+    const row = storeStatus.hours.find(h => h.day_of_week === d);
+    if (!row || row.is_closed) continue;
+    const [oh,om] = row.opens_at.split(":").map(Number);
+    const openMin = oh*60 + om;
+    if (i === 0 && cur < openMin){
+      return { day: d, opens_at: row.opens_at, label: "today" };
+    }
+    if (i > 0){
+      return {
+        day: d,
+        opens_at: row.opens_at,
+        label: i === 1 ? "tomorrow" : _PKT_DAYS_LONG[d]
+      };
+    }
+  }
+  return null;
+}
+
+function applyStoreStatus(){
+  const status = evaluateStoreStatus();
+  const banner = document.getElementById("closedBanner");
+  if (!banner) return;
+
+  if (status.open){
+    banner.hidden = true;
+    document.body.classList.remove("is-store-closed");
+    return;
+  }
+
+  // build message
+  let head = "We're closed right now";
+  let sub  = "";
+  if (status.why === "force"){
+    head = "We're taking a quick break";
+    sub  = status.message || "Back shortly!";
+  } else if (status.next){
+    sub = `Opens ${status.next.label} at ${_fmt12(status.next.opens_at)}`;
+  } else {
+    sub = "Check back soon";
+  }
+
+  document.getElementById("cbHeadline").textContent = head;
+  document.getElementById("cbSub").innerHTML        = sub;
+  banner.hidden = false;
+  document.body.classList.add("is-store-closed");
+}
+
+function startStoreStatusClock(){
+  // re-evaluate every 30s so banner flips around opening / closing time
+  setInterval(applyStoreStatus, 30000);
+
+  // Realtime — admin edits propagate immediately
+  if (!window.db) return;
+  window.db
+    .channel("hours-customer")
+    .on("postgres_changes",
+        { event:"*", schema:"public", table:"business_hours" },
+        () => loadBusinessHours())
+    .on("postgres_changes",
+        { event:"*", schema:"public", table:"app_settings" },
+        () => loadBusinessHours())
+    .subscribe();
+}
+
+
+/* ==================================================================
+   AUTO-APPLY PROMOTIONS  (no code needed; shown as crossed-out price)
+=================================================================== */
+const autoPromos = [];      // array of active is_auto_apply coupon rows
+
+async function loadAutoPromos(){
+  if (!window.db) return;
+  try {
+    const nowIso = new Date().toISOString();
+    const { data, error } = await window.db
+      .from("coupons")
+      .select("*")
+      .eq("is_auto_apply", true)
+      .eq("is_active", true);
+    if (error) throw error;
+    autoPromos.length = 0;
+    (data || [])
+      .filter(p =>
+        (!p.valid_from  || p.valid_from  <= nowIso) &&
+        (!p.valid_until || p.valid_until >= nowIso) &&
+        (!p.usage_limit || p.used_count < p.usage_limit))
+      .forEach(p => autoPromos.push(p));
+    applyAutoPromosToMenu();
+  } catch (e){
+    console.warn("[wokin] auto-promos fetch failed:", e.message);
+  }
+}
+
+function _bestPromoFor(dish, cat){
+  // Find the best (largest discount) auto-promo that matches a given dish
+  if (!autoPromos.length) return null;
+  const slug = window.slugifyDish ? window.slugifyDish(dish.name) : "";
+  const basePrice = dish._price != null ? dish._price : dish.price;
+
+  let best = null;
+  for (const p of autoPromos){
+    let matches = false;
+    if (p.scope === "order"){
+      matches = true;
+    } else if (p.scope === "category"){
+      const cats = p.scope_categories?.length ? p.scope_categories
+                 : (p.scope_category ? [p.scope_category] : []);
+      matches = cats.includes(cat.id);
+    } else if (p.scope === "dish_static"){
+      if (dish._custom) { matches = false; }
+      else {
+        const slugs = p.scope_dish_slugs?.length ? p.scope_dish_slugs
+                    : (p.scope_dish_slug ? [p.scope_dish_slug] : []);
+        matches = slugs.includes(slug);
+      }
+    } else if (p.scope === "dish_custom"){
+      const ids = p.scope_custom_dish_ids?.length ? p.scope_custom_dish_ids
+                : (p.scope_custom_dish_id ? [p.scope_custom_dish_id] : []);
+      matches = !!dish._customId && ids.includes(dish._customId);
+    }
+
+    if (!matches) continue;
+
+    let amount = p.discount_type === "percent"
+      ? basePrice * p.discount_value / 100
+      : p.discount_value;
+    if (p.max_discount != null) amount = Math.min(amount, p.max_discount);
+    amount = Math.min(amount, basePrice);
+
+    if (!best || amount > best.amount){
+      best = { promo: p, amount, newPrice: Math.max(0, Math.round(basePrice - amount)) };
+    }
+  }
+  return best;
+}
+
+function applyAutoPromosToMenu(){
+  if (typeof MENU_DATA === "undefined") return;
+  MENU_DATA.forEach(cat => {
+    cat.items.forEach(d => {
+      const hit = _bestPromoFor(d, cat);
+      if (hit){
+        d._originalPrice = d._price != null ? d._price : d.price;
+        d._price         = hit.newPrice;
+        d._promoLabel    = hit.promo.label;
+      } else {
+        // restore baseline if previously had promo
+        if (d._originalPrice != null){
+          d._price = d._originalPrice;
+          d._originalPrice = undefined;
+          d._promoLabel = undefined;
+        }
+      }
+    });
+  });
+}
+
+async function loadCustomDishes(){
+  if (!window.db || typeof MENU_DATA === "undefined") return;
+  try {
+    const { data, error } = await window.db
+      .from("custom_dishes")
+      .select("*")
+      .eq("is_available", true)
+      .order("position", { ascending: true });
+    if (error) throw error;
+
+    // Strip out any previously-merged custom dishes before re-adding
+    MENU_DATA.forEach(cat => { cat.items = cat.items.filter(d => !d._custom); });
+
+    (data || []).forEach(d => {
+      const cat = MENU_DATA.find(c => c.id === d.category_id);
+      if (!cat) return;
+      cat.items.push({
+        name: d.name,
+        desc: d.description || "",
+        pcs: d.pcs || undefined,
+        price: Number(d.price),
+        priceFull: d.price_full != null ? Number(d.price_full) : undefined,
+        smallLabel: d.small_label || undefined,
+        tags: d.tags || [],
+        _custom: true,            // marker so we can re-merge cleanly
+        _customId: d.id,          // for matching dish_custom scope
+        _available: true,         // already filtered server-side
+        _imageUrl: d.image_path
+          ? `${window.SUPABASE_URL || ""}/storage/v1/object/public/dish-images/${d.image_path}`
+          : null,
+      });
+    });
+  } catch (e){
+    console.warn("[wokin] custom_dishes fetch failed:", e.message);
+  }
+}
+
 function subscribeMenuOverrides(){
   if (!window.db) return;
+  const rerender = () => {
+    const root = document.getElementById("menuRoot");
+    const nav  = document.getElementById("catNavInner");
+    if (root) root.innerHTML = "";
+    if (nav)  nav.innerHTML  = "";
+    renderMenu();
+  };
   window.db
     .channel("menu-overrides-customer")
     .on("postgres_changes",
         { event: "*", schema: "public", table: "menu_overrides" },
-        () => {
-          loadMenuOverrides().then(() => {
-            // re-render visible menu so customers see live changes
-            const root = document.getElementById("menuRoot");
-            const nav  = document.getElementById("catNavInner");
-            if (root) root.innerHTML = "";
-            if (nav)  nav.innerHTML  = "";
-            renderMenu();
-          });
-        })
+        () => loadMenuOverrides().then(rerender))
+    .on("postgres_changes",
+        { event: "*", schema: "public", table: "custom_dishes" },
+        () => loadCustomDishes().then(rerender))
+    .on("postgres_changes",
+        { event: "*", schema: "public", table: "coupons" },
+        () => loadAutoPromos().then(rerender))
     .subscribe();
 }
 
@@ -373,7 +656,7 @@ function renderMenu(){
 
 function dishCard(dish, cat, idx){
   const id = makeDishId(dish, cat);
-  const img = getDishImage(dish.name, cat.id);
+  const img = dish._imageUrl || getDishImage(dish.name, cat.id);
   const initial = dish.name.charAt(0);
 
   // resolve effective values from live overrides (falls back to static)
@@ -383,18 +666,22 @@ function dishCard(dish, cat, idx){
   const desc      = dish._desc      != null ? dish._desc      : (dish.desc || "");
   const pcs       = dish._pcs       != null ? dish._pcs       : dish.pcs;
 
+  const hasPromo  = dish._originalPrice != null && dish._originalPrice !== price;
+  const promoLbl  = dish._promoLabel || "";
+
   const tagsHtml = (dish.tags||[]).map(t => `<span class="dish-tag ${t}">${tagLabel(t)}</span>`).join("");
   const soldOutChip = available ? "" : `<span class="dish-tag sold-out">SOLD OUT</span>`;
+  const promoChip   = hasPromo  ? `<span class="dish-tag promo">${promoLbl}</span>` : "";
 
   const card = document.createElement("article");
-  card.className = "dish-card" + (available ? "" : " is-sold-out");
+  card.className = "dish-card" + (available ? "" : " is-sold-out") + (hasPromo ? " has-promo" : "");
   card.dataset.id = id;
 
   const hasFull = priceFull && priceFull !== price;
 
   card.innerHTML = `
     <div class="img" data-initial="${initial}">
-      <div class="img-tags">${soldOutChip}${tagsHtml}</div>
+      <div class="img-tags">${promoChip}${soldOutChip}${tagsHtml}</div>
     </div>
     <div class="pad">
       <h3>${dish.name}</h3>
@@ -402,7 +689,9 @@ function dishCard(dish, cat, idx){
       <p>${desc}</p>
       <div class="foot">
         <div class="prices">
-          <span class="price-half">${fmtPKR(price)}${dish.smallLabel?` <em>· ${dish.smallLabel}</em>`:""}</span>
+          ${hasPromo
+            ? `<span class="price-half"><s class="price-was">${fmtPKR(dish._originalPrice)}</s> <b>${fmtPKR(price)}</b>${dish.smallLabel?` <em>· ${dish.smallLabel}</em>`:""}</span>`
+            : `<span class="price-half">${fmtPKR(price)}${dish.smallLabel?` <em>· ${dish.smallLabel}</em>`:""}</span>`}
           ${hasFull ? `<span class="price-full">Full ${fmtPKR(priceFull)}</span>`:""}
         </div>
         <div class="action"></div>
@@ -550,11 +839,14 @@ function addToCart(dish, cat){
       id,
       name: dish.name,
       desc,
-      image: getDishImage(dish.name, cat.id),
+      image: dish._imageUrl || getDishImage(dish.name, cat.id),
       price,
       qty: 1,
+      customId: dish._customId || null,   // for scoped coupons
     });
   }
+  // cart changed → invalidate any applied coupon discount until re-validated
+  if (state.coupon){ state.couponDiscount = 0; state.coupon = null; state.couponLabel = ""; }
   saveState();
   recalcCart();
 }
@@ -564,6 +856,8 @@ function changeQty(id, delta){
   if (!item) return;
   item.qty += delta;
   if (item.qty <= 0) state.cart = state.cart.filter(c => c.id !== id);
+  // cart changed → invalidate coupon
+  if (state.coupon){ state.couponDiscount = 0; state.coupon = null; state.couponLabel = ""; }
   saveState();
   recalcCart();
   // refresh corresponding dish card stepper, if open
@@ -594,13 +888,8 @@ function cartTotals(){
   const tax = sub * TAX_RATE;
   const isFreeDel = sub >= FREE_THRESHOLD || state.type === "pickup";
   const del = (state.type === "pickup") ? 0 : (isFreeDel ? 0 : DELIVERY_FEE);
-  // coupon
-  let discount = 0;
-  if (state.coupon && COUPONS[state.coupon]){
-    const c = COUPONS[state.coupon];
-    discount = c.type === "percent" ? sub * c.value / 100 : c.value;
-    discount = Math.min(discount, sub);
-  }
+  // discount validated server-side via validate_coupon RPC
+  const discount = Math.min(state.couponDiscount || 0, sub);
   const grand = Math.max(0, sub - discount) + tax + del;
   return { sub, tax, del, discount, grand, isFreeDel };
 }
@@ -840,6 +1129,16 @@ function openCheckout(){
     alert("Your cart is empty. Add something tasty first.");
     return;
   }
+  // Block checkout when closed (kill-switch OR outside hours)
+  const status = evaluateStoreStatus();
+  if (!status.open){
+    let when = "shortly";
+    if (status.next) when = `${status.next.label} at ${_fmt12(status.next.opens_at)}`;
+    alert("Sorry, we're closed right now.\n\n" +
+          "You can finish placing this order " + when + ".\n" +
+          "Your cart is saved.");
+    return;
+  }
   if (!state.area && state.type !== "pickup"){
     openLocModal();
     return;
@@ -909,23 +1208,64 @@ function bindCheckout(){
   });
 }
 
-function applyCoupon(){
+async function applyCoupon(){
   const inp = document.getElementById("coCoupon");
   const msg = document.getElementById("couponMsg");
+  const btn = document.getElementById("couponApply");
   const code = inp.value.trim().toUpperCase();
-  if (!code){ msg.textContent = ""; msg.className = "coupon-msg"; return; }
-  const c = COUPONS[code];
-  if (!c){
+  if (!code){
     state.coupon = null;
-    msg.textContent = `"${code}" isn't a valid code.`;
-    msg.className = "coupon-msg bad";
-  } else {
-    state.coupon = code;
-    msg.textContent = `✓ Applied: ${c.label}`;
-    msg.className = "coupon-msg ok";
+    state.couponDiscount = 0;
+    state.couponLabel = "";
+    msg.textContent = "";
+    msg.className = "coupon-msg";
+    saveState();
+    renderCheckoutSummary();
+    return;
   }
-  saveState();
-  renderCheckoutSummary();
+
+  // Build minimal cart payload for the RPC
+  const cartPayload = state.cart.map(it => {
+    const [catId, dishKey] = it.id.split("::");
+    return {
+      category_id: catId,
+      dish_slug:   window.slugifyDish ? window.slugifyDish(it.name) : null,
+      custom_id:   it.customId || null,
+      price:       it.price,
+      qty:         it.qty,
+    };
+  });
+
+  const origLabel = btn.textContent;
+  btn.disabled = true; btn.textContent = "CHECKING…";
+  try {
+    const { data, error } = await window.db.rpc("validate_coupon",
+      { p_code: code, p_cart: cartPayload });
+    if (error) throw error;
+    const result = Array.isArray(data) ? data[0] : data;
+    if (!result?.valid){
+      state.coupon = null;
+      state.couponDiscount = 0;
+      state.couponLabel = "";
+      msg.textContent = result?.message || "Invalid coupon";
+      msg.className = "coupon-msg bad";
+    } else {
+      state.coupon = code;
+      state.couponDiscount = Number(result.discount_amount) || 0;
+      state.couponLabel    = result.label || "Coupon applied";
+      msg.textContent = `✓ ${result.label} — saved ${fmtPKR(state.couponDiscount)}`;
+      msg.className = "coupon-msg ok";
+    }
+  } catch (err){
+    state.coupon = null;
+    state.couponDiscount = 0;
+    msg.textContent = "Couldn't validate: " + (err.message || err);
+    msg.className = "coupon-msg bad";
+  } finally {
+    btn.disabled = false; btn.textContent = origLabel;
+    saveState();
+    renderCheckoutSummary();
+  }
 }
 
 function validateCheckout(){
@@ -1074,6 +1414,12 @@ async function placeOrder(){
     recalcCart();
 
     document.getElementById("confirmId").textContent = order.order_number;
+    // Wire the tracking link with the order number + phone (prefilled)
+    const trackEl = document.getElementById("confirmTrack");
+    if (trackEl){
+      const phoneEnc = encodeURIComponent(orderRow.customer_phone);
+      trackEl.href = `/track?o=${order.order_number}&p=${phoneEnc}`;
+    }
     document.getElementById("confirm").hidden = false;
     document.body.classList.add("state-locked");
     console.log("[WOK!N] order placed →", order);

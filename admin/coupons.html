@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>WOK!N · Admin · Coupons</title>
+<meta name="robots" content="noindex, nofollow" />
+<meta name="theme-color" content="#1A1A1A" />
+<link rel="icon" type="image/jpeg" href="/Wokin.- logo.jpeg" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&family=Caveat:wght@500;700&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="auth" id="authScreen">
+  <div class="auth-card">
+    <div class="auth-head">
+      <img src="/Wokin.- logo.jpeg" alt="WOK!N" />
+      <div>
+        <span class="cn">炒</span>
+        <b>WOK!N</b>
+        <em>ADMIN · BACK-OF-HOUSE</em>
+      </div>
+    </div>
+    <h1>Sign <em>in.</em></h1>
+    <p class="auth-sub">Restaurant staff only.</p>
+    <form id="loginForm" class="auth-form" novalidate action="javascript:void(0)">
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" id="email" required autocomplete="username" />
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" required autocomplete="current-password" />
+      </div>
+      <p class="auth-err" id="authErr" hidden></p>
+      <button type="button" id="loginBtn" class="btn-primary big">SIGN IN →</button>
+    </form>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="appScreen" hidden>
+
+  <header class="top">
+    <a href="/" class="brand">
+      <img src="/Wokin.- logo.jpeg" alt="WOK!N" />
+      <span class="cn">炒</span>
+      <span class="brand-text">
+        <b>WOK!N</b>
+        <em>ADMIN</em>
+      </span>
+    </a>
+
+    <nav class="top-nav">
+      <a href="/admin/">ORDERS</a>
+      <a href="/admin/menu.html">MENU</a>
+      <a href="/admin/coupons.html" class="is-on">★ COUPONS</a>
+      <a href="/admin/hours.html">HOURS</a>
+    </nav>
+
+    <div class="top-mid">
+      <span class="live-dot"></span>
+      <span class="live-text">LIVE</span>
+      <span class="separator">·</span>
+      <span id="couponCount">0 coupons</span>
+    </div>
+
+    <div class="top-right">
+      <span class="who" id="whoami">—</span>
+      <button class="btn-ghost small" id="signOut">SIGN OUT</button>
+    </div>
+  </header>
+
+  <!-- toolbar -->
+  <div class="mtools">
+    <div class="mtools-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+      </svg>
+      <input type="text" id="couponSearch" placeholder="Search code / label…" />
+    </div>
+    <div class="mtools-filters">
+      <label class="m-checkbox">
+        <input type="checkbox" id="filterInactive" />
+        <span>Show inactive only</span>
+      </label>
+      <button class="btn-primary small" id="addCouponBtn">+ NEW COUPON</button>
+    </div>
+  </div>
+
+  <!-- grid -->
+  <main class="coupon-grid" id="couponGrid"></main>
+
+</div>
+
+
+<!-- NEW / EDIT COUPON MODAL -->
+<div class="modal" id="couponModal" hidden>
+  <div class="modal-card edit">
+    <button class="modal-close" id="couponClose" aria-label="Close">✕</button>
+    <div class="modal-head">
+      <div class="mh-left">
+        <span class="mh-eyebrow" id="cmEyebrow">NEW COUPON</span>
+        <h2 id="cmTitle">Add a <em>coupon</em>.</h2>
+        <span class="mh-meta">Codes are stored uppercase. Customers type them at checkout.</span>
+      </div>
+    </div>
+    <form id="couponForm" class="edit-form">
+
+      <!-- ── BASICS ─────────────────────────────────── -->
+      <p class="cm-section">① BASICS</p>
+      <div class="field-row">
+        <div class="field">
+          <label for="cmCode">Code <span class="req">*</span></label>
+          <input type="text" id="cmCode" required maxlength="32" style="text-transform:uppercase;" placeholder="WOKIN10" />
+          <span class="hint">Customers type this exactly. Letters + numbers, no spaces.</span>
+        </div>
+        <div class="field">
+          <label for="cmLabel">Customer-facing label <span class="req">*</span></label>
+          <input type="text" id="cmLabel" required placeholder="10% off your meal" />
+          <span class="hint">Shown to the customer when applied.</span>
+        </div>
+      </div>
+
+      <!-- ── DISCOUNT ───────────────────────────────── -->
+      <p class="cm-section">② DISCOUNT</p>
+      <div class="field-row">
+        <div class="field">
+          <label for="cmType">Type <span class="req">*</span></label>
+          <select id="cmType">
+            <option value="percent">Percent off (%)</option>
+            <option value="flat">Flat off (Rs.)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="cmValue">Value <span class="req">*</span></label>
+          <input type="number" id="cmValue" required step="1" min="1" placeholder="10" />
+          <span class="hint" id="cmValueHint">10 = 10% off</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="m-toggle">
+          <input type="checkbox" id="cmAutoApply" />
+          <span class="m-toggle-track"></span>
+          <span class="m-toggle-text">
+            <b>Auto-apply (no code needed)</b>
+            <em>Shown on the menu as a crossed-out price.<br>OFF = customer must type the code at checkout.</em>
+          </span>
+        </label>
+      </div>
+
+      <!-- ── SCOPE ──────────────────────────────────── -->
+      <p class="cm-section">③ APPLIES TO</p>
+      <div class="field">
+        <label for="cmScope">Scope <span class="req">*</span></label>
+        <select id="cmScope">
+          <option value="order">★ The whole order subtotal</option>
+          <option value="category">A whole category (e.g. all Poultry)</option>
+          <option value="dish_static">One specific dish from the menu</option>
+          <option value="dish_custom">One specific custom dish</option>
+        </select>
+      </div>
+      <div class="field" id="cmScopeCategoryWrap" hidden>
+        <label>Which categories? <span class="req">*</span></label>
+        <div class="multi-pick" id="cmScopeCategoryPicker"></div>
+        <span class="hint">Tap to select one or more. Discount applies to items in any chosen category.</span>
+      </div>
+      <div class="field" id="cmScopeDishStaticWrap" hidden>
+        <label>Which menu dishes? <span class="req">*</span></label>
+        <div class="multi-pick scrollable" id="cmScopeDishStaticPicker"></div>
+        <span class="hint">Tap to select one or more.</span>
+      </div>
+      <div class="field" id="cmScopeDishCustomWrap" hidden>
+        <label>Which custom dishes? <span class="req">*</span></label>
+        <div class="multi-pick" id="cmScopeDishCustomPicker"></div>
+      </div>
+
+      <!-- ── RULES ──────────────────────────────────── -->
+      <p class="cm-section">④ RULES <em>(all optional)</em></p>
+      <div class="field-row">
+        <div class="field">
+          <label for="cmMinOrder">Minimum order (Rs.)</label>
+          <input type="number" id="cmMinOrder" step="50" min="0" placeholder="0" />
+          <span class="hint">Order must reach this subtotal.</span>
+        </div>
+        <div class="field">
+          <label for="cmMaxDiscount">Max discount cap (Rs.)</label>
+          <input type="number" id="cmMaxDiscount" step="50" min="0" placeholder="No cap" />
+          <span class="hint">Caps a percent discount.</span>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="cmValidFrom">Valid from</label>
+          <input type="datetime-local" id="cmValidFrom" />
+        </div>
+        <div class="field">
+          <label for="cmValidUntil">Valid until</label>
+          <input type="datetime-local" id="cmValidUntil" />
+        </div>
+      </div>
+      <div class="field">
+        <label for="cmUsageLimit">Total redemptions allowed</label>
+        <input type="number" id="cmUsageLimit" step="1" min="1" placeholder="Unlimited" />
+        <span class="hint">Leave blank for unlimited use.</span>
+      </div>
+      <div class="field">
+        <label for="cmDescription">Internal note <span class="opt">staff only</span></label>
+        <textarea id="cmDescription" rows="2" placeholder='e.g. "Ramadan promo · approved by Usman"'></textarea>
+      </div>
+      <div class="field">
+        <label class="m-toggle">
+          <input type="checkbox" id="cmActive" checked />
+          <span class="m-toggle-track"></span>
+          <span class="m-toggle-text">
+            <b>Active</b>
+            <em>Customers can apply this code right now.</em>
+          </span>
+        </label>
+      </div>
+      <p class="auth-err" id="cmErr" hidden></p>
+      <div class="modal-actions inline">
+        <button type="button" class="act-cancel" id="cmDelete" hidden>🗑 DELETE</button>
+        <button type="button" class="act-cancel" id="couponCancel">CANCEL</button>
+        <button type="submit" class="act-go" id="couponSubmit">✓ SAVE COUPON</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast" hidden></div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/supabase-client.js"></script>
+<script src="/menu-data.js"></script>
+<script src="/dish-images.js"></script>
+<script src="/admin/coupons.js"></script>
+</body>
+</html>
