@@ -1425,9 +1425,7 @@ async function placeOrder(){
     console.log("[WOK!N] order placed →", order);
   } catch (err) {
     console.error("[WOK!N] order failed:", err);
-    alert("Sorry — we couldn't place the order:\n\n" +
-          (err.message || err) +
-          "\n\nPlease try again or call us.");
+    alert("We're sorry — something went wrong while placing your order.\n\nPlease call us and we'll take your order right away:\n\n📞 +92 335 5979775\n\nSorry for the trouble!");
   } finally {
     if (btn){ btn.disabled = false; btn.innerHTML = originalLabel; }
   }
