@@ -564,8 +564,39 @@ async function openModal(id){
     <dt>Change request</dt><dd>${o.change_request || `<span class="none">—</span>`}</dd>
   `;
 
+  // customer-facing message
+  const msgEl = document.getElementById("mCustomerMessage");
+  msgEl.value = o.customer_message || "";
+  document.getElementById("mMsgHint").textContent =
+    o.customer_message ? "Visible on the customer's tracking page now." : "";
+  const saveBtn = document.getElementById("mSaveMessage");
+  saveBtn.onclick = () => saveCustomerMessage(o.id);
+
   // action buttons depend on current status & order type
   renderActions(o);
+}
+
+async function saveCustomerMessage(orderId){
+  const btn  = document.getElementById("mSaveMessage");
+  const msg  = document.getElementById("mCustomerMessage").value.trim();
+  const hint = document.getElementById("mMsgHint");
+  btn.disabled = true; const orig = btn.textContent; btn.textContent = "SAVING…";
+  try {
+    const { error } = await window.db.from("orders")
+      .update({ customer_message: msg || null }).eq("id", orderId);
+    if (error) throw error;
+    hint.textContent = msg
+      ? "✓ Message saved — customer will see it on the tracking page."
+      : "✓ Message cleared.";
+    toast("✓ Customer message saved");
+    // update local cache
+    const o = state.orders.get(orderId);
+    if (o) state.orders.set(orderId, { ...o, customer_message: msg || null });
+  } catch (err){
+    toast("Save failed: " + err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = orig;
+  }
 }
 
 function renderActions(o){

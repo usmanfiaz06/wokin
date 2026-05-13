@@ -363,10 +363,24 @@ function _bestPromoFor(dish, cat){
   let best = null;
   for (const p of autoPromos){
     let matches = false;
-    if (p.scope === "order")              matches = true;
-    else if (p.scope === "category")      matches = cat.id === p.scope_category;
-    else if (p.scope === "dish_static")   matches = !dish._custom && slug === p.scope_dish_slug;
-    else if (p.scope === "dish_custom")   matches = dish._customId === p.scope_custom_dish_id;
+    if (p.scope === "order"){
+      matches = true;
+    } else if (p.scope === "category"){
+      const cats = p.scope_categories?.length ? p.scope_categories
+                 : (p.scope_category ? [p.scope_category] : []);
+      matches = cats.includes(cat.id);
+    } else if (p.scope === "dish_static"){
+      if (dish._custom) { matches = false; }
+      else {
+        const slugs = p.scope_dish_slugs?.length ? p.scope_dish_slugs
+                    : (p.scope_dish_slug ? [p.scope_dish_slug] : []);
+        matches = slugs.includes(slug);
+      }
+    } else if (p.scope === "dish_custom"){
+      const ids = p.scope_custom_dish_ids?.length ? p.scope_custom_dish_ids
+                : (p.scope_custom_dish_id ? [p.scope_custom_dish_id] : []);
+      matches = !!dish._customId && ids.includes(dish._customId);
+    }
 
     if (!matches) continue;
 
@@ -1400,6 +1414,12 @@ async function placeOrder(){
     recalcCart();
 
     document.getElementById("confirmId").textContent = order.order_number;
+    // Wire the tracking link with the order number + phone (prefilled)
+    const trackEl = document.getElementById("confirmTrack");
+    if (trackEl){
+      const phoneEnc = encodeURIComponent(orderRow.customer_phone);
+      trackEl.href = `/track?o=${order.order_number}&p=${phoneEnc}`;
+    }
     document.getElementById("confirm").hidden = false;
     document.body.classList.add("state-locked");
     console.log("[WOK!N] order placed →", order);

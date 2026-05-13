@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>Track your order · WOK!N</title>
+<meta name="robots" content="noindex, nofollow" />
+<meta name="theme-color" content="#E31B23" />
+<link rel="icon" type="image/jpeg" href="/Wokin.- logo.jpeg" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800;900&family=Permanent+Marker&family=Caveat:wght@500;700&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/order.css">
+<style>
+  body{ min-height:100vh; }
+  .tr-wrap{ max-width:720px; margin:0 auto; padding:24px 18px 80px;}
+  .tr-head{
+    display:flex; align-items:center; gap:14px; padding:18px 0 26px;
+    border-bottom:2px solid var(--ink);
+  }
+  .tr-head img{ width:48px; height:48px; object-fit:contain; background:#fff;
+    border:2px solid var(--ink); border-radius:10px; padding:5px;}
+  .tr-head .cn{ font-family:'Noto Serif SC',serif; font-weight:900;
+    font-size:36px; color:var(--red); line-height:1;}
+  .tr-head .ttl{ flex:1;}
+  .tr-head h1{ font-family:'Bebas Neue'; font-size:32px; letter-spacing:.02em;
+    color:var(--ink); line-height:1;}
+  .tr-head h1 em{ font-family:'Caveat',cursive; font-style:italic; font-weight:700;
+    color:var(--red); font-size:32px; }
+  .tr-head .ttl p{ font-size:13px; color:var(--mute); margin-top:4px;}
+  .tr-back{ font-family:'Bebas Neue'; letter-spacing:.18em; font-size:12px;
+    color:var(--red); text-decoration:none; padding:8px 14px;
+    border:2px solid var(--red); border-radius:var(--r-pill); }
+  .tr-back:hover{ background:var(--red); color:#fff; }
+
+  /* Form to look up order */
+  .tr-form{
+    margin-top:24px; padding:22px; background:var(--paper);
+    border:2px solid var(--ink); border-radius:18px;
+    box-shadow:var(--shadow-card);
+  }
+  .tr-form h2{ font-family:'Bebas Neue'; font-size:28px; letter-spacing:.02em;
+    color:var(--ink); margin-bottom:4px; line-height:1; }
+  .tr-form h2 em{ font-family:'Caveat',cursive; font-style:italic; font-weight:700;
+    color:var(--red); font-size:28px; }
+  .tr-form p{ color:var(--mute); font-size:13px; margin-bottom:18px;}
+  .tr-form .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:12px;}
+  .tr-form label{ font-family:'Bebas Neue'; letter-spacing:.14em; font-size:12px;
+    color:var(--ink);}
+  .tr-form input{ padding:13px 14px; border:2px solid var(--ink); border-radius:10px;
+    background:#fff; font-size:15px;}
+  .tr-form input:focus{ outline:none; box-shadow:0 0 0 3px rgba(227,27,35,.18);}
+  .tr-form .err{ background:rgba(227,27,35,.08); color:var(--red-dark);
+    padding:10px 14px; border-radius:10px; font-size:13px; margin-bottom:10px; }
+  .tr-form button[type="submit"]{ width:100%; margin-top:6px; }
+
+  /* Result */
+  .tr-result{
+    margin-top:24px; padding:22px; background:var(--paper);
+    border:2px solid var(--ink); border-radius:18px; position:relative;
+  }
+  .tr-result .tr-order-num{
+    display:inline-block; font-family:'Bebas Neue'; letter-spacing:.08em;
+    font-size:22px; color:var(--red); background:rgba(227,27,35,.08);
+    border:1.5px dashed var(--red); padding:4px 14px; border-radius:6px;
+  }
+  .tr-result .tr-when{ font-size:12px; color:var(--mute); margin-top:6px;}
+
+  /* Status pipeline */
+  .tr-status{ margin:22px 0; }
+  .tr-status .pipe{ display:flex; flex-direction:column; gap:0; }
+  .tr-step{
+    display:grid; grid-template-columns:48px 1fr; gap:14px; align-items:center;
+    padding:14px 0; position:relative;
+  }
+  .tr-step + .tr-step::before{
+    content:''; position:absolute; left:23px; top:-8px; bottom:50%;
+    width:2px; background:var(--line); z-index:0;
+  }
+  .tr-step:not(:last-child)::after{
+    content:''; position:absolute; left:23px; top:50%; bottom:-8px;
+    width:2px; background:var(--line); z-index:0;
+  }
+  .tr-step.is-done + .tr-step::before,
+  .tr-step.is-done:not(:last-child)::after{ background:var(--green); }
+  .tr-step.is-active + .tr-step::before,
+  .tr-step.is-active:not(:last-child)::after{
+    background:linear-gradient(180deg, var(--green) 0%, var(--line) 100%);
+  }
+
+  .tr-dot{
+    width:46px; height:46px; border-radius:50%;
+    background:var(--cream-2); border:2.5px solid var(--ink);
+    display:flex; align-items:center; justify-content:center; z-index:1;
+    color:var(--mute); font-size:22px;
+  }
+  .tr-step.is-done .tr-dot{ background:var(--green); color:#fff; border-color:var(--green);}
+  .tr-step.is-active .tr-dot{
+    background:var(--red); color:#fff; border-color:var(--red);
+    box-shadow:0 0 0 0 rgba(227,27,35,.6); animation:trPulse 1.5s infinite;
+  }
+  @keyframes trPulse{
+    0%,100%{ box-shadow:0 0 0 0 rgba(227,27,35,.55); }
+    50%{ box-shadow:0 0 0 8px rgba(227,27,35,0); }
+  }
+  .tr-step.is-cancelled .tr-dot{ background:#777; color:#fff; border-color:#777;}
+  .tr-step b{ font-family:'Bebas Neue'; letter-spacing:.04em; font-size:18px; color:var(--ink);}
+  .tr-step.is-pending b{ color:var(--mute); }
+  .tr-step small{ display:block; color:var(--mute); font-size:11px; margin-top:2px;}
+
+  /* Admin message */
+  .tr-msg{
+    margin:14px 0; padding:14px 16px;
+    background:linear-gradient(120deg, #fff 0%, var(--paper) 100%);
+    border:2px dashed var(--gold); border-radius:12px;
+    display:flex; gap:10px; align-items:flex-start;
+  }
+  .tr-msg .tr-msg-icon{ font-size:22px;}
+  .tr-msg b{ display:block; font-family:'Bebas Neue'; letter-spacing:.16em;
+    font-size:11px; color:var(--red); margin-bottom:4px;}
+  .tr-msg p{ font-size:14px; color:var(--ink); line-height:1.45; }
+
+  /* ETA */
+  .tr-eta{
+    margin-top:18px; padding:14px 18px;
+    background:var(--ink); color:var(--cream); border-radius:14px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .tr-eta svg{ width:22px; height:22px; color:var(--gold-bright);}
+  .tr-eta b{ font-family:'Bebas Neue'; letter-spacing:.06em; font-size:18px; color:var(--gold-bright);}
+
+  /* Items + totals */
+  .tr-items{ margin-top:18px; padding-top:14px; border-top:1px dashed var(--line);}
+  .tr-items h3{ font-family:'Bebas Neue'; letter-spacing:.16em; font-size:13px;
+    color:var(--mute); margin-bottom:10px;}
+  .tr-item{ display:grid; grid-template-columns:36px 1fr auto; gap:10px;
+    padding:6px 0; font-size:14px;}
+  .tr-item .q{ font-family:'Bebas Neue'; color:var(--red);}
+  .tr-item .n{ color:var(--ink);}
+  .tr-item .p{ font-family:'Bebas Neue'; color:var(--ink);}
+  .tr-totals{ margin-top:10px; padding-top:8px; border-top:1px dashed var(--line);
+    display:flex; flex-direction:column; gap:4px; font-size:13px;}
+  .tr-totals .row{ display:flex; justify-content:space-between;}
+  .tr-totals .grand{ margin-top:6px; padding-top:6px; border-top:1px solid var(--line);
+    font-family:'Bebas Neue'; font-size:20px; color:var(--red); }
+
+  .tr-actions{ margin-top:18px; display:flex; gap:10px; flex-wrap:wrap;}
+  .tr-actions .btn-ghost,
+  .tr-actions .btn-primary{ flex:1; min-width:140px;}
+
+  @media (max-width: 540px){
+    .tr-head{ flex-wrap:wrap; gap:10px; }
+    .tr-head .ttl{ flex:1 1 100%; order:3; }
+    .tr-head h1, .tr-head h1 em{ font-size:26px; }
+  }
+</style>
+</head>
+<body>
+
+<main class="tr-wrap">
+  <header class="tr-head">
+    <img src="/Wokin.- logo.jpeg" alt="WOK!N" />
+    <span class="cn">炒</span>
+    <div class="ttl">
+      <h1>Track your <em>order</em></h1>
+      <p>Live status, ETA, and notes from the kitchen.</p>
+    </div>
+    <a class="tr-back" href="/">← BACK</a>
+  </header>
+
+  <!-- LOOKUP FORM -->
+  <form class="tr-form" id="trForm" novalidate>
+    <h2>Find your <em>order</em></h2>
+    <p>Enter the order number we sent you and the phone you ordered with.</p>
+    <div class="err" id="trErr" hidden></div>
+    <div class="field">
+      <label for="trNum">Order number</label>
+      <input type="text" id="trNum" required placeholder="WK7K3D9F" autocapitalize="characters" />
+    </div>
+    <div class="field">
+      <label for="trPhone">Phone number</label>
+      <input type="tel" id="trPhone" required placeholder="03XX-XXXXXXX" maxlength="12" />
+    </div>
+    <button type="submit" class="btn-primary big" id="trBtn">TRACK ORDER →</button>
+  </form>
+
+  <!-- RESULT (filled by JS) -->
+  <section class="tr-result" id="trResult" hidden></section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/supabase-client.js"></script>
+<script>
+/* =====================================================================
+   WOK!N · Customer order tracking
+   ===================================================================== */
+const STATUS_FLOW = [
+  { key:"new",              label:"PLACED",         note:"We've got your order." },
+  { key:"accepted",         label:"ACCEPTED",       note:"Confirmed by the kitchen." },
+  { key:"cooking",          label:"COOKING",        note:"Fire's on, your dishes are in the wok." },
+  { key:"ready",            label:"READY",          note:"Plated & packed." },
+  { key:"out_for_delivery", label:"ON THE WAY",     note:"The rider is heading to you." },
+  { key:"delivered",        label:"DELIVERED",      note:"Enjoy! Hope it was great." },
+];
+const STATUS_PICKUP = [
+  { key:"new",              label:"PLACED",         note:"We've got your order." },
+  { key:"accepted",         label:"ACCEPTED",       note:"Confirmed by the kitchen." },
+  { key:"cooking",          label:"COOKING",        note:"Fire's on, your dishes are in the wok." },
+  { key:"ready",            label:"READY FOR PICK-UP", note:"Come pick it up!" },
+  { key:"delivered",        label:"PICKED UP",      note:"Thanks for stopping by." },
+];
+
+const fmtPKR = n => "Rs. " + Math.round(Number(n)||0).toLocaleString("en-PK");
+const fmtTime = iso => iso ? new Date(iso).toLocaleString("en-PK",
+  { dateStyle:"medium", timeStyle:"short" }) : "";
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Auto-format the phone input
+  const phone = document.getElementById("trPhone");
+  phone.addEventListener("input", () => {
+    let v = phone.value.replace(/\D/g,"").slice(0,11);
+    if (v.length > 4) v = v.slice(0,4) + "-" + v.slice(4);
+    phone.value = v;
+  });
+
+  // Read ?o= and ?p= from the URL — lets us auto-look-up after order
+  const params = new URLSearchParams(location.search);
+  if (params.get("o")) document.getElementById("trNum").value   = params.get("o");
+  if (params.get("p")) document.getElementById("trPhone").value = params.get("p");
+  if (params.get("o") && params.get("p")) lookUp();
+
+  document.getElementById("trForm").addEventListener("submit", e => {
+    e.preventDefault();
+    lookUp();
+  });
+});
+
+async function lookUp(){
+  const num   = document.getElementById("trNum").value.trim().toUpperCase();
+  const phone = document.getElementById("trPhone").value.trim();
+  const err   = document.getElementById("trErr");
+  err.hidden = true;
+  if (!num || !phone){
+    err.textContent = "Enter both order number and phone."; err.hidden = false; return;
+  }
+  const btn = document.getElementById("trBtn");
+  btn.disabled = true; const orig = btn.textContent; btn.textContent = "LOOKING UP…";
+
+  try {
+    const { data, error } = await window.db.rpc("track_order",
+      { p_order_number: num, p_phone: phone });
+    if (error) throw error;
+    const order = Array.isArray(data) ? data[0] : data;
+    if (!order){
+      err.innerHTML = "We couldn't find an order with <b>" + num + "</b> and that phone number. " +
+                      "Double-check both and try again.";
+      err.hidden = false;
+      document.getElementById("trResult").hidden = true;
+      return;
+    }
+    render(order);
+    // Update URL so it can be shared / bookmarked
+    history.replaceState(null, "", `?o=${num}&p=${encodeURIComponent(phone)}`);
+    // Poll for status changes every 30s
+    if (!_pollTimer) _pollTimer = setInterval(silentRefresh, 30000);
+  } catch (e){
+    err.textContent = "Couldn't reach the server: " + (e.message || e);
+    err.hidden = false;
+  } finally {
+    btn.disabled = false; btn.textContent = orig;
+  }
+}
+
+let _pollTimer = null;
+async function silentRefresh(){
+  const num   = document.getElementById("trNum").value.trim().toUpperCase();
+  const phone = document.getElementById("trPhone").value.trim();
+  if (!num || !phone) return;
+  try {
+    const { data } = await window.db.rpc("track_order",
+      { p_order_number: num, p_phone: phone });
+    const order = Array.isArray(data) ? data[0] : data;
+    if (order) render(order);
+  } catch(e){ /* ignore */ }
+}
+
+function render(o){
+  const res = document.getElementById("trResult");
+  const isPickup = o.order_type === "pickup";
+  const flow = isPickup ? STATUS_PICKUP : STATUS_FLOW;
+
+  // map status -> index
+  const idx = flow.findIndex(s => s.key === o.status);
+  const isCancelled = o.status === "cancelled";
+
+  // Timestamps per status
+  const stamps = {
+    new:              o.created_at,
+    accepted:         o.accepted_at,
+    cooking:          o.cooking_at,
+    ready:            o.ready_at,
+    out_for_delivery: o.out_at,
+    delivered:        o.delivered_at,
+  };
+
+  let stepsHtml;
+  if (isCancelled){
+    stepsHtml = `
+      <div class="tr-step is-cancelled">
+        <div class="tr-dot">✕</div>
+        <div>
+          <b>ORDER CANCELLED</b>
+          <small>${fmtTime(o.cancelled_at)}${o.cancel_reason ? " · " + o.cancel_reason : ""}</small>
+        </div>
+      </div>`;
+  } else {
+    stepsHtml = flow.map((s, i) => {
+      let klass = "is-pending";
+      if (i < idx)  klass = "is-done";
+      if (i === idx) klass = "is-active";
+      const icons = { new:"📋", accepted:"✓", cooking:"🔥", ready:"🍱", out_for_delivery:"🛵", delivered:"🎉" };
+      return `
+        <div class="tr-step ${klass}">
+          <div class="tr-dot">${i < idx ? "✓" : icons[s.key] || ""}</div>
+          <div>
+            <b>${s.label}</b>
+            <small>${i <= idx ? (stamps[s.key] ? fmtTime(stamps[s.key]) : s.note) : s.note}</small>
+          </div>
+        </div>`;
+    }).join("");
+  }
+
+  const itemsHtml = (o.items || []).map(i => `
+    <div class="tr-item">
+      <span class="q">×${i.quantity}</span>
+      <span class="n">${i.dish_name}${i.variant ? " · " + i.variant : ""}</span>
+      <span class="p">${fmtPKR(i.line_total)}</span>
+    </div>`).join("");
+
+  const eta = etaLine(o);
+
+  res.innerHTML = `
+    <span class="tr-order-num">${o.order_number}</span>
+    <p class="tr-when">Placed ${fmtTime(o.created_at)} — ${isPickup ? "pick-up" : "delivery"}${o.area ? " · " + o.area : ""}</p>
+
+    ${o.customer_message ? `
+      <div class="tr-msg">
+        <span class="tr-msg-icon">🥡</span>
+        <div>
+          <b>★ A NOTE FROM THE KITCHEN</b>
+          <p>${o.customer_message}</p>
+        </div>
+      </div>` : ""}
+
+    ${eta}
+
+    <div class="tr-status"><div class="pipe">${stepsHtml}</div></div>
+
+    <div class="tr-items">
+      <h3>★ YOUR ORDER</h3>
+      ${itemsHtml}
+      <div class="tr-totals">
+        <div class="row"><span>Subtotal</span><span>${fmtPKR(o.subtotal)}</span></div>
+        <div class="row"><span>Tax (15%)</span><span>${fmtPKR(o.tax)}</span></div>
+        <div class="row"><span>Delivery</span><span>${Number(o.delivery_fee) === 0 ? "FREE" : fmtPKR(o.delivery_fee)}</span></div>
+        ${Number(o.coupon_discount) > 0 ? `<div class="row"><span>Coupon (${o.coupon_code})</span><span>−${fmtPKR(o.coupon_discount)}</span></div>` : ""}
+        <div class="grand row"><span>TOTAL</span><span>${fmtPKR(o.total)}</span></div>
+      </div>
+    </div>
+
+    <div class="tr-actions">
+      <a class="btn-ghost" href="/">← BACK TO MENU</a>
+      <button class="btn-primary" onclick="silentRefresh()">↻ REFRESH</button>
+    </div>
+  `;
+  res.hidden = false;
+}
+
+function etaLine(o){
+  if (o.status === "delivered")  return `<div class="tr-eta">✓ <b>Order complete</b></div>`;
+  if (o.status === "cancelled")  return `<div class="tr-eta">✕ <b>Order cancelled</b></div>`;
+  const eta = o.estimated_minutes || 45;
+  const placed = new Date(o.created_at).getTime();
+  const due    = placed + eta * 60 * 1000;
+  const left   = Math.max(0, Math.round((due - Date.now()) / 60000));
+  return `<div class="tr-eta">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+    ${left > 0
+      ? `Arriving in <b>~${left} min</b> &nbsp;·&nbsp; ETA ${new Date(due).toLocaleTimeString("en-PK", { hour:"numeric", minute:"2-digit" })}`
+      : `Almost there <b>· any moment</b>`}
+  </div>`;
+}
+</script>
+</body>
+</html>

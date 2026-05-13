@@ -93,19 +93,49 @@ async function enterApp(session){
   subscribe();
 }
 
-function populateScopeDropdowns(){
-  // category dropdown from static MENU_DATA
-  const catSel = document.getElementById("cmScopeCategory");
-  catSel.innerHTML = MENU_DATA
-    .map(c => `<option value="${c.id}">${c.emoji||""} ${c.name}</option>`).join("");
+/* ------------------------------------------------------------------ */
+/*  Multi-select scope pickers                                        */
+/* ------------------------------------------------------------------ */
+const pickedScope = {
+  categories: new Set(),
+  dishSlugs:  new Set(),
+  customIds:  new Set(),
+};
 
-  // static dish dropdown — all static menu items, grouped by category
-  const dsSel = document.getElementById("cmScopeDishStatic");
-  dsSel.innerHTML = MENU_DATA.map(cat =>
-    `<optgroup label="${cat.name}">` +
-      cat.items.map(d => `<option value="${slugifyDish(d.name)}">${d.name}</option>`).join("") +
-    `</optgroup>`
+function populateScopeDropdowns(){
+  // Categories
+  const catBox = document.getElementById("cmScopeCategoryPicker");
+  catBox.innerHTML = MENU_DATA.map(c =>
+    `<button type="button" class="pick-chip" data-cat="${c.id}">${c.emoji||""} ${c.name}</button>`
   ).join("");
+  catBox.querySelectorAll(".pick-chip").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const cat = btn.dataset.cat;
+      if (pickedScope.categories.has(cat)) pickedScope.categories.delete(cat);
+      else pickedScope.categories.add(cat);
+      btn.classList.toggle("is-on");
+    });
+  });
+
+  // Static dishes — grouped by category, scrollable
+  const dsBox = document.getElementById("cmScopeDishStaticPicker");
+  dsBox.innerHTML = MENU_DATA.map(cat => `
+    <div class="pick-group">
+      <p class="pick-group-h">${cat.emoji||""} ${cat.name}</p>
+      ${cat.items.map(d => {
+        const slug = slugifyDish(d.name);
+        return `<button type="button" class="pick-chip" data-slug="${slug}">${d.name}</button>`;
+      }).join("")}
+    </div>
+  `).join("");
+  dsBox.querySelectorAll(".pick-chip").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const slug = btn.dataset.slug;
+      if (pickedScope.dishSlugs.has(slug)) pickedScope.dishSlugs.delete(slug);
+      else pickedScope.dishSlugs.add(slug);
+      btn.classList.toggle("is-on");
+    });
+  });
 }
 
 let _customDishesForScope = [];
@@ -115,20 +145,43 @@ async function loadCustomDishesForScope(){
       .select("id, name, category_id").order("name");
     if (error) throw error;
     _customDishesForScope = data || [];
-    const sel = document.getElementById("cmScopeDishCustom");
-    sel.innerHTML = _customDishesForScope.length
-      ? _customDishesForScope.map(d => `<option value="${d.id}">${d.name} · ${d.category_id}</option>`).join("")
-      : `<option disabled>(no custom dishes yet)</option>`;
+    const box = document.getElementById("cmScopeDishCustomPicker");
+    box.innerHTML = _customDishesForScope.length
+      ? _customDishesForScope.map(d =>
+          `<button type="button" class="pick-chip" data-id="${d.id}">${d.name} · ${d.category_id}</button>`
+        ).join("")
+      : `<p class="hint">No custom dishes yet — add one in MENU first.</p>`;
+    box.querySelectorAll(".pick-chip").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.dataset.id;
+        if (pickedScope.customIds.has(id)) pickedScope.customIds.delete(id);
+        else pickedScope.customIds.add(id);
+        btn.classList.toggle("is-on");
+      });
+    });
   } catch(e){
     console.warn("custom dishes scope load failed:", e.message);
   }
 }
 
+function _setChipsOn(boxId, attr, picked){
+  const box = document.getElementById(boxId);
+  if (!box) return;
+  box.querySelectorAll(".pick-chip").forEach(btn => {
+    btn.classList.toggle("is-on", picked.has(btn.dataset[attr]));
+  });
+}
+
 function refreshScope(){
   const scope = document.getElementById("cmScope").value;
-  document.getElementById("cmScopeCategoryWrap").hidden  = scope !== "category";
-  document.getElementById("cmScopeDishStaticWrap").hidden= scope !== "dish_static";
-  document.getElementById("cmScopeDishCustomWrap").hidden= scope !== "dish_custom";
+  // "Whole order" hides ALL pickers
+  document.getElementById("cmScopeCategoryWrap").hidden   = scope !== "category";
+  document.getElementById("cmScopeDishStaticWrap").hidden = scope !== "dish_static";
+  document.getElementById("cmScopeDishCustomWrap").hidden = scope !== "dish_custom";
+  // Clear selections from non-active scopes so we never save dirty data
+  if (scope !== "category"){ pickedScope.categories.clear(); _setChipsOn("cmScopeCategoryPicker", "cat",  pickedScope.categories); }
+  if (scope !== "dish_static"){ pickedScope.dishSlugs.clear(); _setChipsOn("cmScopeDishStaticPicker", "slug", pickedScope.dishSlugs); }
+  if (scope !== "dish_custom"){ pickedScope.customIds.clear(); _setChipsOn("cmScopeDishCustomPicker", "id",   pickedScope.customIds); }
 }
 
 async function load(){
@@ -223,13 +276,26 @@ function couponCard(c){
     ? `${c.discount_value}% OFF`
     : `Rs. ${c.discount_value} OFF`;
 
-  // Scope label
+  // Scope label — prefer arrays, fall back to singular for legacy rows
   let scopeLabel = "Whole order";
-  if (c.scope === "category")       scopeLabel = `Category · ${c.scope_category || "?"}`;
-  if (c.scope === "dish_static")    scopeLabel = `Dish · ${c.scope_dish_slug || "?"}`;
-  if (c.scope === "dish_custom") {
-    const found = _customDishesForScope.find(d => d.id === c.scope_custom_dish_id);
-    scopeLabel = `Custom · ${found?.name || c.scope_custom_dish_id || "?"}`;
+  if (c.scope === "category"){
+    const cats = (c.scope_categories?.length ? c.scope_categories : [c.scope_category]).filter(Boolean);
+    scopeLabel = cats.length <= 2
+      ? "Cats · " + cats.join(", ")
+      : `Cats · ${cats.length} categories`;
+  }
+  if (c.scope === "dish_static"){
+    const slugs = (c.scope_dish_slugs?.length ? c.scope_dish_slugs : [c.scope_dish_slug]).filter(Boolean);
+    scopeLabel = slugs.length === 1 ? `Dish · ${slugs[0]}` : `Dishes · ${slugs.length} items`;
+  }
+  if (c.scope === "dish_custom"){
+    const ids = (c.scope_custom_dish_ids?.length ? c.scope_custom_dish_ids : [c.scope_custom_dish_id]).filter(Boolean);
+    if (ids.length === 1){
+      const found = _customDishesForScope.find(d => d.id === ids[0]);
+      scopeLabel = `Custom · ${found?.name || "?"}`;
+    } else {
+      scopeLabel = `Custom · ${ids.length} dishes`;
+    }
   }
 
   card.innerHTML = `
@@ -302,9 +368,18 @@ function openModal(code){
   document.getElementById("cmActive").checked     = c ? c.is_active !== false : true;
   document.getElementById("cmAutoApply").checked  = c ? !!c.is_auto_apply : false;
   document.getElementById("cmScope").value        = c?.scope || "order";
-  if (c?.scope_category)        document.getElementById("cmScopeCategory").value = c.scope_category;
-  if (c?.scope_dish_slug)       document.getElementById("cmScopeDishStatic").value = c.scope_dish_slug;
-  if (c?.scope_custom_dish_id)  document.getElementById("cmScopeDishCustom").value = c.scope_custom_dish_id;
+
+  // Load multi-select picks (arrays > singulars > empty)
+  pickedScope.categories = new Set(c?.scope_categories?.length ? c.scope_categories
+                                : (c?.scope_category ? [c.scope_category] : []));
+  pickedScope.dishSlugs  = new Set(c?.scope_dish_slugs?.length ? c.scope_dish_slugs
+                                : (c?.scope_dish_slug ? [c.scope_dish_slug] : []));
+  pickedScope.customIds  = new Set(c?.scope_custom_dish_ids?.length ? c.scope_custom_dish_ids
+                                : (c?.scope_custom_dish_id ? [c.scope_custom_dish_id] : []));
+  _setChipsOn("cmScopeCategoryPicker",   "cat",  pickedScope.categories);
+  _setChipsOn("cmScopeDishStaticPicker", "slug", pickedScope.dishSlugs);
+  _setChipsOn("cmScopeDishCustomPicker", "id",   pickedScope.customIds);
+
   document.getElementById("cmDelete").hidden      = !c;
   document.getElementById("cmErr").hidden         = true;
   refreshTypeHint();
@@ -342,6 +417,18 @@ async function onSave(e){
   }
 
   const scope = document.getElementById("cmScope").value;
+
+  // Validate scope-specific selections
+  if (scope === "category"    && pickedScope.categories.size === 0){
+    errEl.textContent = "Pick at least one category."; errEl.hidden = false; return;
+  }
+  if (scope === "dish_static" && pickedScope.dishSlugs.size === 0){
+    errEl.textContent = "Pick at least one menu dish."; errEl.hidden = false; return;
+  }
+  if (scope === "dish_custom" && pickedScope.customIds.size === 0){
+    errEl.textContent = "Pick at least one custom dish."; errEl.hidden = false; return;
+  }
+
   const row = {
     code,
     label,
@@ -356,9 +443,14 @@ async function onSave(e){
     is_active:      active,
     is_auto_apply:  document.getElementById("cmAutoApply").checked,
     scope,
-    scope_category:       scope === "category"    ? document.getElementById("cmScopeCategory").value : null,
-    scope_dish_slug:      scope === "dish_static" ? document.getElementById("cmScopeDishStatic").value : null,
-    scope_custom_dish_id: scope === "dish_custom" ? document.getElementById("cmScopeDishCustom").value : null,
+    // Arrays — used by the new RPC
+    scope_categories:      scope === "category"    ? Array.from(pickedScope.categories) : [],
+    scope_dish_slugs:      scope === "dish_static" ? Array.from(pickedScope.dishSlugs)  : [],
+    scope_custom_dish_ids: scope === "dish_custom" ? Array.from(pickedScope.customIds)  : [],
+    // Clear legacy singulars
+    scope_category:        null,
+    scope_dish_slug:       null,
+    scope_custom_dish_id:  null,
   };
 
   const btn = document.getElementById("couponSubmit");

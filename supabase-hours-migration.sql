@@ -10,8 +10,8 @@
 -- ---------------------------------------------------------------------
 create table if not exists public.business_hours (
   day_of_week   int primary key check (day_of_week between 0 and 6),
-  opens_at      time not null default '10:00',
-  closes_at     time not null default '23:00',
+  opens_at      time not null default '12:00',         -- 12:00 PM
+  closes_at     time not null default '01:00',         -- 1:00 AM (next day)
   is_closed     boolean not null default false,        -- closed all day
   updated_at    timestamptz not null default now(),
   updated_by    uuid references auth.users(id)
@@ -19,7 +19,7 @@ create table if not exists public.business_hours (
 
 -- Seed all 7 days (idempotent)
 insert into public.business_hours (day_of_week, opens_at, closes_at, is_closed)
-select g.day, '10:00'::time, '23:00'::time, false
+select g.day, '12:00'::time, '01:00'::time, false
 from generate_series(0, 6) as g(day)
 on conflict (day_of_week) do nothing;
 
