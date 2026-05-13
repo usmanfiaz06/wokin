@@ -94,6 +94,28 @@ function applyDishBg(el, url){
 }
 
 /* ------------------------------------------------------------------ */
+/*  CUSTOM DIALOG  (replaces native browser alert)                     */
+/* ------------------------------------------------------------------ */
+function showDialog({ icon = "🔔", title = "Notice", body = "", ok = "GOT IT", onOk } = {}) {
+  const wrap  = document.getElementById("wkDialogWrap");
+  if (!wrap) { alert(body); if (onOk) onOk(); return; }
+  document.getElementById("wkDialogIcon").textContent  = icon;
+  document.getElementById("wkDialogTitle").textContent = title;
+  document.getElementById("wkDialogBody").textContent  = body;
+  document.getElementById("wkDialogOk").textContent    = ok;
+  wrap.hidden = false;
+  document.body.style.overflow = "hidden";
+  const btn = document.getElementById("wkDialogOk");
+  const close = () => {
+    wrap.hidden = true;
+    document.body.style.overflow = "";
+    btn.removeEventListener("click", close);
+    if (onOk) onOk();
+  };
+  btn.addEventListener("click", close);
+}
+
+/* ------------------------------------------------------------------ */
 /*  STATE (persisted in localStorage)                                  */
 /* ------------------------------------------------------------------ */
 const LS_KEY = "wokin_order_state_v1";
@@ -582,6 +604,8 @@ function syncBarLocation(){
   document.getElementById("barTypeLabel").textContent =
     state.type === "pickup" ? "PICK-UP FROM" : (state.type ? "DELIVERY TO" : "CHOOSE");
   document.getElementById("barAreaLabel").textContent = state.area || "— pick an area —";
+  const hamArea = document.getElementById("hamAreaDisplay");
+  if (hamArea) hamArea.textContent = state.area ? `${state.type === "pickup" ? "Pick-up" : "Delivery"}: ${state.area}` : "— pick an area —";
 }
 
 function populateAreaSelect(){
@@ -605,6 +629,19 @@ function bindTopBar(){
   });
   document.getElementById("footerCart").addEventListener("click", openCart);
   document.getElementById("fabCart").addEventListener("click", openCart);
+
+  // hamburger
+  const hamBtn   = document.getElementById("hamburgerBtn");
+  const hamDrawer = document.getElementById("hamDrawer");
+  const hamClose  = document.getElementById("hamClose");
+  const hamOverlay = document.getElementById("hamOverlay");
+  const openHam = () => { hamDrawer.setAttribute("aria-hidden","false"); document.body.style.overflow="hidden"; };
+  const closeHam = () => { hamDrawer.setAttribute("aria-hidden","true"); document.body.style.overflow=""; };
+  hamBtn?.addEventListener("click", openHam);
+  hamClose?.addEventListener("click", closeHam);
+  hamOverlay?.addEventListener("click", closeHam);
+  document.getElementById("hamSearchLink")?.addEventListener("click", () => { closeHam(); openSearch(); });
+  document.getElementById("hamLocLink")?.addEventListener("click", () => { closeHam(); openLocModal(); });
 }
 
 
@@ -1126,7 +1163,7 @@ function doSearch(q){
 =================================================================== */
 function openCheckout(){
   if (!state.cart.length){
-    alert("Your cart is empty. Add something tasty first.");
+    showDialog({ icon:"🛒", title:"CART IS EMPTY", body:"Add something delicious first!" });
     return;
   }
   // Block checkout when closed (kill-switch OR outside hours)
@@ -1134,9 +1171,12 @@ function openCheckout(){
   if (!status.open){
     let when = "shortly";
     if (status.next) when = `${status.next.label} at ${_fmt12(status.next.opens_at)}`;
-    alert("Sorry, we're closed right now.\n\n" +
-          "You can finish placing this order " + when + ".\n" +
-          "Your cart is saved.");
+    showDialog({
+      icon: "🕐",
+      title: "WE'RE CLOSED",
+      body: `We're not taking orders right now.\n\nYou can place your order ${when}.\n\nYour cart is saved — we'll be here soon! 🙏`,
+      ok: "GOT IT"
+    });
     return;
   }
   if (!state.area && state.type !== "pickup"){
@@ -1182,7 +1222,7 @@ function bindCheckout(){
 
   // GPS in map
   document.getElementById("useGpsBtn").addEventListener("click", () => {
-    if (!navigator.geolocation){ alert("Geolocation not supported."); return; }
+    if (!navigator.geolocation){ showDialog({ icon:"📍", title:"NOT SUPPORTED", body:"Your browser doesn't support location. Please paste a Google Maps link instead." }); return; }
     navigator.geolocation.getCurrentPosition(pos => {
       state.gps = { lat: pos.coords.latitude, lng: pos.coords.longitude };
       saveState();
@@ -1190,7 +1230,7 @@ function bindCheckout(){
       c.hidden = false;
       c.querySelector("span").textContent = `${state.gps.lat.toFixed(5)}, ${state.gps.lng.toFixed(5)} (sent to rider)`;
       mountMap();
-    }, err => alert(err.message));
+    }, err => showDialog({ icon:"📍", title:"LOCATION ERROR", body: err.message }));
   });
 
   // form submit
@@ -1425,7 +1465,12 @@ async function placeOrder(){
     console.log("[WOK!N] order placed →", order);
   } catch (err) {
     console.error("[WOK!N] order failed:", err);
-    alert("We're sorry — something went wrong while placing your order.\n\nPlease call us and we'll take your order right away:\n\n📞 +92 335 5979775\n\nSorry for the trouble!");
+    showDialog({
+      icon: "😔",
+      title: "ORDER NOT PLACED",
+      body: "Something went wrong on our end — your order was not placed.\n\nPlease call us and we'll take your order right away:\n\n📞 +92 335 5979775\n\nSorry for the trouble!",
+      ok: "OK"
+    });
   } finally {
     if (btn){ btn.disabled = false; btn.innerHTML = originalLabel; }
   }

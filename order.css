@@ -261,6 +261,89 @@ body.is-store-closed .fab-cart-mid strong{ color:#aaa; }
 }
 .bar-cart-badge.is-empty{ display:none; }
 
+/* hamburger button — hidden on desktop */
+.bar-hamburger{
+  display:none; flex-direction:column; justify-content:center; gap:5px;
+  width:40px; height:40px; padding:8px; background:transparent;
+  border:2px solid var(--ink); border-radius:10px; cursor:pointer;
+}
+.bar-hamburger span{ display:block; height:2px; background:var(--ink); border-radius:2px; transition:all .2s; }
+.bar-hamburger:hover{ background:var(--ink); }
+.bar-hamburger:hover span{ background:var(--cream); }
+
+/* hamburger drawer */
+.ham-drawer{ position:fixed; inset:0; z-index:200; pointer-events:none; }
+.ham-drawer[aria-hidden="false"]{ pointer-events:all; }
+.ham-overlay{
+  position:absolute; inset:0; background:rgba(0,0,0,.5);
+  opacity:0; transition:opacity .25s;
+}
+.ham-drawer[aria-hidden="false"] .ham-overlay{ opacity:1; }
+.ham-panel{
+  position:absolute; top:0; right:0; bottom:0; width:min(320px, 90vw);
+  background:var(--cream); display:flex; flex-direction:column;
+  transform:translateX(100%); transition:transform .28s cubic-bezier(.4,0,.2,1);
+  box-shadow:-4px 0 32px rgba(0,0,0,.18);
+}
+.ham-drawer[aria-hidden="false"] .ham-panel{ transform:translateX(0); }
+.ham-top{
+  display:flex; align-items:center; gap:10px; padding:18px 16px 14px;
+  border-bottom:2px solid var(--ink);
+}
+.ham-logo{ width:40px; height:40px; object-fit:contain; border:2px solid var(--ink);
+  border-radius:8px; padding:3px; background:#fff; }
+.ham-cn{ font-family:'Noto Serif SC',serif; font-weight:900; font-size:28px; color:var(--red); flex:1; }
+.ham-close{ margin-left:auto; width:36px; height:36px; border:2px solid var(--ink);
+  border-radius:50%; font-size:16px; background:transparent; cursor:pointer; }
+.ham-close:hover{ background:var(--ink); color:var(--cream); }
+.ham-loc-info{
+  display:flex; align-items:center; gap:8px; padding:12px 16px;
+  background:var(--paper); border-bottom:1px solid var(--line);
+  font-size:13px; color:var(--mute);
+}
+.ham-links{ list-style:none; padding:8px 0; flex:1; overflow-y:auto; }
+.ham-links li + li{ border-top:1px solid var(--line); }
+.ham-link{
+  display:flex; align-items:center; gap:14px; width:100%; padding:16px 20px;
+  font-family:'Bebas Neue',sans-serif; letter-spacing:.1em; font-size:18px;
+  color:var(--ink); text-decoration:none; background:transparent; cursor:pointer;
+  transition:background .15s;
+}
+.ham-link:hover{ background:var(--paper); }
+.ham-link svg{ flex-shrink:0; color:var(--red); }
+.ham-foot{
+  padding:16px 20px; font-family:'Bebas Neue',sans-serif; letter-spacing:.14em;
+  font-size:11px; color:var(--mute); border-top:1px solid var(--line);
+}
+
+/* custom dialog */
+.wk-dialog-wrap{
+  position:fixed; inset:0; z-index:300; display:flex; align-items:center;
+  justify-content:center; padding:20px;
+  background:rgba(0,0,0,.55); backdrop-filter:blur(4px);
+}
+.wk-dialog-wrap[hidden]{ display:none; }
+.wk-dialog{
+  background:var(--cream); border:2.5px solid var(--ink); border-radius:20px;
+  padding:32px 28px 28px; max-width:360px; width:100%;
+  box-shadow:0 8px 48px rgba(0,0,0,.28);
+  text-align:center; animation:dialogPop .22s cubic-bezier(.4,0,.2,1);
+}
+@keyframes dialogPop{
+  from{ transform:scale(.88); opacity:0; }
+  to  { transform:scale(1);   opacity:1; }
+}
+.wk-dialog-icon{ font-size:42px; margin-bottom:12px; line-height:1; }
+.wk-dialog-title{
+  font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:.04em;
+  color:var(--ink); margin-bottom:10px; line-height:1;
+}
+.wk-dialog-body{
+  font-size:15px; color:var(--mute); line-height:1.55; margin-bottom:24px;
+  white-space:pre-line;
+}
+.wk-dialog-ok{ width:100%; }
+
 .bar-strip{
   background:var(--ink); color:var(--gold-bright); overflow:hidden; white-space:nowrap;
   font-family:'Bebas Neue',sans-serif; letter-spacing:.32em; font-size:12px; padding:6px 0;
@@ -902,21 +985,22 @@ body.is-store-closed .fab-cart-mid strong{ color:#aaa; }
   .field-row{ grid-template-columns:1fr;}
 }
 @media (max-width: 600px){
-  /* Compact header: logo | location chip | [phone] [cart] */
+  /* Compact header: logo | location chip | [cart] [hamburger] */
   .bar-inner{ display:flex; align-items:center; gap:8px; padding:8px 12px; }
-  .bar-logo-cn{ display:none; }              /* hide 炒 character */
+  .bar-logo-cn{ display:none; }
   .bar-logo img{ width:38px; height:38px; }
   .bar-loc{
     flex:1; min-width:0; padding:7px 10px; gap:6px;
     max-width:none;
   }
-  .bar-loc-text em{ display:none; }          /* hide "DELIVERY TO" label */
+  .bar-loc-text em{ display:none; }
   .bar-loc-text b{ font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .bar-actions{ gap:6px; flex-shrink:0; }
-  .bar-track-btn{ display:none; }            /* hide TRACK on mobile (accessible from confirmation) */
-  .bar-phone-btn{ padding:8px 10px; }
-  .bar-icon-btn{ display:none; }             /* hide search icon to save space */
+  .bar-track-btn{ display:none; }
+  .bar-phone-btn{ display:none; }            /* moved into hamburger drawer */
+  .bar-icon-btn{ display:none; }             /* moved into hamburger drawer */
   .bar-cart{ padding:8px 12px; gap:6px; }
+  .bar-hamburger{ display:flex; }            /* show hamburger on mobile */
 }
 @media (max-width: 540px){
   .loc-card{ padding:28px 22px;}
