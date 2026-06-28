@@ -849,6 +849,16 @@ function addToCart(dish, cat){
   if (state.coupon){ state.couponDiscount = 0; state.coupon = null; state.couponLabel = ""; }
   saveState();
   recalcCart();
+
+  // Meta Pixel — AddToCart signal for ad optimisation
+  if (typeof fbq === "function") {
+    fbq("track", "AddToCart", {
+      value:     Math.round(price),
+      currency:  "PKR",
+      contents:  [{ id: dish.name, quantity: 1 }],
+      num_items: 1,
+    });
+  }
 }
 
 function changeQty(id, delta){
@@ -1152,6 +1162,17 @@ function openCheckout(){
   renderCheckoutSummary();
   mountMap();
   recalcCart();
+
+  // Meta Pixel — InitiateCheckout signal for ad optimisation
+  if (typeof fbq === "function") {
+    const t = cartTotals();
+    fbq("track", "InitiateCheckout", {
+      value:     Math.round(t.grand),
+      currency:  "PKR",
+      contents:  state.cart.map(c => ({ id: c.name, quantity: c.qty })),
+      num_items: state.cart.reduce((n, c) => n + c.qty, 0),
+    });
+  }
 }
 function closeCheckout(){
   document.getElementById("checkout").hidden = true;
@@ -1423,6 +1444,16 @@ async function placeOrder(){
     document.getElementById("confirm").hidden = false;
     document.body.classList.add("state-locked");
     console.log("[WOK!N] order placed →", order);
+
+    // Meta Pixel — fire Purchase conversion event for ad optimisation
+    if (typeof fbq === "function") {
+      fbq("track", "Purchase", {
+        value:    Math.round(t.grand),
+        currency: "PKR",
+        contents: itemsRows.map(i => ({ id: i.dish_name, quantity: i.quantity })),
+        num_items: itemsRows.reduce((n, i) => n + i.quantity, 0),
+      });
+    }
   } catch (err) {
     console.error("[WOK!N] order failed:", err);
     alert("We're sorry — something went wrong while placing your order.\n\nPlease call us and we'll take your order right away:\n\n📞 +92 335 5979775\n\nSorry for the trouble!");
