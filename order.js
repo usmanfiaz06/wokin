@@ -1423,6 +1423,16 @@ async function placeOrder(){
     document.getElementById("confirm").hidden = false;
     document.body.classList.add("state-locked");
     console.log("[WOK!N] order placed →", order);
+
+    // Meta Pixel — fire Purchase conversion event for ad optimisation
+    if (typeof fbq === "function") {
+      fbq("track", "Purchase", {
+        value:    Math.round(t.grand),
+        currency: "PKR",
+        contents: itemsRows.map(i => ({ id: i.dish_name, quantity: i.quantity })),
+        num_items: itemsRows.reduce((n, i) => n + i.quantity, 0),
+      });
+    }
   } catch (err) {
     console.error("[WOK!N] order failed:", err);
     alert("We're sorry — something went wrong while placing your order.\n\nPlease call us and we'll take your order right away:\n\n📞 +92 335 5979775\n\nSorry for the trouble!");
