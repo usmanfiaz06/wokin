@@ -76,10 +76,18 @@
     </div>
 
     <div class="top-right">
+      <button class="btn-ghost small sound-toggle" id="soundToggle" title="Ring on every new order until accepted">🔔 SOUND: ON</button>
       <span class="who" id="whoami">—</span>
       <button class="btn-ghost small" id="signOut">SIGN OUT</button>
     </div>
   </header>
+
+  <!-- New-order alarm banner (shows while any order is still unaccepted) -->
+  <div class="new-order-alarm" id="alarmBanner" hidden>
+    <span class="noa-bell">🔔</span>
+    <span class="noa-text"><b id="alarmCount">0</b> new order(s) waiting — tap to review &amp; accept</span>
+    <button type="button" class="noa-silence" id="alarmSilence">SILENCE</button>
+  </div>
 
   <!-- Day filter -->
   <div class="day-filter">

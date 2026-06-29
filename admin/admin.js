@@ -80,6 +80,21 @@ async function init(){
   document.getElementById("signOut").addEventListener("click", onSignOut);
   document.getElementById("modalClose").addEventListener("click", closeModal);
 
+  // New-order alarm controls
+  setSoundEnabled(alarm.enabled);   // reflect saved preference in the button
+  const soundBtn = document.getElementById("soundToggle");
+  if (soundBtn) soundBtn.addEventListener("click", () => { primeAudio(); setSoundEnabled(!alarm.enabled); });
+  const silenceBtn = document.getElementById("alarmSilence");
+  if (silenceBtn) silenceBtn.addEventListener("click", () => { alarm.snoozed = true; updateAlarm(); });
+  const banner = document.getElementById("alarmBanner");
+  if (banner) banner.addEventListener("click", e => {
+    if (e.target.closest("#alarmSilence")) return;  // silence handled above
+    openOldestNew();
+  });
+  // Any click/keypress primes the audio context (browsers need a gesture)
+  ["click","keydown"].forEach(ev =>
+    document.addEventListener(ev, primeAudio, { once: true }));
+
   // Day filter chips
   document.querySelectorAll(".df-chip").forEach(chip => {
     chip.addEventListener("click", () => {
@@ -266,9 +281,18 @@ function onOrderChange(payload){
   }
 
   if (payload.eventType === "INSERT"){
-    // ding (browser may block on first visit)
-    try { playDing(); } catch(e){}
+    alarm.snoozed = false;   // a fresh order always re-arms the alarm
     toast(`★ NEW ORDER · ${payload.new.order_number}`);
+    // Pop the order open so staff can accept / reject right away — but
+    // don't yank them away from one they're already working on.
+    if (!state.currentModalId){
+      setTimeout(() => {
+        if (!state.currentModalId && state.orders.has(o.id) &&
+            state.orders.get(o.id).status === "new"){
+          openModal(o.id);
+        }
+      }, 400);
+    }
   }
 
   renderBoard({ flashId: payload.eventType === "INSERT" ? o.id : null });
@@ -284,16 +308,97 @@ function onItemInsert(payload){
   state.itemsByOrder.get(it.order_id).push(it);
 }
 
-function playDing(){
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  const o = ctx.createOscillator();
-  const g = ctx.createGain();
-  o.connect(g); g.connect(ctx.destination);
-  o.type = "sine"; o.frequency.value = 880;
-  g.gain.setValueAtTime(0.0001, ctx.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + 0.02);
-  g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
-  o.start(); o.stop(ctx.currentTime + 0.55);
+/* ------------------------------------------------------------------ */
+/*  NEW-ORDER ALARM                                                    */
+/*  Rings on a loop while any order is still in "new" (un-accepted),   */
+/*  so an order is never missed. Stops the moment the last new order   */
+/*  is accepted (or the chef hits SILENCE).                            */
+/* ------------------------------------------------------------------ */
+const alarm = {
+  ctx: null,
+  timer: null,
+  enabled: localStorage.getItem("wokin_admin_sound") !== "off", // default ON
+  snoozed: false,   // SILENCE mutes current batch; a brand-new order un-snoozes
+};
+
+// Lazily create / resume one shared AudioContext (browsers require a
+// user gesture before audio can play — login click primes it).
+function alarmCtx(){
+  if (!alarm.ctx) alarm.ctx = new (window.AudioContext || window.webkitAudioContext)();
+  if (alarm.ctx.state === "suspended") alarm.ctx.resume();
+  return alarm.ctx;
+}
+function primeAudio(){ try { alarmCtx(); } catch(e){} }
+
+// One attention-grabbing two-tone chime.
+function ringOnce(){
+  try {
+    const ctx = alarmCtx();
+    const t0 = ctx.currentTime;
+    [[880,0],[1245,0.18]].forEach(([freq, off]) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = "square"; o.frequency.value = freq;
+      const s = t0 + off;
+      g.gain.setValueAtTime(0.0001, s);
+      g.gain.exponentialRampToValueAtTime(0.22, s + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, s + 0.16);
+      o.start(s); o.stop(s + 0.18);
+    });
+  } catch(e){}
+}
+
+function countNewOrders(){
+  let n = 0;
+  state.orders.forEach(o => { if (o.status === "new") n++; });
+  return n;
+}
+
+// Single source of truth — call after anything that changes orders.
+function updateAlarm(){
+  const n = countNewOrders();
+  const banner  = document.getElementById("alarmBanner");
+  const countEl = document.getElementById("alarmCount");
+  const ringing = n > 0 && alarm.enabled && !alarm.snoozed;
+
+  if (banner){
+    banner.hidden = n === 0;
+    banner.classList.toggle("is-muted", n > 0 && !ringing);
+  }
+  if (countEl) countEl.textContent = n;
+
+  if (ringing){
+    if (!alarm.timer){
+      ringOnce();
+      alarm.timer = setInterval(ringOnce, 2200);
+    }
+  } else {
+    stopRinging();
+  }
+}
+
+function stopRinging(){
+  if (alarm.timer){ clearInterval(alarm.timer); alarm.timer = null; }
+}
+
+// Open the longest-waiting un-accepted order (used by the alert banner).
+function openOldestNew(){
+  const news = [...state.orders.values()]
+    .filter(o => o.status === "new")
+    .sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+  if (news.length) openModal(news[0].id);
+}
+
+function setSoundEnabled(on){
+  alarm.enabled = on;
+  localStorage.setItem("wokin_admin_sound", on ? "on" : "off");
+  const btn = document.getElementById("soundToggle");
+  if (btn){
+    btn.classList.toggle("is-off", !on);
+    btn.innerHTML = on ? "🔔 SOUND: ON" : "🔕 SOUND: OFF";
+  }
+  updateAlarm();
 }
 
 /* ------------------------------------------------------------------ */
@@ -398,6 +503,8 @@ function renderBoard({ flashId } = {}){
 
     board.appendChild(col);
   });
+
+  updateAlarm();
 }
 
 function orderCard(o, flash){
