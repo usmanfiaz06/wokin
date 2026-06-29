@@ -75,6 +75,10 @@ const DELIVERY_FEE   = 100;
 const FREE_THRESHOLD = 1800;
 const ETA_MIN        = 45;
 
+// Pick-up: single branch — we just show the address + maps link (no area picker)
+const PICKUP_BRANCH_LABEL = "WOK!N — Ghauri Town, Islamabad";
+const PICKUP_MAPS_URL     = "https://share.google/KlwTn1xN5ljNlj9n7";
+
 // Coupons are validated server-side via the validate_coupon RPC.
 // Active auto-apply promotions are fetched on startup and applied
 // to the dish cards (crossed-out original / discounted price).
@@ -143,8 +147,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   subscribeMenuOverrides();
 
   // User lands on the site freely; pop-up rises 1.5s later
-  // (only the very first time — once they've picked, we skip)
-  if (!(state.type && state.area)) {
+  // (only the very first time — once they've picked, we skip).
+  // Pick-up has no area, so type alone counts as "chosen".
+  const hasChosen = state.type === "pickup" || (state.type && state.area);
+  if (!hasChosen) {
     setTimeout(openLocModal, 1500);
   }
 });
@@ -509,14 +515,31 @@ function closeLocModal(){
 }
 
 function updateLocAreaLabel(){
+  const isPickup = _locDraft.type === "pickup";
   const lbl = document.getElementById("locAreaLabel");
-  if (lbl) lbl.textContent = _locDraft.type === "pickup" ? "WHICH BRANCH FOR PICK-UP?" : "WHICH AREA?";
+  if (lbl) lbl.textContent = isPickup ? "WHERE TO FIND US" : "WHICH AREA?";
+
+  // Pick-up has a single branch — swap the area picker for the branch card
+  const deliv = document.getElementById("locDeliveryArea");
+  const pick  = document.getElementById("locPickupInfo");
+  if (deliv) deliv.hidden = isPickup;
+  if (pick)  pick.hidden  = !isPickup;
+
+  // Pick-up needs no area selection — pin the branch so the CTA can proceed
+  if (isPickup){
+    _locDraft.area = PICKUP_BRANCH_LABEL;
+  } else if (_locDraft.area === PICKUP_BRANCH_LABEL){
+    _locDraft.area = state.type === "pickup" ? null : (state.area || null);
+  }
 }
 
 function updateLocGoState(){
   const btn = document.getElementById("locGo");
   if (!btn) return;
-  btn.disabled = !(_locDraft.type && _locDraft.area);
+  // Pick-up only needs the type chosen; delivery also needs an area
+  btn.disabled = _locDraft.type === "pickup"
+    ? false
+    : !(_locDraft.type && _locDraft.area);
 }
 
 function bindLocationModal(){
@@ -537,9 +560,10 @@ function bindLocationModal(){
   });
 
   document.getElementById("locGo").addEventListener("click", () => {
-    if (!_locDraft.type || !_locDraft.area) return;
+    const isPickup = _locDraft.type === "pickup";
+    if (!_locDraft.type || (!isPickup && !_locDraft.area)) return;
     state.type = _locDraft.type;
-    state.area = _locDraft.area;
+    state.area = isPickup ? null : _locDraft.area;  // pick-up = single branch, no area
     saveState();
     syncBarLocation();
     const sel = document.getElementById("coArea");
@@ -581,7 +605,8 @@ function renderAreaList(filter){
 function syncBarLocation(){
   document.getElementById("barTypeLabel").textContent =
     state.type === "pickup" ? "PICK-UP FROM" : (state.type ? "DELIVERY TO" : "CHOOSE");
-  document.getElementById("barAreaLabel").textContent = state.area || "— pick an area —";
+  document.getElementById("barAreaLabel").textContent =
+    state.type === "pickup" ? "Ghauri Town" : (state.area || "— pick an area —");
 }
 
 function populateAreaSelect(){
@@ -1154,13 +1179,23 @@ function openCheckout(){
     return;
   }
   closeCart();
+
+  // Swap the address fieldset for the pick-up branch card
+  const isPickup = state.type === "pickup";
+  document.getElementById("coDeliveryFs").hidden = isPickup;
+  document.getElementById("coPickupFs").hidden   = !isPickup;
+  // Hidden required fields block native form submit — toggle them off for pick-up
+  document.getElementById("coArea").required    = !isPickup;
+  document.getElementById("coAddress").required = !isPickup;
+
   populateAreaSelect();
-  document.getElementById("coArea").value = state.area || DELIVERY_AREAS[0];
+  document.getElementById("coArea").value =
+    (state.area && DELIVERY_AREAS.includes(state.area)) ? state.area : DELIVERY_AREAS[0];
   document.getElementById("checkout").hidden = false;
   document.body.classList.add("state-locked");
   document.getElementById("checkout").scrollTo(0,0);
   renderCheckoutSummary();
-  mountMap();
+  if (!isPickup) mountMap();
   recalcCart();
 
   // Meta Pixel — InitiateCheckout signal for ad optimisation
@@ -1301,7 +1336,8 @@ function validateCheckout(){
   if (name.value.trim().length < 2){ name.classList.add("is-bad"); ok = false; }
   if (!/^03\d{2}-\d{7}$/.test(phone.value.trim())){ phone.classList.add("is-bad"); ok = false; }
   if (!/^\S+@\S+\.\S+$/.test(email.value.trim())){ email.classList.add("is-bad"); ok = false; }
-  if (addr.value.trim().length < 6){ addr.classList.add("is-bad"); ok = false; }
+  // Address only required for delivery — pick-up has a fixed branch
+  if (state.type !== "pickup" && addr.value.trim().length < 6){ addr.classList.add("is-bad"); ok = false; }
 
   if (!ok){
     const first = document.querySelector(".is-bad");
@@ -1373,22 +1409,25 @@ async function placeOrder(){
   if (btn){ btn.disabled = true; btn.innerHTML = "PLACING ORDER…"; }
 
   const t = cartTotals();
-  const eta = state.type === "pickup" ? 20 : ETA_MIN;
+  const isPickup = state.type === "pickup";
+  const eta = isPickup ? 20 : ETA_MIN;
 
   const orderRow = {
     order_type:             state.type,
-    area:                   document.getElementById("coArea").value,
+    area:                   isPickup ? "Ghauri Town (pick-up)" : document.getElementById("coArea").value,
     customer_name:          document.getElementById("coName").value.trim(),
     customer_phone:         document.getElementById("coPhone").value.trim(),
     customer_phone_alt:     document.getElementById("coPhoneAlt").value.trim() || null,
     customer_email:         document.getElementById("coEmail").value.trim() || null,
 
-    delivery_address:       document.getElementById("coAddress").value.trim() || null,
-    delivery_landmark:      document.getElementById("coLandmark").value.trim() || null,
-    delivery_map_link:      document.getElementById("coMap").value.trim() || null,
-    delivery_gps_lat:       state.gps?.lat || null,
-    delivery_gps_lng:       state.gps?.lng || null,
-    delivery_instructions:  document.getElementById("coInstr").value.trim() || null,
+    delivery_address:       isPickup ? null : (document.getElementById("coAddress").value.trim() || null),
+    delivery_landmark:      isPickup ? null : (document.getElementById("coLandmark").value.trim() || null),
+    delivery_map_link:      isPickup ? null : (document.getElementById("coMap").value.trim() || null),
+    delivery_gps_lat:       isPickup ? null : (state.gps?.lat || null),
+    delivery_gps_lng:       isPickup ? null : (state.gps?.lng || null),
+    delivery_instructions:  isPickup
+                              ? (document.getElementById("coInstrPickup").value.trim() || null)
+                              : (document.getElementById("coInstr").value.trim() || null),
 
     payment_method:         "cash-on-delivery",
     change_request:         document.getElementById("coChange").value.trim() || null,
