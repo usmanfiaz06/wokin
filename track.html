@@ -11,6 +11,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800;900&family=Permanent+Marker&family=Caveat:wght@500;700&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/order.css">
+
+<!-- Vercel Web Analytics -->
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
+
 <style>
   body{ min-height:100vh; }
   .tr-wrap{ max-width:720px; margin:0 auto; padding:24px 18px 80px;}
@@ -411,7 +418,7 @@ function render(o){
         <div class="row"><span>Subtotal</span><span>${fmtPKR(o.subtotal)}</span></div>
         <div class="row"><span>Tax (15%)</span><span>${fmtPKR(o.tax)}</span></div>
         <div class="row"><span>Delivery</span><span>${Number(o.delivery_fee) === 0 ? "FREE" : fmtPKR(o.delivery_fee)}</span></div>
-        ${Number(o.coupon_discount) > 0 ? `<div class="row"><span>Coupon (${o.coupon_code})</span><span>−${fmtPKR(o.coupon_discount)}</span></div>` : ""}
+        ${Number(o.coupon_discount) > 0 ? `<div class="row"><span>Coupon (${o.coupon_code})</span><span>��${fmtPKR(o.coupon_discount)}</span></div>` : ""}
         <div class="grand row"><span>TOTAL</span><span>${fmtPKR(o.total)}</span></div>
       </div>
     </div>
