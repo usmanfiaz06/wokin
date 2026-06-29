@@ -77,7 +77,7 @@ const ETA_MIN        = 45;
 
 // Pick-up: single branch — we just show the address + maps link (no area picker)
 const PICKUP_BRANCH_LABEL = "WOK!N — Empire Plaza, Gulberg Greens";
-const PICKUP_MAPS_URL     = "https://share.google/KlwTn1xN5ljNlj9n7";
+const PICKUP_MAPS_URL     = "https://maps.app.goo.gl/Tg4H33Dk8HezMsHm7";
 
 // Coupons are validated server-side via the validate_coupon RPC.
 // Active auto-apply promotions are fetched on startup and applied
