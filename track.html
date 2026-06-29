@@ -428,7 +428,7 @@ function render(o){
         <div class="row"><span>Subtotal</span><span>${fmtPKR(o.subtotal)}</span></div>
         <div class="row"><span>Tax (15%)</span><span>${fmtPKR(o.tax)}</span></div>
         <div class="row"><span>Delivery</span><span>${Number(o.delivery_fee) === 0 ? "FREE" : fmtPKR(o.delivery_fee)}</span></div>
-        ${Number(o.coupon_discount) > 0 ? `<div class="row"><span>Coupon (${o.coupon_code})</span><span>−${fmtPKR(o.coupon_discount)}</span></div>` : ""}
+        ${Number(o.coupon_discount) > 0 ? `<div class="row"><span>Discount${o.coupon_code ? ` (${o.coupon_code})` : ""}</span><span>−${fmtPKR(o.coupon_discount)}</span></div>` : ""}
         <div class="grand row"><span>TOTAL</span><span>${fmtPKR(o.total)}</span></div>
       </div>
     </div>

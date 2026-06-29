@@ -325,19 +325,26 @@ const alarm = {
 // setInterval + WebAudio gets throttled or suspended when the tab is hidden,
 // which is why the old chime didn't ring when staff were on another tab.
 function buildAlarmAudio(){
-  const sr = 8000, dur = 1.5, n = Math.round(sr * dur);
+  const sr = 22050, dur = 1.7, n = Math.round(sr * dur);
   const pcm = new Int16Array(n);
+  // Bright ascending chime (A5 · C#6 · E6) with a bell-like decay, then a
+  // short gap — pleasant but unmistakable, repeated on loop.
+  const notes = [ { f: 880, t: 0.00 }, { f: 1108.7, t: 0.18 }, { f: 1318.5, t: 0.36 } ];
+  const noteLen = 0.5;
   for (let i = 0; i < n; i++){
     const t = i / sr;
-    let f = 0;
-    if (t < 0.28)        f = 880;    // beep 1
-    else if (t < 0.56)   f = 1245;   // beep 2
-    // rest of the loop is silence → "beep-beep ··· beep-beep ···"
-    if (f){
-      const seg = t < 0.28 ? t : t - 0.28;          // position within this beep
-      const env = Math.max(0, Math.min(1, seg / 0.01, (0.28 - seg) / 0.01)); // de-click fade
-      pcm[i] = Math.sin(2 * Math.PI * f * t) * 0.5 * env * 32767;
+    let s = 0;
+    for (const note of notes){
+      const dt = t - note.t;
+      if (dt >= 0 && dt < noteLen){
+        const env = Math.exp(-dt * 5.5);                       // bell decay
+        s += Math.sin(2 * Math.PI * note.f * dt) * env;        // fundamental
+        s += Math.sin(2 * Math.PI * note.f * 2 * dt) * env * 0.3; // 2nd harmonic for sparkle
+      }
     }
+    s *= 0.6;                                  // headroom for summed notes
+    if (s > 1) s = 1; else if (s < -1) s = -1; // hard clamp
+    pcm[i] = s * 32767;
   }
   const buf = new ArrayBuffer(44 + n * 2);
   const v = new DataView(buf);
@@ -351,6 +358,7 @@ function buildAlarmAudio(){
   for (let i = 0; i < b.length; i++) bin += String.fromCharCode(b[i]);
   const a = new Audio("data:audio/wav;base64," + btoa(bin));
   a.loop = true;
+  a.volume = 1.0;            // always full volume
   return a;
 }
 
@@ -682,7 +690,7 @@ async function openModal(id){
     <div class="row"><span>Subtotal</span><span>${fmtPKR(o.subtotal)}</span></div>
     <div class="row"><span>Tax (15%)</span><span>${fmtPKR(o.tax)}</span></div>
     <div class="row"><span>Delivery</span><span>${Number(o.delivery_fee)===0 ? "FREE" : fmtPKR(o.delivery_fee)}</span></div>
-    ${Number(o.coupon_discount) > 0 ? `<div class="row"><span>Coupon (${o.coupon_code})</span><span>−${fmtPKR(o.coupon_discount)}</span></div>` : ""}
+    ${Number(o.coupon_discount) > 0 ? `<div class="row"><span>Discount${o.coupon_code ? ` (${o.coupon_code})` : ""}</span><span>−${fmtPKR(o.coupon_discount)}</span></div>` : ""}
     <div class="row grand"><span>TOTAL</span><span>${fmtPKR(o.total)}</span></div>
   `;
 
@@ -797,7 +805,8 @@ async function updateStatus(id, newStatus, cancelReason = null){
   if (o){ state.orders.set(id, { ...o, ...update }); }
   renderBoard();
   renderStats();
-  if (state.currentModalId === id) openModal(id);
+  // Action taken from the popup → close it so staff return to the board.
+  if (state.currentModalId === id) closeModal();
 }
 
 /* ------------------------------------------------------------------ */
