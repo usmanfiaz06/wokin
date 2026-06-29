@@ -890,6 +890,7 @@ input{ font:inherit; color:inherit; }
 .sound-toggle{ white-space:nowrap; }
 .sound-toggle.is-off{ opacity:.6; }
 
+.new-order-alarm[hidden]{ display:none; }
 .new-order-alarm{
   display:flex; align-items:center; gap:12px;
   margin:0; padding:14px 20px;
