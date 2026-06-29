@@ -19,55 +19,16 @@
 const GOOGLE_MAPS_API_KEY = ""; // leave empty — GPS capture works without it
 
 const DELIVERY_AREAS = [
-  "Capital Enclave",
-  "Ghauri Model Town",
-  "Ghauri Town",
-  "Ghauri Town Phase 1",
-  "Ghauri Town Phase 2",
-  "Ghauri Town Phase 3",
-  "Ghauri Town Phase 4",
-  "Ghauri Town Phase 4 A",
-  "Ghauri Town Phase 4 B",
-  "Ghauri Town Phase 4C/1",
-  "Ghauri Town Phase 5",
-  "Ghauri Town Phase 5 A",
-  "Ghauri Town Phase 5 B",
-  "Ghauri Town Phase 7",
-  "Ghauri Town VIP",
-  "Gulberg Green Block A",
-  "Gulberg Green Block B",
-  "Gulberg Green Block C",
-  "Gulberg Green Block D",
-  "Gulberg Green Block E",
   "Gulberg Greens",
-  "Gulberg Residencia",
-  "Gulberg Residencia A",
-  "Gulberg Residencia B",
-  "Gulberg Residencia C",
-  "Gulberg Residencia F",
-  "Gulberg Residencia G",
-  "Gulberg Residencia H",
-  "Gulberg Residencia I",
-  "Gulberg Residencia J",
-  "Gulberg Residencia K",
-  "Gulberg Residencia L",
-  "Gulberg Residencia M",
-  "Gulberg Residencia N",
-  "Gulberg Residencia O",
-  "Gulberg Residencia P",
-  "Gulberg Residencia Q",
-  "Gulberg Residencia R",
-  "Gulberg Residencia S",
-  "Jinnah Garden",
-  "Koral Town",
+  "Ghauri Town",
   "Naval Anchorage",
-  "Naval Anchorage B",
-  "Naval Anchorage C",
-  "Naval Anchorage D",
-  "Naval Anchorage E",
-  "Naval Anchorage F",
-  "Naval Anchorage G",
-  "Panwal Shareef",
+  "Koral Town",
+  "Soan Garden",
+  "CBR Town",
+  "PWD",
+  "Pakistan Town",
+  "Airport Housing Society",
+  "Khanna Pul",
 ];
 
 const TAX_RATE       = 0.15;
@@ -788,6 +749,40 @@ function refreshDishAction(card, dish, cat){
     return;
   }
 
+  // Half / Full dishes get one control per size
+  const variants = dishVariants(dish);
+  if (variants.length > 1){
+    const wrap = document.createElement("div");
+    wrap.className = "size-add";
+    variants.forEach(v => {
+      const vid  = makeDishId(dish, cat, v.key);
+      const vit  = state.cart.find(c => c.id === vid);
+      if (vit){
+        const st = document.createElement("div");
+        st.className = "stepper stepper-sm";
+        st.innerHTML = `<button aria-label="Decrease">−</button><b>${v.label} · ${vit.qty}</b><button aria-label="Increase">+</button>`;
+        st.querySelectorAll("button")[0].addEventListener("click", e => { e.stopPropagation(); changeQty(vid, -1); });
+        st.querySelectorAll("button")[1].addEventListener("click", e => { e.stopPropagation(); changeQty(vid, +1); });
+        wrap.appendChild(st);
+      } else {
+        const b = document.createElement("button");
+        b.className = "add-btn add-sm";
+        b.textContent = v.label.toUpperCase() + " +";
+        b.addEventListener("click", e => {
+          e.stopPropagation();
+          addToCart(dish, cat, v.key);
+          refreshDishAction(card, dish, cat);
+          bumpCartIcon();
+          card.classList.add("is-flash");
+          setTimeout(() => card.classList.remove("is-flash"), 600);
+        });
+        wrap.appendChild(b);
+      }
+    });
+    action.appendChild(wrap);
+    return;
+  }
+
   if (item){
     const stepper = document.createElement("div");
     stepper.className = "stepper";
@@ -828,8 +823,24 @@ function tagLabel(t){
   return ({ chef:"CHEF'S", veg:"VEG", spicy:"SPICY", mild:"MILD" })[t] || t.toUpperCase();
 }
 
-function makeDishId(dish, cat){
-  return cat.id + "::" + dish.name.replace(/\s+/g,"_");
+function makeDishId(dish, cat, variant){
+  return cat.id + "::" + dish.name.replace(/\s+/g,"_") + (variant ? "::" + variant : "");
+}
+
+// Half / Full sizes for a dish. Returns a single (size-less) entry for
+// dishes that only have one price.
+function dishVariants(dish){
+  const price     = dish._price     != null ? dish._price     : dish.price;
+  const priceFull = dish._priceFull != null ? dish._priceFull : dish.priceFull;
+  const pcs       = (dish._pcs != null ? dish._pcs : dish.pcs) || "";
+  if (priceFull && priceFull !== price){
+    const parts = pcs.split("/").map(s => s.trim());
+    return [
+      { key: "half", label: "Half", price,           pcs: parts[0] || "Half" },
+      { key: "full", label: "Full", price: priceFull, pcs: parts[1] || "Full" },
+    ];
+  }
+  return [ { key: null, label: "", price, pcs } ];
 }
 
 function observeCatNav(){
@@ -893,22 +904,23 @@ function renderPopular(){
 /* ==================================================================
    CART
 =================================================================== */
-function addToCart(dish, cat){
+function addToCart(dish, cat, variantKey){
   if (dish._available === false){
     return; // shouldn't be reachable, but guard anyway
   }
-  const id = makeDishId(dish, cat);
-  const price = dish._price != null ? dish._price : dish.price;
-  const desc  = dish._pcs   != null ? dish._pcs   : (dish.pcs || "");
+  const variants = dishVariants(dish);
+  const v = (variantKey ? variants.find(x => x.key === variantKey) : null) || variants[0];
+  const id = makeDishId(dish, cat, v.key);
   const existing = state.cart.find(c => c.id === id);
   if (existing){ existing.qty += 1; }
   else {
     state.cart.push({
       id,
       name: dish.name,
-      desc,
+      desc: v.pcs,
+      variant: v.label || null,           // "Half" / "Full" (null when single-size)
       image: dish._imageUrl || getDishImage(dish.name, cat.id),
-      price,
+      price: v.price,
       qty: 1,
       customId: dish._customId || null,   // for scoped coupons
     });
@@ -921,9 +933,9 @@ function addToCart(dish, cat){
   // Meta Pixel — AddToCart signal for ad optimisation
   if (typeof fbq === "function") {
     fbq("track", "AddToCart", {
-      value:     Math.round(price),
+      value:     Math.round(v.price),
       currency:  "PKR",
-      contents:  [{ id: dish.name, quantity: 1 }],
+      contents:  [{ id: dish.name + (v.label ? " ("+v.label+")" : ""), quantity: 1 }],
       num_items: 1,
     });
   }
@@ -938,25 +950,24 @@ function changeQty(id, delta){
   if (state.coupon){ state.couponDiscount = 0; state.coupon = null; state.couponLabel = ""; }
   saveState();
   recalcCart();
-  // refresh corresponding dish card stepper, if open
-  document.querySelectorAll(`.dish-card[data-id="${CSS.escape(id)}"]`).forEach(card => {
-    const [catId] = id.split("::");
-    const cat = MENU_DATA.find(c => c.id === catId);
-    if (!cat) return;
-    const dish = cat.items.find(d => makeDishId(d, cat) === id);
-    if (dish) refreshDishAction(card, dish, cat);
-  });
+  refreshCardForId(id);
 }
 
 function removeItem(id){
   state.cart = state.cart.filter(c => c.id !== id);
   saveState();
   recalcCart();
-  document.querySelectorAll(`.dish-card[data-id="${CSS.escape(id)}"]`).forEach(card => {
-    const [catId] = id.split("::");
+  refreshCardForId(id);
+}
+
+// Re-render the dish card matching a (possibly variant-suffixed) cart id.
+function refreshCardForId(id){
+  const [catId, , variant] = id.split("::");
+  const baseId = id.split("::").slice(0, 2).join("::");
+  document.querySelectorAll(`.dish-card[data-id="${CSS.escape(baseId)}"]`).forEach(card => {
     const cat = MENU_DATA.find(c => c.id === catId);
     if (!cat) return;
-    const dish = cat.items.find(d => makeDishId(d, cat) === id);
+    const dish = cat.items.find(d => makeDishId(d, cat) === baseId);
     if (dish) refreshDishAction(card, dish, cat);
   });
 }
@@ -1021,7 +1032,7 @@ function recalcCart(){
     row.innerHTML = `
       <div class="img"></div>
       <div class="info">
-        <b>${item.name}</b>
+        <b>${item.name}${item.variant?` <span class="variant-tag">${item.variant}</span>`:""}</b>
         ${item.desc?`<small>${item.desc}</small>`:""}
         <div class="row">
           <span class="price">${fmtPKR(item.price)}</span>
@@ -1402,7 +1413,7 @@ function renderCheckoutSummary(){
     row.className = "co-sum-item";
     row.innerHTML = `
       <span class="qty">×${i.qty}</span>
-      <div class="nm">${i.name}<small>${fmtPKR(i.price)} each</small></div>
+      <div class="nm">${i.name}${i.variant?` (${i.variant})`:""}<small>${fmtPKR(i.price)} each</small></div>
       <span class="pr">${fmtPKR(i.price * i.qty)}</span>
     `;
     list.appendChild(row);

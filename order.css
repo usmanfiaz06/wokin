@@ -584,6 +584,17 @@ body.is-store-closed .fab-cart-mid strong{ color:#aaa; }
 .dish-card .add-btn:hover{ background:var(--red);}
 .dish-card .add-btn.added{ background:var(--green);}
 
+/* Half / Full size picker on a dish card */
+.dish-card .size-add{ display:flex; flex-direction:column; gap:6px; align-items:flex-end; }
+.dish-card .add-btn.add-sm{ padding:8px 14px; font-size:13px; letter-spacing:.12em; white-space:nowrap; }
+.dish-card .stepper.stepper-sm{ padding:3px; gap:4px; box-shadow:1px 1px 0 var(--ink); }
+.dish-card .stepper.stepper-sm button{ width:26px; height:26px; font-size:18px; }
+.dish-card .stepper.stepper-sm b{ min-width:auto; padding:0 6px; font-size:14px; letter-spacing:.04em; }
+/* size badge on cart lines */
+.variant-tag{ display:inline-block; margin-left:6px; padding:1px 8px; border-radius:999px;
+  background:var(--red); color:#fff; font-family:'Bebas Neue',sans-serif; font-size:11px;
+  letter-spacing:.08em; vertical-align:middle; }
+
 /* prominent quantity stepper after adding */
 .dish-card .stepper{
   display:flex; align-items:center; gap:6px; padding:5px;
