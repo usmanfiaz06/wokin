@@ -76,7 +76,7 @@ const FREE_THRESHOLD = 1800;
 const ETA_MIN        = 45;
 
 // Pick-up: single branch — we just show the address + maps link (no area picker)
-const PICKUP_BRANCH_LABEL = "WOK!N — Ghauri Town, Islamabad";
+const PICKUP_BRANCH_LABEL = "WOK!N — Empire Plaza, Gulberg Greens";
 const PICKUP_MAPS_URL     = "https://share.google/KlwTn1xN5ljNlj9n7";
 
 // Coupons are validated server-side via the validate_coupon RPC.
@@ -606,7 +606,7 @@ function syncBarLocation(){
   document.getElementById("barTypeLabel").textContent =
     state.type === "pickup" ? "PICK-UP FROM" : (state.type ? "DELIVERY TO" : "CHOOSE");
   document.getElementById("barAreaLabel").textContent =
-    state.type === "pickup" ? "Ghauri Town" : (state.area || "— pick an area —");
+    state.type === "pickup" ? "Gulberg Greens" : (state.area || "— pick an area —");
 }
 
 function populateAreaSelect(){
@@ -1414,7 +1414,7 @@ async function placeOrder(){
 
   const orderRow = {
     order_type:             state.type,
-    area:                   isPickup ? "Ghauri Town (pick-up)" : document.getElementById("coArea").value,
+    area:                   isPickup ? "Gulberg Greens (pick-up)" : document.getElementById("coArea").value,
     customer_name:          document.getElementById("coName").value.trim(),
     customer_phone:         document.getElementById("coPhone").value.trim(),
     customer_phone_alt:     document.getElementById("coPhoneAlt").value.trim() || null,
