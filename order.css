@@ -908,9 +908,9 @@ body.is-store-closed .fab-cart-mid strong{ color:#aaa; }
 .confirm-id{ font-size:13px; color:var(--mute); margin-bottom:14px;}
 .confirm-id b{ font-family:'Bebas Neue'; color:var(--ink); letter-spacing:.1em;}
 .confirm-text{ font-size:14px; color:var(--mute); line-height:1.5; margin-bottom:22px;}
-.confirm-actions{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
+.confirm-actions{ display:flex; flex-direction:column; gap:10px; align-items:stretch;}
 .confirm-actions .btn-primary,
-.confirm-actions .btn-ghost{ flex:1; min-width:140px; text-decoration:none; }
+.confirm-actions .btn-ghost{ width:100%; white-space:nowrap; text-decoration:none; }
 
 
 /* =====================================================================

@@ -315,38 +315,69 @@ function onItemInsert(payload){
 /*  is accepted (or the chef hits SILENCE).                            */
 /* ------------------------------------------------------------------ */
 const alarm = {
-  ctx: null,
-  timer: null,
+  audio: null,
   enabled: localStorage.getItem("wokin_admin_sound") !== "off", // default ON
   snoozed: false,   // SILENCE mutes current batch; a brand-new order un-snoozes
 };
 
-// Lazily create / resume one shared AudioContext (browsers require a
-// user gesture before audio can play — login click primes it).
-function alarmCtx(){
-  if (!alarm.ctx) alarm.ctx = new (window.AudioContext || window.webkitAudioContext)();
-  if (alarm.ctx.state === "suspended") alarm.ctx.resume();
-  return alarm.ctx;
+// Build a looping two-tone alarm as an in-memory WAV (no external file).
+// A real <audio> element keeps playing in BACKGROUND / inactive tabs —
+// setInterval + WebAudio gets throttled or suspended when the tab is hidden,
+// which is why the old chime didn't ring when staff were on another tab.
+function buildAlarmAudio(){
+  const sr = 8000, dur = 1.5, n = Math.round(sr * dur);
+  const pcm = new Int16Array(n);
+  for (let i = 0; i < n; i++){
+    const t = i / sr;
+    let f = 0;
+    if (t < 0.28)        f = 880;    // beep 1
+    else if (t < 0.56)   f = 1245;   // beep 2
+    // rest of the loop is silence → "beep-beep ··· beep-beep ···"
+    if (f){
+      const seg = t < 0.28 ? t : t - 0.28;          // position within this beep
+      const env = Math.max(0, Math.min(1, seg / 0.01, (0.28 - seg) / 0.01)); // de-click fade
+      pcm[i] = Math.sin(2 * Math.PI * f * t) * 0.5 * env * 32767;
+    }
+  }
+  const buf = new ArrayBuffer(44 + n * 2);
+  const v = new DataView(buf);
+  const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, "RIFF"); v.setUint32(4, 36 + n * 2, true); w(8, "WAVE"); w(12, "fmt ");
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  w(36, "data"); v.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) v.setInt16(44 + i * 2, pcm[i], true);
+  let bin = ""; const b = new Uint8Array(buf);
+  for (let i = 0; i < b.length; i++) bin += String.fromCharCode(b[i]);
+  const a = new Audio("data:audio/wav;base64," + btoa(bin));
+  a.loop = true;
+  return a;
 }
-function primeAudio(){ try { alarmCtx(); } catch(e){} }
 
-// One attention-grabbing two-tone chime.
-function ringOnce(){
+function alarmEl(){
+  if (!alarm.audio) alarm.audio = buildAlarmAudio();
+  return alarm.audio;
+}
+
+// Unlock audio on a user gesture (browsers block autoplay until then).
+// Once unlocked, later play() calls work even when the tab is in the
+// background — which is exactly what we need for new-order alerts.
+function primeAudio(){
   try {
-    const ctx = alarmCtx();
-    const t0 = ctx.currentTime;
-    [[880,0],[1245,0.18]].forEach(([freq, off]) => {
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.connect(g); g.connect(ctx.destination);
-      o.type = "square"; o.frequency.value = freq;
-      const s = t0 + off;
-      g.gain.setValueAtTime(0.0001, s);
-      g.gain.exponentialRampToValueAtTime(0.22, s + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.0001, s + 0.16);
-      o.start(s); o.stop(s + 0.18);
-    });
+    const a = alarmEl();
+    a.play().then(() => { if (!alarmShouldRing()) { a.pause(); a.currentTime = 0; } }).catch(() => {});
   } catch(e){}
+}
+
+function alarmShouldRing(){
+  return countNewOrders() > 0 && alarm.enabled && !alarm.snoozed;
+}
+
+function startAlarmSound(){
+  try { const a = alarmEl(); if (a.paused) a.play().catch(() => {}); } catch(e){}
+}
+function stopAlarmSound(){
+  try { const a = alarm.audio; if (a){ a.pause(); a.currentTime = 0; } } catch(e){}
 }
 
 function countNewOrders(){
@@ -368,18 +399,8 @@ function updateAlarm(){
   }
   if (countEl) countEl.textContent = n;
 
-  if (ringing){
-    if (!alarm.timer){
-      ringOnce();
-      alarm.timer = setInterval(ringOnce, 2200);
-    }
-  } else {
-    stopRinging();
-  }
-}
-
-function stopRinging(){
-  if (alarm.timer){ clearInterval(alarm.timer); alarm.timer = null; }
+  if (ringing) startAlarmSound();
+  else         stopAlarmSound();
 }
 
 // Open the longest-waiting un-accepted order (used by the alert banner).
