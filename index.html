@@ -163,13 +163,35 @@ src="https://www.facebook.com/tr?id=1004327052385262&ev=PageView&noscript=1"/></
 
     <!-- area picker -->
     <p class="loc-field-lbl">★ <span id="locAreaLabel">WHICH AREA?</span></p>
-    <div class="loc-search-wrap">
-      <svg class="loc-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
-        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-      </svg>
-      <input type="text" id="areaSearch" class="loc-search" placeholder="Search your area…" autocomplete="off" />
+
+    <!-- DELIVERY: searchable area list -->
+    <div id="locDeliveryArea">
+      <div class="loc-search-wrap">
+        <svg class="loc-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+        </svg>
+        <input type="text" id="areaSearch" class="loc-search" placeholder="Search your area…" autocomplete="off" />
+      </div>
+      <ul class="area-list" id="areaList" role="listbox" aria-label="Delivery areas"></ul>
     </div>
-    <ul class="area-list" id="areaList" role="listbox" aria-label="Delivery areas"></ul>
+
+    <!-- PICK-UP: single branch address + directions -->
+    <div id="locPickupInfo" class="pickup-info" hidden>
+      <div class="pickup-pin">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+          <path d="M12 22s-7-8-7-13a7 7 0 0114 0c0 5-7 13-7 13z"/><circle cx="12" cy="9" r="2.5"/>
+        </svg>
+      </div>
+      <p class="pickup-name">WOK!N · Ghauri Town</p>
+      <p class="pickup-addr">Ghauri Town, Islamabad</p>
+      <a class="pickup-maps" href="https://share.google/KlwTn1xN5ljNlj9n7" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s-7-8-7-13a7 7 0 0114 0c0 5-7 13-7 13z"/><circle cx="12" cy="9" r="2.5"/>
+        </svg>
+        VIEW ON GOOGLE MAPS
+      </a>
+      <p class="pickup-note">Ready in ~20 min · just walk in and pick up your order.</p>
+    </div>
 
     <button type="button" class="loc-go" id="locGo" disabled>
       <span>LET'S EAT</span>
@@ -429,7 +451,7 @@ src="https://www.facebook.com/tr?id=1004327052385262&ev=PageView&noscript=1"/></
         </div>
       </fieldset>
 
-      <fieldset class="co-fs">
+      <fieldset class="co-fs" id="coDeliveryFs">
         <legend><i>02</i> DELIVERY ADDRESS</legend>
         <div class="field">
           <label for="coArea">Area <span class="req">*</span></label>
@@ -471,6 +493,31 @@ src="https://www.facebook.com/tr?id=1004327052385262&ev=PageView&noscript=1"/></
         <div class="field">
           <label for="coInstr">Delivery instructions <span class="opt">optional</span></label>
           <textarea id="coInstr" name="instructions" rows="2" placeholder="e.g. Ring twice, leave with guard, don't ring the bell — baby sleeping"></textarea>
+        </div>
+      </fieldset>
+
+      <!-- PICK-UP branch (shown instead of the delivery address fieldset) -->
+      <fieldset class="co-fs" id="coPickupFs" hidden>
+        <legend><i>02</i> PICK-UP LOCATION</legend>
+        <div class="pickup-info">
+          <div class="pickup-pin">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+              <path d="M12 22s-7-8-7-13a7 7 0 0114 0c0 5-7 13-7 13z"/><circle cx="12" cy="9" r="2.5"/>
+            </svg>
+          </div>
+          <p class="pickup-name">WOK!N · Ghauri Town</p>
+          <p class="pickup-addr">Ghauri Town, Islamabad</p>
+          <a class="pickup-maps" href="https://share.google/KlwTn1xN5ljNlj9n7" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s-7-8-7-13a7 7 0 0114 0c0 5-7 13-7 13z"/><circle cx="12" cy="9" r="2.5"/>
+            </svg>
+            VIEW ON GOOGLE MAPS
+          </a>
+          <p class="pickup-note">Ready in ~20 min · just walk in and pick up your order.</p>
+        </div>
+        <div class="field" style="margin-top:16px;">
+          <label for="coInstrPickup">Note for the kitchen <span class="opt">optional</span></label>
+          <textarea id="coInstrPickup" name="instructionsPickup" rows="2" placeholder="e.g. I'll arrive around 7:30pm, please keep it fresh"></textarea>
         </div>
       </fieldset>
 
