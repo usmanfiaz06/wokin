@@ -199,6 +199,15 @@ body.is-store-closed .fab-cart-mid strong{ color:#aaa; }
   box-shadow:0 5px 0 -2px var(--ink);}
 .pickup-note{ font-size:12.5px; color:var(--mute); margin:14px 0 0;}
 
+/* Compact pick-up summary for the location modal (full details live at checkout) */
+.pickup-mini{ margin-top:8px; padding:12px 14px; display:flex; align-items:center; gap:12px;
+  text-align:left; border:2px solid var(--ink); border-radius:12px; background:#fff;}
+.pickup-pin--sm{ width:34px; height:34px; margin:0; flex:0 0 auto;}
+.pickup-pin--sm svg{ width:18px; height:18px;}
+.pickup-mini-txt{ min-width:0;}
+.pickup-mini-txt .pickup-name{ font-size:18px; line-height:1.1;}
+.pickup-mini-txt .pickup-addr{ margin:2px 0 0; font-size:12.5px;}
+
 .loc-go{
   display:flex; align-items:center; justify-content:center; gap:10px; width:100%;
   margin-top:16px; padding:16px 22px; background:var(--ink); color:#fff;

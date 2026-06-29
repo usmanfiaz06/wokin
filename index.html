@@ -175,22 +175,17 @@ src="https://www.facebook.com/tr?id=1004327052385262&ev=PageView&noscript=1"/></
       <ul class="area-list" id="areaList" role="listbox" aria-label="Delivery areas"></ul>
     </div>
 
-    <!-- PICK-UP: single branch address + directions -->
-    <div id="locPickupInfo" class="pickup-info" hidden>
-      <div class="pickup-pin">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+    <!-- PICK-UP: compact summary (full address + map shown at checkout) -->
+    <div id="locPickupInfo" class="pickup-mini" hidden>
+      <div class="pickup-pin pickup-pin--sm">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
           <path d="M12 22s-7-8-7-13a7 7 0 0114 0c0 5-7 13-7 13z"/><circle cx="12" cy="9" r="2.5"/>
         </svg>
       </div>
-      <p class="pickup-name">WOK!N · Gulberg Greens</p>
-      <p class="pickup-addr">Empire Plaza, Gulberg Greens, Islamabad</p>
-      <a class="pickup-maps" href="https://maps.app.goo.gl/Tg4H33Dk8HezMsHm7" target="_blank" rel="noopener">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 22s-7-8-7-13a7 7 0 0114 0c0 5-7 13-7 13z"/><circle cx="12" cy="9" r="2.5"/>
-        </svg>
-        VIEW ON GOOGLE MAPS
-      </a>
-      <p class="pickup-note">Ready in ~20 min · just walk in and pick up your order.</p>
+      <div class="pickup-mini-txt">
+        <p class="pickup-name">WOK!N · Gulberg Greens</p>
+        <p class="pickup-addr">Empire Plaza · ready in ~20 min · full address at checkout</p>
+      </div>
     </div>
 
     <button type="button" class="loc-go" id="locGo" disabled>
