@@ -39,6 +39,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("editClose").addEventListener("click", closeEdit);
   document.getElementById("editForm").addEventListener("submit", onEditSave);
   document.getElementById("editClear").addEventListener("click", onEditClear);
+  // edit-modal image controls
+  document.getElementById("edImgPick").addEventListener("click", () =>
+    document.getElementById("edImgFile").click());
+  document.getElementById("edImgPreview").addEventListener("click", () =>
+    document.getElementById("edImgFile").click());
+  document.getElementById("edImgFile").addEventListener("change", onPickEditImage);
+  document.getElementById("edImgClear").addEventListener("click", onRemoveEditImage);
   document.getElementById("menuSearch").addEventListener("input", e => {
     state.filter = e.target.value.toLowerCase();
     renderMenu();
@@ -351,15 +358,70 @@ function clearImage(){
   if (clr) clr.hidden = true;
 }
 
-async function uploadPendingImage(){
-  if (!_pendingImageFile) return null;
-  const ext = (_pendingImageFile.name.split(".").pop() || "jpg").toLowerCase();
+async function uploadImageFile(file){
+  const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
   const path = `${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
   const { error } = await window.db.storage.from("dish-images")
-    .upload(path, _pendingImageFile, { cacheControl: "31536000", upsert: false });
+    .upload(path, file, { cacheControl: "31536000", upsert: false });
   if (error) throw error;
-  _pendingImagePath = path;
   return path;
+}
+
+async function uploadPendingImage(){
+  if (!_pendingImageFile) return null;
+  _pendingImagePath = await uploadImageFile(_pendingImageFile);
+  return _pendingImagePath;
+}
+
+/* ---- edit-modal image (change an existing dish's photo) ----------- */
+let _editPendingFile = null;   // a newly picked photo, not yet uploaded
+let _editRemoveImage = false;  // true when the chef hit REMOVE
+
+function onPickEditImage(e){
+  const file = e.target.files?.[0];
+  if (!file) return;
+  if (file.size > 3 * 1024 * 1024){
+    toast("Image is over 3 MB — please pick a smaller one");
+    e.target.value = "";
+    return;
+  }
+  _editPendingFile = file;
+  _editRemoveImage = false;
+  const reader = new FileReader();
+  reader.onload = () => {
+    setEditPreview(reader.result);
+    document.getElementById("edImgClear").hidden = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+function onRemoveEditImage(){
+  _editPendingFile = null;
+  _editRemoveImage = true;
+  const dish = state.editingDish, cat = state.editingCat;
+  setEditPreview(dish ? getDishImage(dish.name, cat.id) : null); // back to default
+  document.getElementById("edImgClear").hidden = true;
+  const fi = document.getElementById("edImgFile");
+  if (fi) fi.value = "";
+}
+
+function setEditPreview(url){
+  const prev = document.getElementById("edImgPreview");
+  if (!prev) return;
+  if (url){
+    prev.innerHTML = "";
+    prev.style.backgroundImage = `url("${url}")`;
+  } else {
+    prev.style.backgroundImage = "";
+    prev.innerHTML = `<span class="img-empty">📷  Tap to upload</span>`;
+  }
+}
+
+function resetEditImage(){
+  _editPendingFile = null;
+  _editRemoveImage = false;
+  const fi = document.getElementById("edImgFile");
+  if (fi) fi.value = "";
 }
 
 function publicImageUrl(path){
@@ -476,7 +538,7 @@ function dishRow(dish, cat){
     </div>
   `;
 
-  const img = getDishImage(dish.name, cat.id);
+  const img = (o && o.image_path) ? publicImageUrl(o.image_path) : getDishImage(dish.name, cat.id);
   const imgEl = row.querySelector(".mm-img");
   imgEl.style.backgroundImage = `url("${img}")`;
   const probe = new Image();
@@ -542,6 +604,12 @@ function openEdit(dish, cat){
   document.getElementById("editPcsDefault").textContent       = dish.pcs ? `Default: "${dish.pcs}" — leave empty for default` : "No portion label by default";
   document.getElementById("editDescDefault").textContent      = `Default: "${(dish.desc||"").slice(0,90)}…" — leave empty for default`;
 
+  // image: show the dish's current photo (custom override if set, else default)
+  resetEditImage();
+  const curImg = (o && o.image_path) ? publicImageUrl(o.image_path) : getDishImage(dish.name, cat.id);
+  setEditPreview(curImg);
+  document.getElementById("edImgClear").hidden = !(o && o.image_path);
+
   document.getElementById("editModal").hidden = false;
   document.body.style.overflow = "hidden";
 }
@@ -563,6 +631,18 @@ async function onEditSave(e){
   const pcs       = document.getElementById("editPcs").value.trim();
   const desc      = document.getElementById("editDesc").value.trim();
 
+  const o = state.overrides.get(slug);
+  // Resolve the photo: new upload → keep existing → removed → default
+  let imagePath;
+  if (_editPendingFile){
+    try { imagePath = await uploadImageFile(_editPendingFile); }
+    catch(err){ toast("Image upload failed: " + err.message); return; }
+  } else if (_editRemoveImage){
+    imagePath = null;
+  } else {
+    imagePath = o?.image_path ?? null;
+  }
+
   const row = {
     dish_slug:            slug,
     dish_name:            dish.name,
@@ -571,10 +651,25 @@ async function onEditSave(e){
     price_full_override:  priceFull === "" ? null : Number(priceFull),
     pcs_override:         pcs       === "" ? null : pcs,
     description_override: desc      === "" ? null : desc,
+    image_path:           imagePath,
   };
 
-  const { error } = await window.db.from("menu_overrides")
+  let { error } = await window.db.from("menu_overrides")
     .upsert(row, { onConflict: "dish_slug" });
+  // If the image_path column hasn't been added yet, save everything else
+  // so edits still work, and tell the admin to run the DB migration.
+  if (error && /image_path/i.test(error.message || "")){
+    const { image_path, ...rest } = row;
+    ({ error } = await window.db.from("menu_overrides").upsert(rest, { onConflict: "dish_slug" }));
+    if (!error){
+      state.overrides.set(slug, rest);
+      bumpSaveCount();
+      toast("Saved — but run the menu-image DB migration to enable photo changes");
+      closeEdit();
+      renderMenu();
+      return;
+    }
+  }
   if (error){ toast("Save failed: " + error.message); return; }
 
   state.overrides.set(slug, row);

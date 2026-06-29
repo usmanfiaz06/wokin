@@ -147,6 +147,21 @@
         <span class="hint" id="editDescDefault"></span>
       </div>
 
+      <div class="field">
+        <label>Dish photo</label>
+        <div class="img-uploader" id="edImgUploader">
+          <div class="img-preview" id="edImgPreview">
+            <span class="img-empty">📷  Tap to upload</span>
+          </div>
+          <input type="file" id="edImgFile" accept="image/jpeg,image/png,image/webp" hidden />
+          <div class="img-actions">
+            <button type="button" class="btn-ghost small" id="edImgPick">CHANGE PHOTO</button>
+            <button type="button" class="btn-ghost small" id="edImgClear" hidden>REMOVE</button>
+            <p class="hint">JPG / PNG / WebP · ideally 800×600 · under 3 MB</p>
+          </div>
+        </div>
+      </div>
+
       <div class="modal-actions inline">
         <button type="button" class="act-cancel" id="editClear">↺ CLEAR OVERRIDES</button>
         <button type="submit" class="act-go">✓ SAVE</button>

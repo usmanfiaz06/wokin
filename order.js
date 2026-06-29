@@ -207,6 +207,10 @@ function applyOverridesToMenu(){
       d._priceFull = (o && o.price_full_override!= null) ? Number(o.price_full_override) : d.priceFull;
       d._desc      = (o && o.description_override) ? o.description_override : d.desc;
       d._pcs       = (o && o.pcs_override)         ? o.pcs_override         : d.pcs;
+      // custom photo set from admin → use it (else fall back to static image)
+      d._imageUrl  = (o && o.image_path)
+        ? `${(window.SUPABASE_URL || "").replace(/\/$/, "")}/storage/v1/object/public/dish-images/${o.image_path}`
+        : null;
     });
   });
 }
