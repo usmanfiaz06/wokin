@@ -531,10 +531,10 @@ function openEdit(dish, cat){
   document.getElementById("editName").textContent = dish.name;
   document.getElementById("editCat").textContent  = cat.name;
   document.getElementById("editAvailable").checked = o ? o.is_available !== false : true;
-  document.getElementById("editPrice").value     = o?.price_override     != null ? o.price_override     : "";
-  document.getElementById("editPriceFull").value = o?.price_full_override!= null ? o.price_full_override : "";
-  document.getElementById("editPcs").value       = o?.pcs_override         || "";
-  document.getElementById("editDesc").value      = o?.description_override || "";
+  document.getElementById("editPrice").value     = o?.price_override     != null ? o.price_override     : (dish.price     || "");
+  document.getElementById("editPriceFull").value = o?.price_full_override != null ? o.price_full_override : (dish.priceFull || "");
+  document.getElementById("editPcs").value       = o?.pcs_override         != null ? o.pcs_override         : (dish.pcs   || "");
+  document.getElementById("editDesc").value      = o?.description_override != null ? o.description_override : (dish.desc  || "");
 
   document.getElementById("editPriceDefault").textContent     = `Default: ${fmtPKR(dish.price)} — leave empty to use default`;
   document.getElementById("editPriceFullDefault").textContent =
