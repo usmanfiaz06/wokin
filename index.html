@@ -448,7 +448,7 @@ src="https://www.facebook.com/tr?id=1004327052385262&ev=PageView&noscript=1"/></
 
     <div class="cart-totals" id="cartTotals" hidden>
       <div class="tot-row"><span>Subtotal</span><span id="totSub">Rs. 0</span></div>
-      <div class="tot-row"><span>Sales Tax (15%)</span><span id="totTax">Rs. 0</span></div>
+      <div class="tot-row"><span>Sales Tax (<span id="taxPctCart">15</span>%)</span><span id="totTax">Rs. 0</span></div>
       <div class="tot-row"><span>Delivery <em id="totDelEta">· ~45 min</em></span><span id="totDel">Rs. 100</span></div>
       <div class="tot-row tot-grand"><span>TOTAL</span><span id="totGrand">Rs. 0</span></div>
     </div>
@@ -581,20 +581,19 @@ src="https://www.facebook.com/tr?id=1004327052385262&ev=PageView&noscript=1"/></
 
       <fieldset class="co-fs">
         <legend><i>03</i> PAYMENT</legend>
-        <div class="pay-card">
-          <div class="pay-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-              <rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/>
-              <path d="M6 10h.01M18 14h.01"/>
-            </svg>
-          </div>
-          <div class="pay-text">
-            <b>CASH ON DELIVERY</b>
-            <span>Pay the rider when your order arrives. Only payment method right now.</span>
-          </div>
-          <span class="pay-tick">✓</span>
+        <div class="pay-methods" id="payMethods">
+          <button type="button" class="pay-opt is-on" data-pay="cash">
+            <span class="pay-opt-ic">💵</span>
+            <span class="pay-opt-tx"><b>CASH</b><em id="payCashSub">Pay the rider on delivery</em></span>
+            <span class="pay-opt-tick">✓</span>
+          </button>
+          <button type="button" class="pay-opt" data-pay="card" id="payCardOpt" hidden>
+            <span class="pay-opt-ic">💳</span>
+            <span class="pay-opt-tx"><b>CARD</b><em>Pay by card at pick-up · only 5% tax</em></span>
+            <span class="pay-opt-tick">✓</span>
+          </button>
         </div>
-        <div class="field">
+        <div class="field" id="changeField">
           <label for="coChange">Change request <span class="opt">we'll bring change for…</span></label>
           <input type="text" id="coChange" name="change" placeholder="e.g. bring change for Rs. 5,000" />
         </div>
@@ -619,7 +618,7 @@ src="https://www.facebook.com/tr?id=1004327052385262&ev=PageView&noscript=1"/></
 
       <div class="co-sum-tot">
         <div class="tot-row"><span>Subtotal</span><span id="coSub">Rs. 0</span></div>
-        <div class="tot-row"><span>Tax (15%)</span><span id="coTax">Rs. 0</span></div>
+        <div class="tot-row"><span>Tax (<span id="taxPctCo">15</span>%)</span><span id="coTax">Rs. 0</span></div>
         <div class="tot-row"><span>Delivery</span><span id="coDel">Rs. 100</span></div>
         <div class="tot-row tot-discount" id="coDiscRow" hidden><span>Coupon discount</span><span id="coDisc">−Rs. 0</span></div>
         <div class="tot-row tot-grand"><span>TOTAL</span><span id="coGrand">Rs. 0</span></div>
@@ -648,9 +647,9 @@ src="https://www.facebook.com/tr?id=1004327052385262&ev=PageView&noscript=1"/></
     <span class="confirm-aster a2">✱</span>
     <div class="confirm-bowl">🥡</div>
     <p class="confirm-eyebrow">ORDER PLACED · WOK IS FIRED UP</p>
-    <h2>SEE YOU IN <em>~45 MIN</em></h2>
+    <h2>SEE YOU IN <em id="confirmEta">~45 MIN</em></h2>
     <p class="confirm-id">Order #<b id="confirmId">—</b></p>
-    <p class="confirm-text">A confirmation is on its way to your email. Our rider will call when they're close. Have your <b>cash</b> ready 🙌</p>
+    <p class="confirm-text" id="confirmText">A confirmation is on its way to your email. Our rider will call when they're close. Have your <b>cash</b> ready 🙌</p>
     <div class="confirm-actions">
       <a class="btn-primary" id="confirmTrack" href="#" target="_blank" rel="noopener">★ TRACK MY ORDER</a>
       <button class="btn-ghost" id="confirmDone">BACK TO MENU</button>

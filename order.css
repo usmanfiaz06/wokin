@@ -897,6 +897,22 @@ body.is-store-closed .fab-cart-mid strong{ color:#aaa; }
 .pay-tick{ width:32px; height:32px; border-radius:50%; background:var(--green); color:#fff;
   display:flex; align-items:center; justify-content:center; font-weight:700;}
 
+/* selectable payment methods (Cash / Card) */
+.pay-methods{ display:flex; flex-direction:column; gap:10px; margin-top:14px;}
+.pay-opt{ display:grid; grid-template-columns:auto 1fr auto; gap:14px; align-items:center;
+  width:100%; text-align:left; padding:14px; background:#fff;
+  border:2px solid rgba(26,26,26,.18); border-radius:14px; cursor:pointer;
+  transition:border-color var(--t-fast), background var(--t-fast);}
+.pay-opt[hidden]{ display:none;}
+.pay-opt-ic{ font-size:24px; line-height:1; width:40px; text-align:center;}
+.pay-opt-tx b{ font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:.08em; display:block; color:var(--ink);}
+.pay-opt-tx em{ color:var(--mute); font-size:13px; font-style:normal;}
+.pay-opt-tick{ width:30px; height:30px; border-radius:50%; border:2px solid rgba(26,26,26,.2);
+  display:flex; align-items:center; justify-content:center; color:transparent; font-weight:700;}
+.pay-opt.is-on{ border-color:var(--green); background:rgba(46,139,87,.06);}
+.pay-opt.is-on .pay-opt-tick{ background:var(--green); border-color:var(--green); color:#fff;}
+#changeField[hidden]{ display:none;}
+
 .coupon-row{ display:grid; grid-template-columns:1fr auto; gap:10px; margin-top:14px;}
 .coupon-row input{ padding:11px 14px; border:2px solid var(--ink); border-radius:10px; font-size:15px; text-transform:uppercase;}
 .coupon-msg{ margin-top:8px; font-size:13px; min-height:18px;}

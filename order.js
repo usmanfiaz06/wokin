@@ -31,7 +31,8 @@ const DELIVERY_AREAS = [
   "Khanna Pul",
 ];
 
-const TAX_RATE       = 0.15;
+const TAX_RATE             = 0.15;
+const TAX_RATE_PICKUP_CARD = 0.05;   // pick-up paid by card → reduced tax
 const DELIVERY_FEE   = 100;
 const FREE_THRESHOLD = 1800;
 const ETA_MIN        = 45;
@@ -91,10 +92,12 @@ const state = loadState() || {
   coupon: null,
   couponDiscount: 0, // Rs value validated by server
   couponLabel: "",
+  payment: "cash",   // 'cash' | 'card' (card only offered for pick-up)
 };
 // Migrate older state shapes
 if (state.couponDiscount === undefined) state.couponDiscount = 0;
 if (state.couponLabel === undefined)    state.couponLabel = "";
+if (state.payment === undefined)        state.payment = "cash";
 
 function saveState(){
   try { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
@@ -974,13 +977,16 @@ function refreshCardForId(id){
 
 function cartTotals(){
   const sub = state.cart.reduce((s,i) => s + i.price * i.qty, 0);
-  const tax = sub * TAX_RATE;
+  // Pick-up paid by card is taxed at the reduced rate
+  const taxRate = (state.type === "pickup" && state.payment === "card")
+    ? TAX_RATE_PICKUP_CARD : TAX_RATE;
+  const tax = sub * taxRate;
   const isFreeDel = sub >= FREE_THRESHOLD || state.type === "pickup";
   const del = (state.type === "pickup") ? 0 : (isFreeDel ? 0 : DELIVERY_FEE);
   // discount validated server-side via validate_coupon RPC
   const discount = Math.min(state.couponDiscount || 0, sub);
   const grand = Math.max(0, sub - discount) + tax + del;
-  return { sub, tax, del, discount, grand, isFreeDel };
+  return { sub, tax, del, discount, grand, isFreeDel, taxRate };
 }
 
 function recalcCart(){
@@ -1078,6 +1084,7 @@ function recalcCart(){
 
   document.getElementById("totSub").textContent = fmtPKR(t.sub);
   document.getElementById("totTax").textContent = fmtPKR(t.tax);
+  { const el = document.getElementById("taxPctCart"); if (el) el.textContent = Math.round(t.taxRate * 100); }
   document.getElementById("totDel").textContent = t.del === 0 ? "FREE" : fmtPKR(t.del);
   document.getElementById("totGrand").textContent = fmtPKR(t.grand);
   document.getElementById("totDelEta").textContent =
@@ -1283,6 +1290,7 @@ function openCheckout(){
   populateAreaSelect();
   document.getElementById("coArea").value =
     (state.area && DELIVERY_AREAS.includes(state.area)) ? state.area : DELIVERY_AREAS[0];
+  reflectPaymentMethod();
   document.getElementById("checkout").hidden = false;
   document.body.classList.add("state-locked");
   document.getElementById("checkout").scrollTo(0,0);
@@ -1307,6 +1315,20 @@ function closeCheckout(){
   recalcCart();
 }
 
+// Show/hide the Card option (pick-up only) and reflect the chosen method.
+function reflectPaymentMethod(){
+  const isPickup = state.type === "pickup";
+  const cardOpt = document.getElementById("payCardOpt");
+  const cashSub = document.getElementById("payCashSub");
+  if (cardOpt) cardOpt.hidden = !isPickup;
+  if (!isPickup && state.payment === "card"){ state.payment = "cash"; saveState(); }
+  if (cashSub) cashSub.textContent = isPickup ? "Pay cash at the counter" : "Pay the rider on delivery";
+  document.querySelectorAll("#payMethods .pay-opt").forEach(o =>
+    o.classList.toggle("is-on", o.dataset.pay === state.payment));
+  const changeField = document.getElementById("changeField");
+  if (changeField) changeField.hidden = state.payment !== "cash";
+}
+
 function bindCheckout(){
   document.getElementById("coBack").addEventListener("click", () => { closeCheckout(); openCart(); });
 
@@ -1321,6 +1343,16 @@ function bindCheckout(){
   });
 
   document.getElementById("areaChangeBtn").addEventListener("click", openLocModal);
+
+  // payment method (Cash / Card) — card only offered for pick-up
+  document.querySelectorAll("#payMethods .pay-opt").forEach(opt => {
+    opt.addEventListener("click", () => {
+      state.payment = opt.dataset.pay;
+      saveState();
+      reflectPaymentMethod();
+      recalcCart();
+    });
+  });
 
   // coupon
   document.getElementById("couponApply").addEventListener("click", applyCoupon);
@@ -1455,6 +1487,7 @@ function renderCheckoutSummary(){
   });
   document.getElementById("coSub").textContent  = fmtPKR(t.sub);
   document.getElementById("coTax").textContent  = fmtPKR(t.tax);
+  { const el = document.getElementById("taxPctCo"); if (el) el.textContent = Math.round(t.taxRate * 100); }
   document.getElementById("coDel").textContent  = t.del === 0 ? "FREE" : fmtPKR(t.del);
   document.getElementById("coGrand").textContent= fmtPKR(t.grand);
   const dr = document.getElementById("coDiscRow");
@@ -1521,8 +1554,12 @@ async function placeOrder(){
                               ? (document.getElementById("coInstrPickup").value.trim() || null)
                               : (document.getElementById("coInstr").value.trim() || null),
 
-    payment_method:         "cash-on-delivery",
-    change_request:         document.getElementById("coChange").value.trim() || null,
+    payment_method:         state.payment === "card"
+                              ? "card-on-pickup"
+                              : (isPickup ? "cash-on-pickup" : "cash-on-delivery"),
+    change_request:         state.payment === "cash"
+                              ? (document.getElementById("coChange").value.trim() || null)
+                              : null,
 
     subtotal:               Math.round(t.sub),
     tax:                    Math.round(t.tax),
@@ -1566,6 +1603,19 @@ async function placeOrder(){
     recalcCart();
 
     document.getElementById("confirmId").textContent = order.order_number;
+    const etaEl = document.getElementById("confirmEta");
+    if (etaEl) etaEl.textContent = `~${eta} MIN`;
+    // Tailor the confirmation message to pick-up vs delivery / cash vs card
+    const ctEl = document.getElementById("confirmText");
+    if (ctEl){
+      if (isPickup){
+        ctEl.innerHTML = state.payment === "card"
+          ? `A confirmation is on its way to your email. Come collect your order at the counter and <b>pay by card</b> 🙌`
+          : `A confirmation is on its way to your email. Come collect your order at the counter and <b>pay cash</b> 🙌`;
+      } else {
+        ctEl.innerHTML = `A confirmation is on its way to your email. Our rider will call when they're close. Have your <b>cash</b> ready 🙌`;
+      }
+    }
     // Wire the tracking link with the order number + phone (prefilled)
     const trackEl = document.getElementById("confirmTrack");
     if (trackEl){

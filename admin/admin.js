@@ -686,18 +686,25 @@ async function openModal(id){
   `).join("");
 
   // totals
+  const taxPct = o.subtotal > 0 ? Math.round((Number(o.tax) / Number(o.subtotal)) * 100) : 15;
   document.getElementById("mTotals").innerHTML = `
     <div class="row"><span>Subtotal</span><span>${fmtPKR(o.subtotal)}</span></div>
-    <div class="row"><span>Tax (15%)</span><span>${fmtPKR(o.tax)}</span></div>
+    <div class="row"><span>Tax (${taxPct}%)</span><span>${fmtPKR(o.tax)}</span></div>
     <div class="row"><span>Delivery</span><span>${Number(o.delivery_fee)===0 ? "FREE" : fmtPKR(o.delivery_fee)}</span></div>
     ${Number(o.coupon_discount) > 0 ? `<div class="row"><span>Discount${o.coupon_code ? ` (${o.coupon_code})` : ""}</span><span>−${fmtPKR(o.coupon_discount)}</span></div>` : ""}
     <div class="row grand"><span>TOTAL</span><span>${fmtPKR(o.total)}</span></div>
   `;
 
   // payment
+  const payLabel = {
+    "card-on-pickup":   "💳 Card at pick-up",
+    "cash-on-pickup":   "Cash at pick-up",
+    "cash-on-delivery": "Cash on delivery",
+  }[o.payment_method] || "Cash on delivery";
+  const isCard = o.payment_method === "card-on-pickup";
   document.getElementById("mPayment").innerHTML = `
-    <dt>Method</dt><dd>Cash on delivery</dd>
-    <dt>Change request</dt><dd>${o.change_request || `<span class="none">—</span>`}</dd>
+    <dt>Method</dt><dd>${payLabel}</dd>
+    ${isCard ? "" : `<dt>Change request</dt><dd>${o.change_request || `<span class="none">—</span>`}</dd>`}
   `;
 
   // customer-facing message
