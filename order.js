@@ -719,15 +719,18 @@ function dishCard(dish, cat, idx){
       <h3>${dish.name}</h3>
       ${pcs ? `<span class="pcs">${pcs}</span>`:""}
       <p>${desc}</p>
+      ${hasFull ? `
+      <div class="foot foot-full">
+        <div class="size-rows"></div>
+      </div>` : `
       <div class="foot">
         <div class="prices">
           ${hasPromo
             ? `<span class="price-half"><s class="price-was">${fmtPKR(dish._originalPrice)}</s> <b>${fmtPKR(price)}</b>${dish.smallLabel?` <em>· ${dish.smallLabel}</em>`:""}</span>`
             : `<span class="price-half">${fmtPKR(price)}${dish.smallLabel?` <em>· ${dish.smallLabel}</em>`:""}</span>`}
-          ${hasFull ? `<span class="price-full">Full ${fmtPKR(priceFull)}</span>`:""}
         </div>
         <div class="action"></div>
-      </div>
+      </div>`}
     </div>
   `;
   applyDishBg(card.querySelector(".img"), img);
@@ -737,7 +740,66 @@ function dishCard(dish, cat, idx){
   return card;
 }
 
+function flashCard(card){
+  bumpCartIcon();
+  card.classList.add("is-flash");
+  setTimeout(() => card.classList.remove("is-flash"), 600);
+}
+
+// Build a − qty + stepper for a given cart id.
+function buildStepper(id, qty, onChange){
+  const st = document.createElement("div");
+  st.className = "stepper stepper-sm";
+  st.innerHTML = `<button aria-label="Decrease">−</button><b>${qty}</b><button aria-label="Increase">+</button>`;
+  st.querySelectorAll("button")[0].addEventListener("click", e => { e.stopPropagation(); changeQty(id, -1); onChange && onChange(); });
+  st.querySelectorAll("button")[1].addEventListener("click", e => { e.stopPropagation(); changeQty(id, +1); onChange && onChange(); });
+  return st;
+}
+
+// Half / Full dishes: a clean row per size (label · pcs · price · add/qty)
+function renderSizeRows(host, card, dish, cat, variants){
+  host.innerHTML = "";
+  if (dish._available === false){
+    host.innerHTML = `<span class="sold-out-pill">SOLD OUT</span>`;
+    return;
+  }
+  variants.forEach(v => {
+    const vid = makeDishId(dish, cat, v.key);
+    const vit = state.cart.find(c => c.id === vid);
+    const row = document.createElement("div");
+    row.className = "size-row" + (vit ? " in-cart" : "");
+    row.innerHTML = `
+      <div class="sr-meta"><b>${v.label}</b>${v.pcs ? `<small>${v.pcs}</small>` : ""}</div>
+      <span class="sr-price">${fmtPKR(v.price)}</span>
+      <div class="sr-act"></div>
+    `;
+    const act = row.querySelector(".sr-act");
+    if (vit){
+      act.appendChild(buildStepper(vid, vit.qty, () => refreshDishAction(card, dish, cat)));
+    } else {
+      const b = document.createElement("button");
+      b.className = "add-btn add-sm";
+      b.textContent = "ADD";
+      b.addEventListener("click", e => {
+        e.stopPropagation();
+        addToCart(dish, cat, v.key);
+        refreshDishAction(card, dish, cat);
+        flashCard(card);
+      });
+      act.appendChild(b);
+    }
+    host.appendChild(row);
+  });
+}
+
 function refreshDishAction(card, dish, cat){
+  // Half / Full dishes render into their own size-rows block
+  const sizeHost = card.querySelector(".size-rows");
+  if (sizeHost){
+    renderSizeRows(sizeHost, card, dish, cat, dishVariants(dish));
+    return;
+  }
+
   const id     = makeDishId(dish, cat);
   const item   = state.cart.find(c => c.id === id);
   const action = card.querySelector(".action");
@@ -749,40 +811,6 @@ function refreshDishAction(card, dish, cat){
     tag.className = "sold-out-pill";
     tag.textContent = "SOLD OUT";
     action.appendChild(tag);
-    return;
-  }
-
-  // Half / Full dishes get one control per size
-  const variants = dishVariants(dish);
-  if (variants.length > 1){
-    const wrap = document.createElement("div");
-    wrap.className = "size-add";
-    variants.forEach(v => {
-      const vid  = makeDishId(dish, cat, v.key);
-      const vit  = state.cart.find(c => c.id === vid);
-      if (vit){
-        const st = document.createElement("div");
-        st.className = "stepper stepper-sm";
-        st.innerHTML = `<button aria-label="Decrease">−</button><b>${v.label} · ${vit.qty}</b><button aria-label="Increase">+</button>`;
-        st.querySelectorAll("button")[0].addEventListener("click", e => { e.stopPropagation(); changeQty(vid, -1); });
-        st.querySelectorAll("button")[1].addEventListener("click", e => { e.stopPropagation(); changeQty(vid, +1); });
-        wrap.appendChild(st);
-      } else {
-        const b = document.createElement("button");
-        b.className = "add-btn add-sm";
-        b.textContent = v.label.toUpperCase() + " +";
-        b.addEventListener("click", e => {
-          e.stopPropagation();
-          addToCart(dish, cat, v.key);
-          refreshDishAction(card, dish, cat);
-          bumpCartIcon();
-          card.classList.add("is-flash");
-          setTimeout(() => card.classList.remove("is-flash"), 600);
-        });
-        wrap.appendChild(b);
-      }
-    });
-    action.appendChild(wrap);
     return;
   }
 
@@ -839,8 +867,8 @@ function dishVariants(dish){
   if (priceFull && priceFull !== price){
     const parts = pcs.split("/").map(s => s.trim());
     return [
-      { key: "half", label: "Half", price,           pcs: parts[0] || "Half" },
-      { key: "full", label: "Full", price: priceFull, pcs: parts[1] || "Full" },
+      { key: "half", label: "Half", price,           pcs: parts[0] || "" },
+      { key: "full", label: "Full", price: priceFull, pcs: parts[1] || "" },
     ];
   }
   return [ { key: null, label: "", price, pcs } ];
@@ -963,6 +991,33 @@ function removeItem(id){
   refreshCardForId(id);
 }
 
+// Switch a cart line between Half and Full (merges if the target already exists).
+function switchCartVariant(id, targetKey){
+  const item = state.cart.find(c => c.id === id);
+  if (!item) return;
+  const [catId] = id.split("::");
+  const baseId  = id.split("::").slice(0, 2).join("::");
+  const cat  = MENU_DATA.find(c => c.id === catId);
+  const dish = cat && cat.items.find(d => makeDishId(d, cat) === baseId);
+  if (!dish) return;
+  const v = dishVariants(dish).find(x => x.key === targetKey);
+  if (!v) return;
+  const newId = makeDishId(dish, cat, v.key);
+  if (newId === id) return;                       // already that size
+
+  const existing = state.cart.find(c => c.id === newId);
+  if (existing){
+    existing.qty += item.qty;                     // merge into the existing size
+    state.cart = state.cart.filter(c => c.id !== id);
+  } else {
+    item.id = newId; item.variant = v.label; item.price = v.price; item.desc = v.pcs;
+  }
+  if (state.coupon){ state.couponDiscount = 0; state.coupon = null; state.couponLabel = ""; }
+  saveState();
+  recalcCart();
+  refreshCardForId(newId);
+}
+
 // Re-render the dish card matching a (possibly variant-suffixed) cart id.
 function refreshCardForId(id){
   const [catId, , variant] = id.split("::");
@@ -1021,6 +1076,7 @@ function recalcCart(){
     empty.style.display = "block";
     list.style.display  = "none";
     tots.hidden = true; upsell.hidden = true; freeb.hidden = true; foot.hidden = true;
+    { const cp = document.getElementById("cartPay"); if (cp) cp.hidden = true; }
     document.getElementById("cartSub").textContent = "0 items · pick something delicious";
     return;
   }
@@ -1038,8 +1094,12 @@ function recalcCart(){
     row.innerHTML = `
       <div class="img"></div>
       <div class="info">
-        <b>${item.name}${item.variant?` <span class="variant-tag">${item.variant}</span>`:""}</b>
+        <b>${item.name}</b>
         ${item.desc?`<small>${item.desc}</small>`:""}
+        ${item.variant ? `<div class="cart-size" data-id="${item.id}">
+          <button type="button" data-v="half" class="${item.variant==='Half'?'is-on':''}">Half</button>
+          <button type="button" data-v="full" class="${item.variant==='Full'?'is-on':''}">Full</button>
+        </div>` : ""}
         <div class="row">
           <span class="price">${fmtPKR(item.price)}</span>
           <a class="remove" href="#" data-id="${item.id}">Remove</a>
@@ -1060,9 +1120,22 @@ function recalcCart(){
   list.querySelectorAll(".remove").forEach(a => {
     a.addEventListener("click", e => { e.preventDefault(); removeItem(a.dataset.id); });
   });
+  list.querySelectorAll(".cart-size button").forEach(b => {
+    b.addEventListener("click", () => {
+      switchCartVariant(b.closest(".cart-size").dataset.id, b.dataset.v);
+    });
+  });
 
   // upsell
   renderUpsell();
+
+  // pick-up pay-by toggle (Card → 5% tax). Only relevant for pick-up.
+  const cartPay = document.getElementById("cartPay");
+  if (cartPay){
+    cartPay.hidden = state.type !== "pickup";
+    document.querySelectorAll("#cartPayOpts button").forEach(b =>
+      b.classList.toggle("is-on", b.dataset.pay === state.payment));
+  }
 
   // free delivery bar
   if (state.type === "pickup"){
@@ -1147,6 +1220,14 @@ function bindCart(){
     document.querySelector(".cat-nav")?.scrollIntoView({ behavior:"smooth" });
   });
   document.getElementById("checkoutBtn").addEventListener("click", openCheckout);
+  // pick-up pay-by toggle (Cash / Card → 5% tax)
+  document.querySelectorAll("#cartPayOpts button").forEach(b => {
+    b.addEventListener("click", () => {
+      state.payment = b.dataset.pay;
+      saveState();
+      recalcCart();
+    });
+  });
 }
 
 function bumpCartIcon(){
@@ -1199,56 +1280,11 @@ function doSearch(q){
     results.innerHTML = `<p class="search-no">No dishes match "${q}". Try another word.</p>`;
     return;
   }
-  hits.slice(0, 30).forEach(({ dish, cat }) => {
-    const price     = dish._price != null ? dish._price : dish.price;
-    const desc      = dish._desc  != null ? dish._desc  : (dish.desc || "");
-    const soldOut   = dish._available === false;
-    const variants  = dishVariants(dish);
-    const hasFull   = variants.length > 1;
-
-    const card = document.createElement("div");
-    card.className = "search-card" + (soldOut ? " is-sold-out" : "");
-    card.innerHTML = `
-      <div class="sc-img"></div>
-      <div class="sc-body">
-        <h4>${dish.name}</h4>
-        <p>${desc.slice(0,90)}${desc.length>90?"…":""}</p>
-        <div class="sc-foot">
-          <b>${hasFull ? "From " : ""}${fmtPKR(price)}</b>
-          <div class="sc-action"></div>
-        </div>
-      </div>
-    `;
-    applyDishBg(card.querySelector(".sc-img"), dish._imageUrl || getDishImage(dish.name, cat.id));
-
-    const act = card.querySelector(".sc-action");
-    if (soldOut){
-      act.innerHTML = `<span class="sc-soldout">SOLD OUT</span>`;
-    } else if (hasFull){
-      variants.forEach(v => {
-        const b = document.createElement("button");
-        b.className = "sc-add sc-add-sm";
-        b.textContent = v.label.toUpperCase() + " +";
-        b.addEventListener("click", () => { addToCart(dish, cat, v.key); flashAdded(b, v.label.toUpperCase()); });
-        act.appendChild(b);
-      });
-    } else {
-      const b = document.createElement("button");
-      b.className = "sc-add";
-      b.textContent = "ADD +";
-      b.addEventListener("click", () => { addToCart(dish, cat); flashAdded(b, "ADD +"); });
-      act.appendChild(b);
-    }
-    results.appendChild(card);
+  // Reuse the real menu card → images, Half/Full size rows, working add,
+  // all consistent with the menu.
+  hits.slice(0, 30).forEach(({ dish, cat }, i) => {
+    results.appendChild(dishCard(dish, cat, i));
   });
-}
-
-// Brief "added" confirmation on a search add button.
-function flashAdded(btn, original){
-  btn.textContent = "ADDED ✓";
-  btn.classList.add("is-added");
-  bumpCartIcon();
-  setTimeout(() => { btn.textContent = original; btn.classList.remove("is-added"); }, 1100);
 }
 
 

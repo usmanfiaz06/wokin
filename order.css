@@ -584,16 +584,45 @@ body.is-store-closed .fab-cart-mid strong{ color:#aaa; }
 .dish-card .add-btn:hover{ background:var(--red);}
 .dish-card .add-btn.added{ background:var(--green);}
 
-/* Half / Full size picker on a dish card */
-.dish-card .size-add{ display:flex; flex-direction:column; gap:6px; align-items:flex-end; }
-.dish-card .add-btn.add-sm{ padding:8px 14px; font-size:13px; letter-spacing:.12em; white-space:nowrap; }
+/* Half / Full size rows on a dish card */
+.dish-card .foot-full{ display:block; }
+.dish-card .size-rows{ display:flex; flex-direction:column; gap:8px; width:100%; }
+.dish-card .size-row{ display:grid; grid-template-columns:1fr auto auto; align-items:center; gap:10px;
+  padding:8px 8px 8px 12px; border:2px solid rgba(26,26,26,.14); border-radius:12px; background:#fff; }
+.dish-card .size-row.in-cart{ border-color:var(--red); background:rgba(227,27,35,.05); }
+.dish-card .sr-meta b{ font-family:'Bebas Neue',sans-serif; font-size:15px; letter-spacing:.07em;
+  color:var(--ink); display:block; line-height:1.05; }
+.dish-card .sr-meta small{ font-size:10.5px; color:var(--mute); }
+.dish-card .sr-price{ font-family:'Bebas Neue',sans-serif; font-size:17px; color:var(--red); white-space:nowrap; }
+.dish-card .sr-act{ display:flex; justify-content:flex-end; }
+.dish-card .add-btn.add-sm{ padding:7px 16px; font-size:13px; letter-spacing:.1em; white-space:nowrap; }
 .dish-card .stepper.stepper-sm{ padding:3px; gap:4px; box-shadow:1px 1px 0 var(--ink); }
 .dish-card .stepper.stepper-sm button{ width:26px; height:26px; font-size:18px; }
-.dish-card .stepper.stepper-sm b{ min-width:auto; padding:0 6px; font-size:14px; letter-spacing:.04em; }
+.dish-card .stepper.stepper-sm b{ min-width:22px; padding:0 4px; font-size:15px; letter-spacing:.02em; }
 /* size badge on cart lines */
 .variant-tag{ display:inline-block; margin-left:6px; padding:1px 8px; border-radius:999px;
   background:var(--red); color:#fff; font-family:'Bebas Neue',sans-serif; font-size:11px;
   letter-spacing:.08em; vertical-align:middle; }
+
+/* size switch on a cart line */
+.cart-size{ display:inline-flex; margin:6px 0 2px; border:1.5px solid rgba(26,26,26,.25);
+  border-radius:999px; overflow:hidden; }
+.cart-size button{ padding:3px 13px; font-family:'Bebas Neue',sans-serif; letter-spacing:.08em;
+  font-size:12px; color:var(--mute); background:transparent; cursor:pointer; }
+.cart-size button.is-on{ background:var(--red); color:#fff; }
+
+/* compact pick-up payment toggle inside the cart drawer */
+.cart-pay{ margin-top:16px; }
+.cart-pay[hidden]{ display:none; }
+.cart-pay .cart-pay-lbl{ font-family:'Bebas Neue',sans-serif; letter-spacing:.14em; font-size:12px;
+  color:var(--mute); margin-bottom:7px; }
+.cart-pay-opts{ display:flex; gap:8px; }
+.cart-pay-opts button{ flex:1; padding:10px 8px; border:2px solid rgba(26,26,26,.18); border-radius:12px;
+  background:#fff; cursor:pointer; font-family:'Bebas Neue',sans-serif; letter-spacing:.06em;
+  font-size:14px; color:var(--ink); display:flex; flex-direction:column; align-items:center; gap:2px; }
+.cart-pay-opts button em{ font-style:normal; font-size:10.5px; color:var(--mute); letter-spacing:.02em; }
+.cart-pay-opts button.is-on{ border-color:var(--green); background:rgba(46,139,87,.07); }
+.cart-pay-opts button.is-on em{ color:var(--green); }
 
 /* prominent quantity stepper after adding */
 .dish-card .stepper{
@@ -802,6 +831,7 @@ body.is-store-closed .fab-cart-mid strong{ color:#aaa; }
 
 .cart-totals{ margin-top:18px; padding-top:14px; border-top:2px dashed var(--ink); display:flex;
   flex-direction:column; gap:6px;}
+.cart-totals[hidden], .cart-freebar[hidden], .cart-upsell[hidden], .cart-foot[hidden]{ display:none !important; }
 .tot-row{ display:flex; justify-content:space-between; align-items:baseline; font-size:14px;}
 .tot-row em{ font-style:italic; color:var(--mute); font-size:11px; margin-left:4px;}
 .tot-row.tot-grand{ margin-top:6px; padding-top:8px; border-top:1px solid var(--line);
