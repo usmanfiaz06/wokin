@@ -677,6 +677,31 @@ body.is-store-closed .fab-cart-mid strong{ color:#aaa; }
 .search-no{ color:var(--cream); text-align:center; font-family:'Bebas Neue'; font-size:22px;
   letter-spacing:.2em; padding:40px 0;}
 
+/* Search result cards (own layout — not the popular-row card) */
+.search-card{ display:flex; flex-direction:column; background:var(--cream);
+  border:2px solid var(--ink); border-radius:14px; overflow:hidden;
+  box-shadow:3px 3px 0 rgba(0,0,0,.25);}
+.search-card.is-sold-out{ opacity:.6;}
+.search-card .sc-img{ height:120px; background:var(--paper) center/cover no-repeat;
+  border-bottom:2px solid var(--ink);}
+.search-card .sc-body{ padding:10px 12px 12px; display:flex; flex-direction:column; gap:4px; flex:1;}
+.search-card h4{ font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:.03em;
+  line-height:1.05; color:var(--ink);}
+.search-card p{ font-size:11.5px; color:var(--mute); line-height:1.35; margin:0;}
+.search-card .sc-foot{ margin-top:auto; padding-top:8px; display:flex; align-items:center;
+  justify-content:space-between; gap:8px; flex-wrap:wrap;}
+.search-card .sc-foot b{ font-family:'Bebas Neue',sans-serif; font-size:19px; color:var(--red);
+  white-space:nowrap;}
+.search-card .sc-action{ display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;}
+.search-card .sc-add{ padding:8px 14px; background:var(--ink); color:#fff;
+  font-family:'Bebas Neue',sans-serif; letter-spacing:.12em; font-size:13px;
+  border-radius:var(--r-pill); white-space:nowrap; transition:background var(--t-fast);}
+.search-card .sc-add:hover{ background:var(--red);}
+.search-card .sc-add.is-added{ background:var(--green);}
+.search-card .sc-add-sm{ padding:7px 11px; font-size:12px; letter-spacing:.08em;}
+.search-card .sc-soldout{ font-family:'Bebas Neue',sans-serif; letter-spacing:.12em;
+  font-size:13px; color:var(--mute); padding:8px 4px;}
+
 
 /* =====================================================================
    POSTER FOOTER

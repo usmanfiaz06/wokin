@@ -1193,20 +1193,55 @@ function doSearch(q){
     return;
   }
   hits.slice(0, 30).forEach(({ dish, cat }) => {
+    const price     = dish._price != null ? dish._price : dish.price;
+    const desc      = dish._desc  != null ? dish._desc  : (dish.desc || "");
+    const soldOut   = dish._available === false;
+    const variants  = dishVariants(dish);
+    const hasFull   = variants.length > 1;
+
     const card = document.createElement("div");
-    card.className = "pop-card";
+    card.className = "search-card" + (soldOut ? " is-sold-out" : "");
     card.innerHTML = `
-      <div class="img"></div>
-      <div class="pad">
+      <div class="sc-img"></div>
+      <div class="sc-body">
         <h4>${dish.name}</h4>
-        <p style="font-size:11px; color:var(--mute); margin:2px 0 0;">${(dish.desc||"").slice(0,76)}…</p>
-        <div class="price"><b>${fmtPKR(dish.price)}</b><button class="add">+</button></div>
+        <p>${desc.slice(0,90)}${desc.length>90?"…":""}</p>
+        <div class="sc-foot">
+          <b>${hasFull ? "From " : ""}${fmtPKR(price)}</b>
+          <div class="sc-action"></div>
+        </div>
       </div>
     `;
-    applyDishBg(card.querySelector(".img"), getDishImage(dish.name, cat.id));
-    card.querySelector(".add").addEventListener("click", () => addToCart(dish, cat));
+    applyDishBg(card.querySelector(".sc-img"), dish._imageUrl || getDishImage(dish.name, cat.id));
+
+    const act = card.querySelector(".sc-action");
+    if (soldOut){
+      act.innerHTML = `<span class="sc-soldout">SOLD OUT</span>`;
+    } else if (hasFull){
+      variants.forEach(v => {
+        const b = document.createElement("button");
+        b.className = "sc-add sc-add-sm";
+        b.textContent = v.label.toUpperCase() + " +";
+        b.addEventListener("click", () => { addToCart(dish, cat, v.key); flashAdded(b, v.label.toUpperCase()); });
+        act.appendChild(b);
+      });
+    } else {
+      const b = document.createElement("button");
+      b.className = "sc-add";
+      b.textContent = "ADD +";
+      b.addEventListener("click", () => { addToCart(dish, cat); flashAdded(b, "ADD +"); });
+      act.appendChild(b);
+    }
     results.appendChild(card);
   });
+}
+
+// Brief "added" confirmation on a search add button.
+function flashAdded(btn, original){
+  btn.textContent = "ADDED ✓";
+  btn.classList.add("is-added");
+  bumpCartIcon();
+  setTimeout(() => { btn.textContent = original; btn.classList.remove("is-added"); }, 1100);
 }
 
 
