@@ -593,12 +593,23 @@ function openEdit(dish, cat){
   document.getElementById("editName").textContent = dish.name;
   document.getElementById("editCat").textContent  = cat.name;
   document.getElementById("editAvailable").checked = o ? o.is_available !== false : true;
-  document.getElementById("editPrice").value     = o?.price_override     != null ? o.price_override     : (dish.price     || "");
+
+  // Sizes: single / half / full (soups) · half / full · single
+  const hasFull  = dish.priceFull != null;
+  const is3size  = hasFull && dish.priceHalf != null;
+  // In a 2-size dish, `price` IS the Half price; in a 3-size dish it's Single.
+  document.getElementById("editPriceLabel").textContent = is3size ? "Single price" : (hasFull ? "Half price" : "Price");
+  document.getElementById("editPriceHalfField").hidden  = !is3size;
+  document.getElementById("editPriceFullField").hidden  = !hasFull;
+
+  document.getElementById("editPrice").value     = o?.price_override      != null ? o.price_override      : (dish.price     || "");
+  document.getElementById("editPriceHalf").value = o?.price_half_override != null ? o.price_half_override : (dish.priceHalf || "");
   document.getElementById("editPriceFull").value = o?.price_full_override != null ? o.price_full_override : (dish.priceFull || "");
   document.getElementById("editPcs").value       = o?.pcs_override         != null ? o.pcs_override         : (dish.pcs   || "");
   document.getElementById("editDesc").value      = o?.description_override != null ? o.description_override : (dish.desc  || "");
 
   document.getElementById("editPriceDefault").textContent     = `Default: ${fmtPKR(dish.price)} — leave empty to use default`;
+  document.getElementById("editPriceHalfDefault").textContent = dish.priceHalf ? `Default: ${fmtPKR(dish.priceHalf)} — leave empty for default` : "";
   document.getElementById("editPriceFullDefault").textContent =
     dish.priceFull ? `Default: ${fmtPKR(dish.priceFull)} — leave empty for default` : `No full-size price by default`;
   document.getElementById("editPcsDefault").textContent       = dish.pcs ? `Default: "${dish.pcs}" — leave empty for default` : "No portion label by default";
@@ -627,6 +638,7 @@ async function onEditSave(e){
   const dish = state.editingDish;
   const isAvailable = document.getElementById("editAvailable").checked;
   const price     = document.getElementById("editPrice").value.trim();
+  const priceHalf = document.getElementById("editPriceHalf").value.trim();
   const priceFull = document.getElementById("editPriceFull").value.trim();
   const pcs       = document.getElementById("editPcs").value.trim();
   const desc      = document.getElementById("editDesc").value.trim();
@@ -648,33 +660,32 @@ async function onEditSave(e){
     dish_name:            dish.name,
     is_available:         isAvailable,
     price_override:       price     === "" ? null : Number(price),
+    price_half_override:  priceHalf === "" ? null : Number(priceHalf),
     price_full_override:  priceFull === "" ? null : Number(priceFull),
     pcs_override:         pcs       === "" ? null : pcs,
     description_override: desc      === "" ? null : desc,
     image_path:           imagePath,
   };
 
-  let { error } = await window.db.from("menu_overrides")
-    .upsert(row, { onConflict: "dish_slug" });
-  // If the image_path column hasn't been added yet, save everything else
-  // so edits still work, and tell the admin to run the DB migration.
-  if (error && /image_path/i.test(error.message || "")){
-    const { image_path, ...rest } = row;
-    ({ error } = await window.db.from("menu_overrides").upsert(rest, { onConflict: "dish_slug" }));
-    if (!error){
-      state.overrides.set(slug, rest);
-      bumpSaveCount();
-      toast("Saved — but run the menu-image DB migration to enable photo changes");
-      closeEdit();
-      renderMenu();
-      return;
-    }
+  // Upsert, dropping any newer columns the DB doesn't have yet so edits
+  // still save (and warn the admin to run the migration).
+  let attempt = { ...row };
+  let error, dropped = false;
+  for (let i = 0; i < 3; i++){
+    ({ error } = await window.db.from("menu_overrides").upsert(attempt, { onConflict: "dish_slug" }));
+    if (!error) break;
+    const msg = error.message || "";
+    const col = ["price_half_override", "image_path"].find(c => msg.includes(c) && c in attempt);
+    if (!col) break;
+    delete attempt[col]; dropped = true;
   }
   if (error){ toast("Save failed: " + error.message); return; }
 
-  state.overrides.set(slug, row);
+  state.overrides.set(slug, attempt);
   bumpSaveCount();
-  toast("✓ " + dish.name + " UPDATED");
+  toast(dropped
+    ? "Saved — run the latest DB migration for new size/photo fields"
+    : "✓ " + dish.name + " UPDATED");
   closeEdit();
   renderMenu();
 }

@@ -167,8 +167,9 @@ function applyOverridesToMenu(){
       const slug = window.slugifyDish(d.name);
       const o = menuOverrides.get(slug);
       d._available = o ? o.is_available !== false : true;
-      d._price     = (o && o.price_override     != null) ? Number(o.price_override)     : d.price;
-      d._priceFull = (o && o.price_full_override!= null) ? Number(o.price_full_override) : d.priceFull;
+      d._price     = (o && o.price_override      != null) ? Number(o.price_override)      : d.price;
+      d._priceHalf = (o && o.price_half_override != null) ? Number(o.price_half_override) : d.priceHalf;
+      d._priceFull = (o && o.price_full_override != null) ? Number(o.price_full_override) : d.priceFull;
       d._desc      = (o && o.description_override) ? o.description_override : d.desc;
       d._pcs       = (o && o.pcs_override)         ? o.pcs_override         : d.pcs;
       // custom photo set from admin → use it (else fall back to static image)

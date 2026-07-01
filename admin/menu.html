@@ -123,13 +123,19 @@
         </label>
       </div>
 
-      <div class="field">
-        <label for="editPrice">Price (Rs.)</label>
+      <div class="field" id="editPriceField">
+        <label for="editPrice"><span id="editPriceLabel">Price</span> (Rs.)</label>
         <input type="number" id="editPrice" step="5" min="0" />
         <span class="hint" id="editPriceDefault"></span>
       </div>
 
-      <div class="field">
+      <div class="field" id="editPriceHalfField" hidden>
+        <label for="editPriceHalf">Half size price (Rs.)</label>
+        <input type="number" id="editPriceHalf" step="5" min="0" />
+        <span class="hint" id="editPriceHalfDefault"></span>
+      </div>
+
+      <div class="field" id="editPriceFullField">
         <label for="editPriceFull">Full size price (Rs.)</label>
         <input type="number" id="editPriceFull" step="5" min="0" />
         <span class="hint" id="editPriceFullDefault"></span>
