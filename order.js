@@ -862,8 +862,18 @@ function makeDishId(dish, cat, variant){
 // dishes that only have one price.
 function dishVariants(dish){
   const price     = dish._price     != null ? dish._price     : dish.price;
+  const priceHalf = dish._priceHalf != null ? dish._priceHalf : dish.priceHalf;
   const priceFull = dish._priceFull != null ? dish._priceFull : dish.priceFull;
   const pcs       = (dish._pcs != null ? dish._pcs : dish.pcs) || "";
+  // Three sizes (soups): Single / Half / Full
+  if (priceHalf != null && priceFull != null){
+    return [
+      { key: "single", label: "Single", price,            pcs: "" },
+      { key: "half",   label: "Half",   price: priceHalf, pcs: "" },
+      { key: "full",   label: "Full",   price: priceFull, pcs: "" },
+    ];
+  }
+  // Two sizes: Half / Full
   if (priceFull && priceFull !== price){
     const parts = pcs.split("/").map(s => s.trim());
     return [
@@ -991,7 +1001,22 @@ function removeItem(id){
   refreshCardForId(id);
 }
 
-// Switch a cart line between Half and Full (merges if the target already exists).
+// Build the size switcher for a cart line, listing all of the dish's sizes.
+function cartSizeToggle(item){
+  const [catId] = item.id.split("::");
+  const baseId  = item.id.split("::").slice(0, 2).join("::");
+  const cat  = MENU_DATA.find(c => c.id === catId);
+  const dish = cat && cat.items.find(d => makeDishId(d, cat) === baseId);
+  if (!dish) return "";
+  const variants = dishVariants(dish);
+  if (variants.length < 2) return "";
+  const curKey = variants.find(v => v.label === item.variant)?.key;
+  return `<div class="cart-size" data-id="${item.id}">` +
+    variants.map(v => `<button type="button" data-v="${v.key}" class="${v.key === curKey ? "is-on" : ""}">${v.label}</button>`).join("") +
+    `</div>`;
+}
+
+// Switch a cart line to another size (merges if the target already exists).
 function switchCartVariant(id, targetKey){
   const item = state.cart.find(c => c.id === id);
   if (!item) return;
@@ -1096,10 +1121,7 @@ function recalcCart(){
       <div class="info">
         <b>${item.name}</b>
         ${item.desc?`<small>${item.desc}</small>`:""}
-        ${item.variant ? `<div class="cart-size" data-id="${item.id}">
-          <button type="button" data-v="half" class="${item.variant==='Half'?'is-on':''}">Half</button>
-          <button type="button" data-v="full" class="${item.variant==='Full'?'is-on':''}">Full</button>
-        </div>` : ""}
+        ${item.variant ? cartSizeToggle(item) : ""}
         <div class="row">
           <span class="price">${fmtPKR(item.price)}</span>
           <a class="remove" href="#" data-id="${item.id}">Remove</a>

@@ -533,6 +533,24 @@ function renderBoard({ flashId } = {}){
     board.appendChild(col);
   });
 
+  // CANCELLED — read-only record at the end of the board (only if any)
+  const cancelled = buckets["cancelled"] || [];
+  if (cancelled.length){
+    const col = document.createElement("section");
+    col.className = "col col-cancelled";
+    col.dataset.status = "cancelled";
+    col.innerHTML = `
+      <div class="col-head">
+        <h3><span class="dot"></span>CANCELLED</h3>
+        <span class="ct">${cancelled.length}</span>
+      </div>
+      <div class="col-body" data-body></div>
+    `;
+    const body = col.querySelector("[data-body]");
+    cancelled.forEach(o => body.appendChild(orderCard(o, false)));
+    board.appendChild(col);
+  }
+
   updateAlarm();
 }
 
@@ -565,8 +583,10 @@ function orderCard(o, flash){
       <span class="pill">${o.customer_phone}</span>
     </div>
     <div class="oc-items">${itemsLabel}</div>
+    ${o.status === "cancelled" ? `<div class="oc-cancel-reason">✕ ${o.cancel_reason ? o.cancel_reason : "No reason given"}</div>` : ""}
     <div class="oc-foot">
       <span class="oc-total">${fmtPKR(o.total)}</span>
+      ${o.status === "cancelled" ? `<span class="oc-cancel-when">${fmtTime(o.cancelled_at || o.created_at)}</span>` : ""}
     </div>
   `;
 
@@ -583,9 +603,10 @@ function orderCard(o, flash){
     });
   }
 
-  // ---- drag and drop ----------------------------------------------
-  card.draggable = true;
+  // ---- drag and drop (cancelled orders are a read-only record) -----
   card.dataset.orderId = o.id;
+  if (o.status === "cancelled") return card;
+  card.draggable = true;
   card.addEventListener("dragstart", e => {
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("text/plain", o.id);
@@ -631,8 +652,12 @@ async function openModal(id){
   document.body.style.overflow = "hidden";
 
   document.getElementById("mOrderNum").textContent = o.order_number;
-  document.getElementById("mOrderMeta").textContent =
-    `Placed ${fmtTime(o.created_at)} · ${minutesAgo(o.created_at)} min ago`;
+  let metaTxt = `Placed ${fmtTime(o.created_at)} · ${minutesAgo(o.created_at)} min ago`;
+  if (o.status === "cancelled"){
+    metaTxt += ` · ✕ CANCELLED ${o.cancelled_at ? fmtTime(o.cancelled_at) : ""}`
+             + (o.cancel_reason ? ` — “${o.cancel_reason}”` : " — no reason given");
+  }
+  document.getElementById("mOrderMeta").textContent = metaTxt;
   const stEl = document.getElementById("mStatus");
   stEl.textContent = STATUS_LABEL[o.status] || o.status.toUpperCase();
   stEl.dataset.status = o.status;

@@ -122,9 +122,9 @@ const MENU_DATA = [
       {
         name: "Wokin Special Soup",
         desc: "Delightful thick soup with Chicken, Prawns, Seasonal Vegetables and Black Mushrooms.",
-        pcs: "19B",
         price: 720,
         priceFull: 2880,
+        priceHalf: 1440,
         smallLabel: "Single",
         tags: ["chef"]
       },
@@ -133,6 +133,7 @@ const MENU_DATA = [
         desc: "All-time favourite soup prepared in Chicken Broth with Chicken and Chinese Vegetables.",
         price: 625,
         priceFull: 2505,
+        priceHalf: 1250,
         smallLabel: "Single",
         tags: []
       },
@@ -141,6 +142,7 @@ const MENU_DATA = [
         desc: "Minced Chicken and crushed Sweet Corn, cooked in Chicken Broth.",
         price: 625,
         priceFull: 2505,
+        priceHalf: 1250,
         smallLabel: "Single",
         tags: ["mild"]
       },
@@ -149,6 +151,7 @@ const MENU_DATA = [
         desc: "Authentic Szechuan Soup with Chicken, Prawns, Tofu and Chinese Herbs in a Hot Sauce, topped with Chopped Peanuts.",
         price: 670,
         priceFull: 2685,
+        priceHalf: 1350,
         smallLabel: "Single",
         tags: []
       },
@@ -157,6 +160,7 @@ const MENU_DATA = [
         desc: "Clear Chicken soup with Lemon Juice and Green Chillies, garnished with Crispy Rice.",
         price: 625,
         priceFull: 2505,
+        priceHalf: 1250,
         smallLabel: "Single",
         tags: []
       },
@@ -165,6 +169,7 @@ const MENU_DATA = [
         desc: "Delicious thick soup with Chicken, Prawns, Carrots, Black Mushrooms & Green Onions.",
         price: 715,
         priceFull: 2860,
+        priceHalf: 1450,
         smallLabel: "Single",
         tags: ["chef"]
       },
@@ -173,6 +178,7 @@ const MENU_DATA = [
         desc: "Mild flavour clear soup with Chinese and Chicken Noodles.",
         price: 625,
         priceFull: 2505,
+        priceHalf: 1250,
         smallLabel: "Single",
         tags: ["mild"]
       },
@@ -181,6 +187,7 @@ const MENU_DATA = [
         desc: "Special clear Seafood soup prepared with Fish, Prawns, Chinese Mushrooms and Seasonal Vegetables.",
         price: 715,
         priceFull: 2860,
+        priceHalf: 1450,
         smallLabel: "Single",
         tags: []
       },
@@ -189,6 +196,7 @@ const MENU_DATA = [
         desc: "A medley of Vegetables in a clear Vegetable/Chicken Broth.",
         price: 540,
         priceFull: 2155,
+        priceHalf: 1080,
         smallLabel: "Single",
         tags: ["veg"]
       },
@@ -197,6 +205,7 @@ const MENU_DATA = [
         desc: "A medley of Vegetables and Chicken in a clear Chicken Broth.",
         price: 615,
         priceFull: 2460,
+        priceHalf: 1230,
         smallLabel: "Single",
         tags: []
       }
