@@ -167,10 +167,8 @@ const MENU_DATA = [
       {
         name: "Chef's Special Soup",
         desc: "Delicious thick soup with Chicken, Prawns, Carrots, Black Mushrooms & Green Onions.",
-        price: 715,
+        price: 1450,
         priceFull: 2860,
-        priceHalf: 1450,
-        smallLabel: "Single",
         tags: ["chef"]
       },
       {
