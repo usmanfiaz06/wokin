@@ -1280,10 +1280,41 @@ function doSearch(q){
     results.innerHTML = `<p class="search-no">No dishes match "${q}". Try another word.</p>`;
     return;
   }
-  // Reuse the real menu card → images, Half/Full size rows, working add,
-  // all consistent with the menu.
-  hits.slice(0, 30).forEach(({ dish, cat }, i) => {
-    results.appendChild(dishCard(dish, cat, i));
+  hits.slice(0, 30).forEach(({ dish, cat }) => {
+    const price    = dish._price != null ? dish._price : dish.price;
+    const desc     = dish._desc  != null ? dish._desc  : (dish.desc || "");
+    const soldOut  = dish._available === false;
+    const hasFull  = dishVariants(dish).length > 1;
+
+    const card = document.createElement("div");
+    card.className = "search-card" + (soldOut ? " is-sold-out" : "");
+    card.innerHTML = `
+      <div class="sc-img"></div>
+      <div class="sc-body">
+        <h4>${dish.name}</h4>
+        <p>${desc.slice(0,80)}${desc.length>80?"…":""}</p>
+        <div class="sc-foot">
+          <b>${hasFull ? "From " : ""}${fmtPKR(price)}</b>
+          <div class="sc-act"></div>
+        </div>
+      </div>
+    `;
+    applyDishBg(card.querySelector(".sc-img"), dish._imageUrl || getDishImage(dish.name, cat.id));
+    const act = card.querySelector(".sc-act");
+    if (soldOut){
+      act.innerHTML = `<span class="sc-soldout">SOLD OUT</span>`;
+    } else {
+      const btn = document.createElement("button");
+      btn.className = "sc-add";
+      btn.textContent = "ADD +";
+      btn.addEventListener("click", () => {
+        addToCart(dish, cat);          // default size; switchable in the cart
+        btn.textContent = "ADDED ✓"; btn.classList.add("is-added"); bumpCartIcon();
+        setTimeout(() => { btn.textContent = "ADD +"; btn.classList.remove("is-added"); }, 1100);
+      });
+      act.appendChild(btn);
+    }
+    results.appendChild(card);
   });
 }
 
