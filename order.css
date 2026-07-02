@@ -522,8 +522,12 @@ body.is-store-closed .fab-cart-mid strong{ color:#aaa; }
 .pop-card h4{ font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:.04em; line-height:1.1;}
 .pop-card .price{ margin-top:auto; display:flex; justify-content:space-between; align-items:center;}
 .pop-card .price b{ font-family:'Bebas Neue',sans-serif; font-size:20px; color:var(--red);}
-.pop-card .add{ width:34px; height:34px; border-radius:50%; background:var(--ink); color:#fff;
-  display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:600;}
+.pop-card .add{ position:relative; width:34px; height:34px; border-radius:50%; background:var(--ink);
+  color:transparent; font-size:0; padding:0; flex-shrink:0;}
+.pop-card .add::before, .pop-card .add::after{ content:""; position:absolute; top:50%; left:50%;
+  background:#fff; border-radius:1px;}
+.pop-card .add::before{ width:14px; height:2.5px; transform:translate(-50%,-50%);}
+.pop-card .add::after{ width:2.5px; height:14px; transform:translate(-50%,-50%);}
 .pop-card .add:hover{ background:var(--red);}
 
 
@@ -817,8 +821,12 @@ body.is-store-closed .fab-cart-mid strong{ color:#aaa; }
   display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 .up-card .row{ display:flex; align-items:center; justify-content:space-between; margin-top:4px;}
 .up-card .row span{ font-family:'Bebas Neue'; font-size:13px; color:var(--red);}
-.up-card .row .add{ width:22px; height:22px; border-radius:50%; background:var(--ink); color:#fff;
-  display:flex; align-items:center; justify-content:center; font-size:14px;}
+.up-card .row .add{ position:relative; width:22px; height:22px; border-radius:50%; background:var(--ink);
+  color:transparent; font-size:0; padding:0; flex-shrink:0;}
+.up-card .row .add::before, .up-card .row .add::after{ content:""; position:absolute; top:50%; left:50%;
+  background:#fff; border-radius:1px;}
+.up-card .row .add::before{ width:10px; height:2px; transform:translate(-50%,-50%);}
+.up-card .row .add::after{ width:2px; height:10px; transform:translate(-50%,-50%);}
 
 .cart-freebar{ margin-top:18px; padding:14px; background:var(--paper);
   border:2px dashed var(--red); border-radius:14px;}
