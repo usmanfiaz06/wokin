@@ -168,6 +168,7 @@ function applyOverridesToMenu(){
       const o = menuOverrides.get(slug);
       d._available = o ? o.is_available !== false : true;
       d._hidden    = o ? o.is_hidden === true : false;   // fully hidden from customers
+      d._popular   = o ? o.is_popular === true : false;  // show in Crowd Favourites
       d._price     = (o && o.price_override      != null) ? Number(o.price_override)      : d.price;
       d._priceHalf = (o && o.price_half_override != null) ? Number(o.price_half_override) : d.priceHalf;
       d._priceFull = (o && o.price_full_override != null) ? Number(o.price_full_override) : d.priceFull;
@@ -917,13 +918,24 @@ function findDishByName(name){
   return null;
 }
 
+// The "Crowd Favourites" list: dishes the admin flagged as popular; if the
+// admin hasn't flagged any, fall back to the built-in curated list.
+function getPopularPicks(){
+  const flagged = [];
+  MENU_DATA.forEach(cat => cat.items.forEach(d => {
+    if (d._popular && !d._hidden) flagged.push({ dish: d, cat });
+  }));
+  if (flagged.length) return flagged;
+  return POPULAR_DISH_NAMES
+    .map(n => findDishByName(n))
+    .filter(Boolean)
+    .filter(({ dish }) => !dish._hidden);
+}
+
 function renderPopular(){
   const scroll = document.getElementById("popularScroll");
-  POPULAR_DISH_NAMES.forEach(nm => {
-    const hit = findDishByName(nm);
-    if (!hit) return;
-    const { dish, cat } = hit;
-    if (dish._hidden) return;   // hidden from customers
+  scroll.innerHTML = "";
+  getPopularPicks().forEach(({ dish, cat }) => {
     const img = dish._imageUrl || getDishImage(dish.name, cat.id);
     const card = document.createElement("div");
     card.className = "pop-card";
@@ -1201,10 +1213,7 @@ function renderUpsell(){
   const scroll = document.getElementById("upsellScroll");
   scroll.innerHTML = "";
   const inCart = new Set(state.cart.map(c => c.id));
-  const picks = POPULAR_DISH_NAMES
-    .map(n => findDishByName(n))
-    .filter(Boolean)
-    .filter(({ dish }) => !dish._hidden)
+  const picks = getPopularPicks()
     .filter(({ dish, cat }) => !inCart.has(makeDishId(dish, cat)))
     .slice(0, 6);
 

@@ -499,6 +499,7 @@ function dishRow(dish, cat){
   const o    = state.overrides.get(slug);
   const available = o ? o.is_available !== false : true;
   const hidden    = o ? o.is_hidden === true : false;
+  const popular   = o ? o.is_popular === true : false;
   const price     = o?.price_override     != null ? Number(o.price_override)     : dish.price;
   const priceFull = o?.price_full_override!= null ? Number(o.price_full_override) : dish.priceFull;
   const desc      = o?.description_override || dish.desc;
@@ -518,6 +519,7 @@ function dishRow(dish, cat){
     <div class="mm-main">
       <div class="mm-name">
         <h3>${dish.name}</h3>
+        ${popular ? `<span class="pop-badge">★ POPULAR</span>` : ""}
         ${hidden ? `<span class="hidden-badge">HIDDEN</span>` : ""}
         ${pcs ? `<span class="mm-pcs">${pcs}</span>` : ""}
       </div>
@@ -536,6 +538,7 @@ function dishRow(dish, cat){
         <span class="mm-toggle-track"></span>
         <span class="mm-toggle-label">${available ? "ON" : "OFF"}</span>
       </label>
+      <button class="btn-ghost small mm-pop ${popular ? "is-on" : ""}" data-pop title="${popular ? "Remove from Crowd Favourites" : "Add to Crowd Favourites"}">★</button>
       <button class="btn-ghost small mm-hide" data-hide title="${hidden ? "Show on menu" : "Hide from menu"}">${hidden ? "SHOW" : "HIDE"}</button>
       <button class="btn-ghost small mm-edit" data-edit>EDIT</button>
     </div>
@@ -554,6 +557,8 @@ function dishRow(dish, cat){
     toggleAvailable(slug, dish.name, e.target.checked));
   row.querySelector("[data-hide]").addEventListener("click", () =>
     toggleHidden(slug, dish.name, !hidden));
+  row.querySelector("[data-pop]").addEventListener("click", () =>
+    togglePopular(slug, dish.name, !popular));
   row.querySelector("[data-edit]").addEventListener("click", () =>
     openEdit(dish, cat));
   return row;
@@ -612,6 +617,26 @@ async function toggleHidden(slug, name, hide){
   toast(`${hide ? "🙈 " + name + " HIDDEN" : "👁 " + name + " SHOWN"}`);
 }
 
+// Add / remove a dish from the Crowd Favourites (popular) row
+async function togglePopular(slug, name, on){
+  const prev = state.overrides.get(slug);
+  state.overrides.set(slug, { ...(prev || {}), dish_slug: slug, dish_name: name, is_popular: on });
+  renderMenu();
+
+  const row = { dish_slug: slug, dish_name: name, is_popular: on };
+  let { error } = await window.db.from("menu_overrides").upsert(row, { onConflict: "dish_slug" });
+  if (error){
+    if (prev) state.overrides.set(slug, prev); else state.overrides.delete(slug);
+    renderMenu();
+    toast(/is_popular/i.test(error.message || "")
+      ? "Run the latest DB migration to manage the popular row (is_popular column)"
+      : "Save failed: " + error.message);
+    return;
+  }
+  bumpSaveCount();
+  toast(`${on ? "★ " + name + " ADDED to Crowd Favourites" : name + " REMOVED from Crowd Favourites"}`);
+}
+
 function openEdit(dish, cat){
   const slug = slugifyDish(dish.name);
   const o = state.overrides.get(slug);
@@ -623,6 +648,7 @@ function openEdit(dish, cat){
   document.getElementById("editCat").textContent  = cat.name;
   document.getElementById("editAvailable").checked = o ? o.is_available !== false : true;
   document.getElementById("editHidden").checked    = o ? o.is_hidden === true : false;
+  document.getElementById("editPopular").checked   = o ? o.is_popular === true : false;
 
   // Sizes: single / half / full (soups) · half / full · single
   const hasFull  = dish.priceFull != null;
@@ -668,6 +694,7 @@ async function onEditSave(e){
   const dish = state.editingDish;
   const isAvailable = document.getElementById("editAvailable").checked;
   const isHidden    = document.getElementById("editHidden").checked;
+  const isPopular   = document.getElementById("editPopular").checked;
   const price     = document.getElementById("editPrice").value.trim();
   const priceHalf = document.getElementById("editPriceHalf").value.trim();
   const priceFull = document.getElementById("editPriceFull").value.trim();
@@ -691,6 +718,7 @@ async function onEditSave(e){
     dish_name:            dish.name,
     is_available:         isAvailable,
     is_hidden:            isHidden,
+    is_popular:           isPopular,
     price_override:       price     === "" ? null : Number(price),
     price_half_override:  priceHalf === "" ? null : Number(priceHalf),
     price_full_override:  priceFull === "" ? null : Number(priceFull),
@@ -707,7 +735,7 @@ async function onEditSave(e){
     ({ error } = await window.db.from("menu_overrides").upsert(attempt, { onConflict: "dish_slug" }));
     if (!error) break;
     const msg = error.message || "";
-    const col = ["price_half_override", "image_path", "is_hidden"].find(c => msg.includes(c) && c in attempt);
+    const col = ["price_half_override", "image_path", "is_hidden", "is_popular"].find(c => msg.includes(c) && c in attempt);
     if (!col) break;
     delete attempt[col]; dropped = true;
   }

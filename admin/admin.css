@@ -331,7 +331,11 @@ input{ font:inherit; color:inherit; }
 .mm-row.is-hidden-row .mm-img{ filter:grayscale(1) brightness(.55); }
 .hidden-badge{ background:#555; color:#fff; font-family:'Bebas Neue',sans-serif; letter-spacing:.1em;
   font-size:10px; padding:2px 7px; border-radius:5px; vertical-align:middle; margin-left:2px; }
+.pop-badge{ background:var(--gold-bright); color:var(--ink); font-family:'Bebas Neue',sans-serif;
+  letter-spacing:.08em; font-size:10px; padding:2px 7px; border-radius:5px; vertical-align:middle; margin-left:2px; }
 .mm-hide[data-hide]{ white-space:nowrap; }
+.mm-pop[data-pop]{ padding:7px 10px; font-size:14px; line-height:1; color:var(--mute); }
+.mm-pop[data-pop].is-on{ background:var(--gold-bright); color:var(--ink); border-color:var(--gold-bright); }
 .m-toggle-danger .m-toggle-text b{ color:var(--red-dark); }
 .mm-img{ width:64px; height:64px; border-radius:8px;
   background-color:var(--ink-3); background-size:cover; background-position:center;
