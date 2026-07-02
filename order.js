@@ -919,7 +919,7 @@ function renderPopular(){
     const hit = findDishByName(nm);
     if (!hit) return;
     const { dish, cat } = hit;
-    const img = getDishImage(dish.name, cat.id);
+    const img = dish._imageUrl || getDishImage(dish.name, cat.id);
     const card = document.createElement("div");
     card.className = "pop-card";
     card.innerHTML = `
@@ -1215,7 +1215,7 @@ function renderUpsell(){
         </div>
       </div>
     `;
-    applyDishBg(card.querySelector(".img"), getDishImage(dish.name, cat.id));
+    applyDishBg(card.querySelector(".img"), dish._imageUrl || getDishImage(dish.name, cat.id));
     card.querySelector(".add").addEventListener("click", () => addToCart(dish, cat));
     scroll.appendChild(card);
   });
