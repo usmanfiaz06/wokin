@@ -327,6 +327,12 @@ input{ font:inherit; color:inherit; }
 .mm-row:hover{ border-color:rgba(240,188,46,.5);}
 .mm-row.is-sold-out{ opacity:.6;}
 .mm-row.is-sold-out .mm-img{ filter:grayscale(.8) brightness(.6);}
+.mm-row.is-hidden-row{ opacity:.5; border-style:dashed; }
+.mm-row.is-hidden-row .mm-img{ filter:grayscale(1) brightness(.55); }
+.hidden-badge{ background:#555; color:#fff; font-family:'Bebas Neue',sans-serif; letter-spacing:.1em;
+  font-size:10px; padding:2px 7px; border-radius:5px; vertical-align:middle; margin-left:2px; }
+.mm-hide[data-hide]{ white-space:nowrap; }
+.m-toggle-danger .m-toggle-text b{ color:var(--red-dark); }
 .mm-img{ width:64px; height:64px; border-radius:8px;
   background-color:var(--ink-3); background-size:cover; background-position:center;
   border:1px solid var(--ink);}

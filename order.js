@@ -167,6 +167,7 @@ function applyOverridesToMenu(){
       const slug = window.slugifyDish(d.name);
       const o = menuOverrides.get(slug);
       d._available = o ? o.is_available !== false : true;
+      d._hidden    = o ? o.is_hidden === true : false;   // fully hidden from customers
       d._price     = (o && o.price_override      != null) ? Number(o.price_override)      : d.price;
       d._priceHalf = (o && o.price_half_override != null) ? Number(o.price_half_override) : d.priceHalf;
       d._priceFull = (o && o.price_full_override != null) ? Number(o.price_full_override) : d.priceFull;
@@ -650,6 +651,9 @@ function renderMenu(){
 
   // skip beverages if you want? we'll keep them; they have their own section
   MENU_DATA.forEach(cat => {
+    const visible = cat.items.filter(d => !d._hidden);
+    if (!visible.length) return;   // whole category hidden → skip nav + section
+
     // nav chip
     const chip = document.createElement("button");
     chip.className = "cat-chip";
@@ -676,7 +680,7 @@ function renderMenu(){
 
     const grid = document.createElement("div");
     grid.className = "dish-grid";
-    cat.items.forEach((dish, idx) => {
+    visible.forEach((dish, idx) => {
       grid.appendChild(dishCard(dish, cat, idx));
     });
     sec.appendChild(grid);
@@ -919,6 +923,7 @@ function renderPopular(){
     const hit = findDishByName(nm);
     if (!hit) return;
     const { dish, cat } = hit;
+    if (dish._hidden) return;   // hidden from customers
     const img = dish._imageUrl || getDishImage(dish.name, cat.id);
     const card = document.createElement("div");
     card.className = "pop-card";
@@ -1199,6 +1204,7 @@ function renderUpsell(){
   const picks = POPULAR_DISH_NAMES
     .map(n => findDishByName(n))
     .filter(Boolean)
+    .filter(({ dish }) => !dish._hidden)
     .filter(({ dish, cat }) => !inCart.has(makeDishId(dish, cat)))
     .slice(0, 6);
 
@@ -1294,6 +1300,7 @@ function doSearch(q){
   const hits = [];
   MENU_DATA.forEach(cat => {
     cat.items.forEach(dish => {
+      if (dish._hidden) return;   // hidden from customers
       if ((dish.name + " " + (dish.desc||"")).toLowerCase().includes(term)){
         hits.push({ dish, cat });
       }

@@ -498,6 +498,7 @@ function dishRow(dish, cat){
   const slug = slugifyDish(dish.name);
   const o    = state.overrides.get(slug);
   const available = o ? o.is_available !== false : true;
+  const hidden    = o ? o.is_hidden === true : false;
   const price     = o?.price_override     != null ? Number(o.price_override)     : dish.price;
   const priceFull = o?.price_full_override!= null ? Number(o.price_full_override) : dish.priceFull;
   const desc      = o?.description_override || dish.desc;
@@ -510,13 +511,14 @@ function dishRow(dish, cat){
   if (o?.pcs_override)               overrideTags.push("PORTION");
 
   const row = document.createElement("article");
-  row.className = "mm-row" + (available ? "" : " is-sold-out");
+  row.className = "mm-row" + (available ? "" : " is-sold-out") + (hidden ? " is-hidden-row" : "");
   row.dataset.slug = slug;
   row.innerHTML = `
     <div class="mm-img"></div>
     <div class="mm-main">
       <div class="mm-name">
         <h3>${dish.name}</h3>
+        ${hidden ? `<span class="hidden-badge">HIDDEN</span>` : ""}
         ${pcs ? `<span class="mm-pcs">${pcs}</span>` : ""}
       </div>
       <p class="mm-desc">${desc || ""}</p>
@@ -534,6 +536,7 @@ function dishRow(dish, cat){
         <span class="mm-toggle-track"></span>
         <span class="mm-toggle-label">${available ? "ON" : "OFF"}</span>
       </label>
+      <button class="btn-ghost small mm-hide" data-hide title="${hidden ? "Show on menu" : "Hide from menu"}">${hidden ? "SHOW" : "HIDE"}</button>
       <button class="btn-ghost small mm-edit" data-edit>EDIT</button>
     </div>
   `;
@@ -549,6 +552,8 @@ function dishRow(dish, cat){
 
   row.querySelector("[data-toggle]").addEventListener("change", e =>
     toggleAvailable(slug, dish.name, e.target.checked));
+  row.querySelector("[data-hide]").addEventListener("click", () =>
+    toggleHidden(slug, dish.name, !hidden));
   row.querySelector("[data-edit]").addEventListener("click", () =>
     openEdit(dish, cat));
   return row;
@@ -583,6 +588,30 @@ async function toggleAvailable(slug, name, isOn){
   toast(`✓ ${name} · ${isOn ? "AVAILABLE" : "SOLD OUT"}`);
 }
 
+// Fully hide / show a dish on the customer menu (via is_hidden override)
+async function toggleHidden(slug, name, hide){
+  const prev = state.overrides.get(slug);
+  state.overrides.set(slug, { ...(prev || {}), dish_slug: slug, dish_name: name, is_hidden: hide });
+  renderMenu();
+
+  const row = { dish_slug: slug, dish_name: name, is_hidden: hide };
+  let { error } = await window.db.from("menu_overrides").upsert(row, { onConflict: "dish_slug" });
+  if (error && /is_hidden/i.test(error.message || "")){
+    if (prev) state.overrides.set(slug, prev); else state.overrides.delete(slug);
+    renderMenu();
+    toast("Run the latest DB migration to enable Hide (is_hidden column)");
+    return;
+  }
+  if (error){
+    if (prev) state.overrides.set(slug, prev); else state.overrides.delete(slug);
+    renderMenu();
+    toast("Save failed: " + error.message);
+    return;
+  }
+  bumpSaveCount();
+  toast(`${hide ? "🙈 " + name + " HIDDEN" : "👁 " + name + " SHOWN"}`);
+}
+
 function openEdit(dish, cat){
   const slug = slugifyDish(dish.name);
   const o = state.overrides.get(slug);
@@ -593,6 +622,7 @@ function openEdit(dish, cat){
   document.getElementById("editName").textContent = dish.name;
   document.getElementById("editCat").textContent  = cat.name;
   document.getElementById("editAvailable").checked = o ? o.is_available !== false : true;
+  document.getElementById("editHidden").checked    = o ? o.is_hidden === true : false;
 
   // Sizes: single / half / full (soups) · half / full · single
   const hasFull  = dish.priceFull != null;
@@ -637,6 +667,7 @@ async function onEditSave(e){
   if (!slug) return;
   const dish = state.editingDish;
   const isAvailable = document.getElementById("editAvailable").checked;
+  const isHidden    = document.getElementById("editHidden").checked;
   const price     = document.getElementById("editPrice").value.trim();
   const priceHalf = document.getElementById("editPriceHalf").value.trim();
   const priceFull = document.getElementById("editPriceFull").value.trim();
@@ -659,6 +690,7 @@ async function onEditSave(e){
     dish_slug:            slug,
     dish_name:            dish.name,
     is_available:         isAvailable,
+    is_hidden:            isHidden,
     price_override:       price     === "" ? null : Number(price),
     price_half_override:  priceHalf === "" ? null : Number(priceHalf),
     price_full_override:  priceFull === "" ? null : Number(priceFull),
@@ -675,7 +707,7 @@ async function onEditSave(e){
     ({ error } = await window.db.from("menu_overrides").upsert(attempt, { onConflict: "dish_slug" }));
     if (!error) break;
     const msg = error.message || "";
-    const col = ["price_half_override", "image_path"].find(c => msg.includes(c) && c in attempt);
+    const col = ["price_half_override", "image_path", "is_hidden"].find(c => msg.includes(c) && c in attempt);
     if (!col) break;
     delete attempt[col]; dropped = true;
   }
