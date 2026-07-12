@@ -892,14 +892,22 @@ input{ font:inherit; color:inherit; }
    PRINT (thermal receipt)
 ===================================================================== */
 @media print {
-  body { background:#fff; color:#000; }
-  .top, .stats, .board, .modal-actions, .modal-close { display:none !important; }
-  .modal { position:static; background:transparent; padding:0;}
-  .modal-card { width:auto; box-shadow:none; border:none; background:#fff; color:#000;}
-  .modal-head, .m-section dl, .m-item, .m-totals .row, .m-totals .row.grand,
-  .mh-eyebrow, .mh-left h2, .mh-meta, .mh-status { color:#000 !important; }
-  .m-section h3 { color:#333 !important; }
-  .m-item, .order-card { background:#fff !important; border-color:#000 !important;}
+  body { background:#fff !important; color:#000 !important; }
+  .top, .stats, .board, .day-filter, .new-order-alarm,
+  .modal-actions, .modal-close, .m-msg-edit, .toast { display:none !important; }
+  .modal[hidden] { display:none !important; }
+  /* Print the open order modal as a plain receipt (no clipping) */
+  .modal { position:static !important; inset:auto !important; display:block !important;
+    background:#fff !important; padding:0 !important; overflow:visible !important; }
+  .modal-card { position:static !important; width:auto !important; max-width:none !important;
+    max-height:none !important; overflow:visible !important; box-shadow:none !important;
+    border:none !important; background:#fff !important; }
+  .modal-body { padding:0 !important; overflow:visible !important; }
+  /* Force ALL receipt content to dark-on-white so nothing is invisible */
+  .modal-card, .modal-card * { color:#000 !important; background:transparent !important; }
+  .m-item { border:1px solid #000 !important; }
+  .m-section { border-bottom:1px dashed #777 !important; }
+  .m-totals .row.grand { border-top:1px solid #000 !important; }
 }
 
 /* ====================================================================
