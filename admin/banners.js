@@ -87,10 +87,15 @@ function renderBanners(){
     const actions = document.createElement("div");
     actions.className = "bn-actions";
 
+    const status = document.createElement("span");
+    status.className = "bn-status" + (b.is_active ? " is-live" : "");
+    status.textContent = b.is_active ? "● LIVE ON SITE" : "○ HIDDEN";
+    actions.appendChild(status);
+
     const toggle = document.createElement("button");
-    toggle.className = "btn-ghost small bn-toggle" + (b.is_active ? " is-on" : "");
-    toggle.textContent = b.is_active ? "ACTIVE" : "OFF";
-    toggle.title = b.is_active ? "Showing on the menu — click to hide" : "Hidden — click to show";
+    toggle.className = "btn-ghost small bn-toggle";
+    toggle.textContent = b.is_active ? "TURN OFF" : "TURN ON";
+    toggle.title = b.is_active ? "Currently showing — click to hide it" : "Currently hidden — click to show it on the site";
     toggle.addEventListener("click", () => setActive(b.id, !b.is_active));
     actions.appendChild(toggle);
 
