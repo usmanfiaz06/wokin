@@ -328,8 +328,8 @@ function closeNewDishModal(){
 function onPickImage(e){
   const file = e.target.files?.[0];
   if (!file) return;
-  if (file.size > 3 * 1024 * 1024){
-    toast("Image is over 3 MB — please pick a smaller one");
+  if (file.size > 12 * 1024 * 1024){
+    toast("Image is over 12 MB — please pick a smaller one");
     e.target.value = "";
     return;
   }
@@ -358,11 +358,36 @@ function clearImage(){
   if (clr) clr.hidden = true;
 }
 
+// Downscale + re-encode an image in the browser before upload, so we don't
+// waste Supabase storage/egress on multi-MB photos. Returns a JPEG Blob.
+async function compressImage(file, maxDim = 900, quality = 0.72){
+  const dataUrl = await new Promise((res, rej) => {
+    const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file);
+  });
+  const img = await new Promise((res, rej) => {
+    const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = dataUrl;
+  });
+  let { width, height } = img;
+  const scale = Math.min(1, maxDim / Math.max(width, height));   // only ever downscale
+  width  = Math.max(1, Math.round(width  * scale));
+  height = Math.max(1, Math.round(height * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = width; canvas.height = height;
+  canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+  return await new Promise(res => canvas.toBlob(res, "image/jpeg", quality));
+}
+
 async function uploadImageFile(file){
-  const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+  let toUpload = file;
+  let ext   = (file.name.split(".").pop() || "jpg").toLowerCase();
+  let ctype = file.type || "image/jpeg";
+  try {
+    const blob = await compressImage(file);
+    if (blob && blob.size < file.size){ toUpload = blob; ext = "jpg"; ctype = "image/jpeg"; }
+  } catch(e){ /* fall back to the original file */ }
   const path = `${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
   const { error } = await window.db.storage.from("dish-images")
-    .upload(path, file, { cacheControl: "31536000", upsert: false });
+    .upload(path, toUpload, { cacheControl: "31536000", upsert: false, contentType: ctype });
   if (error) throw error;
   return path;
 }
@@ -380,8 +405,8 @@ let _editRemoveImage = false;  // true when the chef hit REMOVE
 function onPickEditImage(e){
   const file = e.target.files?.[0];
   if (!file) return;
-  if (file.size > 3 * 1024 * 1024){
-    toast("Image is over 3 MB — please pick a smaller one");
+  if (file.size > 12 * 1024 * 1024){
+    toast("Image is over 12 MB — please pick a smaller one");
     e.target.value = "";
     return;
   }
