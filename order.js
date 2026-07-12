@@ -152,13 +152,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 async function loadDeals(){
   const bar   = document.getElementById("dealsBar");
   const track = document.getElementById("dealsTrack");
+  const brand = document.getElementById("brandStrip");
   if (!bar || !track || !window.db) return;
+  const showBrand = () => { if (brand) brand.style.display = ""; bar.hidden = true; };
   try {
     const { data, error } = await window.db.from("promo_banners")
       .select("message,position").eq("is_active", true).order("position", { ascending: true });
     if (error) throw error;
     const msgs = (data || []).map(d => (d.message || "").trim()).filter(Boolean);
-    if (!msgs.length){ bar.hidden = true; return; }
+    if (!msgs.length){ showBrand(); return; }
     track.innerHTML = "";
     // duplicate the set so the marquee loops seamlessly (see -50% keyframe)
     for (let pass = 0; pass < 2; pass++){
@@ -168,9 +170,11 @@ async function loadDeals(){
         track.appendChild(s);
       });
     }
+    // Only one scrolling bar at a time — hide the brand ticker while a deal runs
+    if (brand) brand.style.display = "none";
     bar.hidden = false;
   } catch(e){
-    bar.hidden = true;   // table may not exist yet — fail silently
+    showBrand();   // table may not exist yet — keep the brand ticker
   }
 }
 
