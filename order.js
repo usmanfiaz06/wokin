@@ -51,12 +51,15 @@ const fmtPKR = n => "Rs. " + Math.round(n).toLocaleString("en-PK");
 // fallback if the per-dish file isn't uploaded yet.
 function applyDishBg(el, url){
   if (!el) return;
-  el.style.backgroundImage = `url("${url}")`;
+  const fallback = window.FALLBACK_DISH_IMG || "Assorted_Chinese_food_set.jpg.webp";
+  // Paint the food fallback first so a broken/missing photo never leaves the
+  // bare "initial letter" placeholder showing…
+  el.style.backgroundImage = `url("${fallback}")`;
+  if (!url || url === fallback) return;
+  // …then upgrade to the real photo only once it has actually loaded.
   const probe = new Image();
+  probe.onload  = () => { el.style.backgroundImage = `url("${url}")`; };
   probe.src = url;
-  probe.onerror = () => {
-    el.style.backgroundImage = `url("${window.FALLBACK_DISH_IMG || "Assorted_Chinese_food_set.jpg.webp"}")`;
-  };
 }
 
 /* ------------------------------------------------------------------ */
