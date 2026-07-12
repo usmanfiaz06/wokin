@@ -473,6 +473,18 @@ body.is-store-closed .fab-cart-mid strong{ color:#aaa; }
 .ticker-row code{ background:var(--gold-bright); color:var(--ink); padding:2px 8px;
   border-radius:4px; font-family:'Bebas Neue',sans-serif; font-size:13px;}
 
+/* Deals marquee (admin-managed promotions) */
+.deals-bar{ background:var(--gold-bright); color:var(--ink); overflow:hidden; padding:9px 0;
+  border-bottom:2px solid var(--ink); position:relative;}
+.deals-bar[hidden]{ display:none; }
+.deals-track{ display:flex; gap:52px; white-space:nowrap; width:max-content; padding-left:52px;
+  animation:dealScroll 30s linear infinite;}
+@keyframes dealScroll{ from{ transform:translateX(0);} to{ transform:translateX(-50%);} }
+.deals-bar:hover .deals-track{ animation-play-state:paused; }
+.deals-track span{ display:inline-flex; align-items:center; gap:10px;
+  font-family:'Bebas Neue',sans-serif; letter-spacing:.14em; font-size:14px; font-weight:400;}
+@media (max-width:600px){ .deals-track{ font-size:13px; gap:40px; } }
+
 
 /* =====================================================================
    CATEGORY NAV

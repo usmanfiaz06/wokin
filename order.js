@@ -131,6 +131,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   syncBarLocation();
   recalcCart();
   subscribeMenuOverrides();
+  loadDeals();
 
   // User lands on the site freely; pop-up rises 1.5s later
   // (only the very first time — once they've picked, we skip).
@@ -141,6 +142,34 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
+
+/* ==================================================================
+   DEALS MARQUEE  (admin-managed promo banners)
+=================================================================== */
+async function loadDeals(){
+  const bar   = document.getElementById("dealsBar");
+  const track = document.getElementById("dealsTrack");
+  if (!bar || !track || !window.db) return;
+  try {
+    const { data, error } = await window.db.from("promo_banners")
+      .select("message,position").eq("is_active", true).order("position", { ascending: true });
+    if (error) throw error;
+    const msgs = (data || []).map(d => (d.message || "").trim()).filter(Boolean);
+    if (!msgs.length){ bar.hidden = true; return; }
+    track.innerHTML = "";
+    // duplicate the set so the marquee loops seamlessly (see -50% keyframe)
+    for (let pass = 0; pass < 2; pass++){
+      msgs.forEach(m => {
+        const s = document.createElement("span");
+        s.textContent = "🔥 " + m;          // textContent = safe from HTML injection
+        track.appendChild(s);
+      });
+    }
+    bar.hidden = false;
+  } catch(e){
+    bar.hidden = true;   // table may not exist yet — fail silently
+  }
+}
 
 /* ==================================================================
    LIVE MENU OVERRIDES
