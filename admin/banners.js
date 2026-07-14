@@ -99,6 +99,13 @@ function renderBanners(){
     toggle.addEventListener("click", () => setActive(b.id, !b.is_active));
     actions.appendChild(toggle);
 
+    const edit = document.createElement("button");
+    edit.className = "btn-ghost small";
+    edit.textContent = "EDIT";
+    edit.title = "Edit this deal's text";
+    edit.addEventListener("click", () => editBanner(b.id, b.message));
+    actions.appendChild(edit);
+
     const del = document.createElement("button");
     del.className = "btn-ghost small bn-del";
     del.textContent = "🗑";
@@ -129,6 +136,19 @@ async function addBanner(){
   input.value = "";
   renderBanners();
   toast("🔥 Deal added");
+}
+
+async function editBanner(id, current){
+  const next = prompt("Edit deal text:", current);
+  if (next === null) return;                       // cancelled
+  const message = next.trim();
+  if (!message){ toast("Deal text can't be empty."); return; }
+  if (message === current) return;
+  const { error } = await window.db.from("promo_banners").update({ message }).eq("id", id);
+  if (error){ toast("Save failed: " + error.message); return; }
+  state.banners = state.banners.map(b => b.id === id ? { ...b, message } : b);
+  renderBanners();
+  toast("✓ Deal updated");
 }
 
 async function setActive(id, on){
