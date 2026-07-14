@@ -66,8 +66,15 @@
         <input type="text" id="cbName" maxlength="80" placeholder="e.g. Family Feast for 4" />
       </div>
       <div class="field">
-        <label for="cbDesc">What's included <span class="opt">optional</span></label>
-        <textarea id="cbDesc" rows="2" maxlength="200" placeholder="e.g. 2 mains + fried rice + 2 drinks"></textarea>
+        <label>What's included <span class="opt">pick dishes from the menu</span></label>
+        <div class="cb-picker">
+          <div class="cb-chips" id="cbChips"></div>
+          <div class="cb-picker-input">
+            <input type="text" id="cbDishInput" placeholder="Type a dish… e.g. Chicken Manchurian" autocomplete="off" />
+            <div class="cb-dropdown" id="cbDishDropdown" hidden></div>
+          </div>
+          <p class="hint">Type to search the menu, click a dish to add it · press Enter to add custom text (e.g. “2 soft drinks”)</p>
+        </div>
       </div>
       <div class="field">
         <label for="cbPrice">Combo price (Rs.)</label>
@@ -99,6 +106,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/supabase-client.js"></script>
+<script src="/menu-data.js"></script>
 <script src="/admin/combos.js"></script>
 </body>
 </html>

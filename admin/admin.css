@@ -1007,3 +1007,25 @@ input{ font:inherit; color:inherit; }
   .cb-actions{ grid-column:1 / -1; flex-wrap:wrap; }
   .cb-form-actions{ flex-direction:column; }
 }
+
+/* Combo "what's included" dish picker */
+.cb-picker{ }
+.cb-chips{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+.cb-chips:empty{ margin-bottom:0; }
+.cb-chip{ display:inline-flex; align-items:center; gap:6px; padding:5px 6px 5px 11px;
+  background:var(--red); color:#fff; border-radius:999px; font-size:13px; font-weight:500; }
+.cb-chip-x{ width:18px; height:18px; border-radius:50%; background:rgba(0,0,0,.28); color:#fff;
+  font-size:15px; line-height:1; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.cb-chip-x:hover{ background:rgba(0,0,0,.55); }
+.cb-picker-input{ position:relative; }
+.cb-picker-input input{ width:100%; padding:12px 14px; border:2px solid var(--ink); border-radius:10px;
+  background:var(--ink-3); color:var(--cream); font-size:15px; }
+.cb-picker-input input:focus{ outline:none; border-color:var(--gold-bright); }
+.cb-dropdown{ position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:30; max-height:240px;
+  overflow-y:auto; background:var(--ink-2); border:2px solid var(--gold-bright); border-radius:10px;
+  box-shadow:0 12px 30px rgba(0,0,0,.5); }
+.cb-dropdown[hidden]{ display:none; }
+.cb-dd-item{ display:block; width:100%; text-align:left; padding:10px 14px; color:var(--cream);
+  font-size:14px; border-bottom:1px solid rgba(255,255,255,.06); }
+.cb-dd-item:last-child{ border-bottom:none; }
+.cb-dd-item:hover{ background:var(--red); color:#fff; }

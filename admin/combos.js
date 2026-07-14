@@ -9,7 +9,8 @@
 
 const fmtPKR = n => "Rs. " + Math.round(Number(n)||0).toLocaleString("en-PK");
 
-const state = { combos: [], editingId: null };
+const state = { combos: [], editingId: null, chips: [] };
+let ALL_DISHES = [];   // flat list of menu dish names for the picker
 let _pendingImage = null;    // File selected but not yet uploaded
 let _removeImage  = false;   // true if the edit cleared the existing photo
 
@@ -32,6 +33,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("cbImgPreview").addEventListener("click", () => document.getElementById("cbImgFile").click());
   document.getElementById("cbImgFile").addEventListener("change", onPickImage);
   document.getElementById("cbImgClear").addEventListener("click", onRemoveImage);
+
+  // dish picker for "what's included"
+  if (typeof MENU_DATA !== "undefined"){
+    ALL_DISHES = MENU_DATA.flatMap(c => c.items.map(d => d.name));
+  }
+  const di = document.getElementById("cbDishInput");
+  di.addEventListener("input", () => renderDishDropdown(di.value));
+  di.addEventListener("focus", () => renderDishDropdown(di.value));
+  di.addEventListener("keydown", e => {
+    if (e.key === "Enter"){ e.preventDefault(); if (di.value.trim()){ addChip(di.value.trim()); } }
+    if (e.key === "Escape"){ hideDropdown(); }
+  });
+  document.addEventListener("click", e => {
+    if (!e.target.closest(".cb-picker-input")) hideDropdown();
+  });
 
   const { data: { session } } = await window.db.auth.getSession();
   if (session) enterApp(session);
@@ -149,9 +165,49 @@ function renderCombos(){
   });
 }
 
+/* ---- dish picker for "what's included" ---- */
+function renderDishDropdown(q){
+  const dd = document.getElementById("cbDishDropdown");
+  const term = (q || "").trim().toLowerCase();
+  const chosen = new Set(state.chips.map(s => s.toLowerCase()));
+  let matches = ALL_DISHES.filter(n => !chosen.has(n.toLowerCase()));
+  if (term) matches = matches.filter(n => n.toLowerCase().includes(term));
+  matches = matches.slice(0, 8);
+  dd.innerHTML = "";
+  if (!matches.length){ dd.hidden = true; return; }
+  matches.forEach(n => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "cb-dd-item"; b.textContent = n;
+    b.addEventListener("click", () => addChip(n));
+    dd.appendChild(b);
+  });
+  dd.hidden = false;
+}
+function hideDropdown(){ const dd = document.getElementById("cbDishDropdown"); dd.hidden = true; dd.innerHTML = ""; }
+function addChip(name){
+  name = name.trim(); if (!name) return;
+  if (!state.chips.some(s => s.toLowerCase() === name.toLowerCase())) state.chips.push(name);
+  const di = document.getElementById("cbDishInput"); di.value = "";
+  hideDropdown(); renderChips(); di.focus();
+}
+function removeChip(name){ state.chips = state.chips.filter(s => s !== name); renderChips(); }
+function renderChips(){
+  const box = document.getElementById("cbChips");
+  box.innerHTML = "";
+  state.chips.forEach(name => {
+    const chip = document.createElement("span"); chip.className = "cb-chip";
+    const lbl = document.createElement("span"); lbl.textContent = name; chip.appendChild(lbl);
+    const x = document.createElement("button"); x.type = "button"; x.className = "cb-chip-x";
+    x.setAttribute("aria-label", "Remove"); x.textContent = "×";
+    x.addEventListener("click", () => removeChip(name)); chip.appendChild(x);
+    box.appendChild(chip);
+  });
+}
+
 /* ---- form (add / edit) ---- */
 function resetForm(){
   state.editingId = null; _pendingImage = null; _removeImage = false;
+  state.chips = []; renderChips(); hideDropdown();
   document.getElementById("comboForm").reset();
   setPreview(null);
   document.getElementById("cbImgClear").hidden = true;
@@ -162,7 +218,8 @@ function resetForm(){
 function startEdit(c){
   state.editingId = c.id; _pendingImage = null; _removeImage = false;
   document.getElementById("cbName").value = c.name;
-  document.getElementById("cbDesc").value = c.description || "";
+  state.chips = (c.description || "").split(" · ").map(s => s.trim()).filter(Boolean);
+  renderChips();
   document.getElementById("cbPrice").value = c.price;
   setPreview(publicImageUrl(c.image_path));
   document.getElementById("cbImgClear").hidden = !c.image_path;
@@ -175,7 +232,7 @@ function startEdit(c){
 async function onSaveCombo(e){
   e.preventDefault();
   const name  = document.getElementById("cbName").value.trim();
-  const desc  = document.getElementById("cbDesc").value.trim();
+  const desc  = state.chips.join(" · ");
   const price = document.getElementById("cbPrice").value.trim();
   if (!name){ toast("Give the combo a name."); return; }
   if (price === "" || Number(price) <= 0){ toast("Set a combo price."); return; }
