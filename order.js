@@ -49,17 +49,25 @@ const fmtPKR = n => "Rs. " + Math.round(n).toLocaleString("en-PK");
 
 // Apply a dish photo URL to a .img element, with a guaranteed Asian-food
 // fallback if the per-dish file isn't uploaded yet.
-function applyDishBg(el, url){
+function applyDishBg(el, url, altUrl){
   if (!el) return;
-  const fallback = window.FALLBACK_DISH_IMG || "Assorted_Chinese_food_set.jpg.webp";
-  // Paint the food fallback first so a broken/missing photo never leaves the
-  // bare "initial letter" placeholder showing…
-  el.style.backgroundImage = `url("${fallback}")`;
-  if (!url || url === fallback) return;
-  // …then upgrade to the real photo only once it has actually loaded.
-  const probe = new Image();
-  probe.onload  = () => { el.style.backgroundImage = `url("${url}")`; };
-  probe.src = url;
+  const generic = window.FALLBACK_DISH_IMG || "Assorted_Chinese_food_set.jpg.webp";
+  // Paint the food fallback first so a broken/missing photo never shows the
+  // bare "initial letter" placeholder…
+  el.style.backgroundImage = `url("${generic}")`;
+  // …then try each candidate in order (Vercel copy → Supabase → generic),
+  // showing the first that actually loads.
+  const candidates = [url, altUrl].filter(u => u && u !== generic);
+  let i = 0;
+  const tryNext = () => {
+    if (i >= candidates.length) return;
+    const u = candidates[i++];
+    const probe = new Image();
+    probe.onload  = () => { el.style.backgroundImage = `url("${u}")`; };
+    probe.onerror = tryNext;
+    probe.src = u;
+  };
+  tryNext();
 }
 
 /* ------------------------------------------------------------------ */
@@ -182,10 +190,11 @@ async function loadDeals(){
 /* ==================================================================
    COMBO DEALS  (admin-managed bundle offers)
 =================================================================== */
-function comboImageUrl(c){
-  if (!c.image_path) return null;
-  return `${(window.SUPABASE_URL || "").replace(/\/$/, "")}/storage/v1/object/public/dish-images/${c.image_path}`;
+function supabaseStorageUrl(path){
+  if (!path) return null;
+  return `${(window.SUPABASE_URL || "").replace(/\/$/, "")}/storage/v1/object/public/dish-images/${path}`;
 }
+function comboImageUrl(c){ return c.image_path ? supabaseStorageUrl(c.image_path) : null; }
 
 async function loadCombos(){
   const sec  = document.getElementById("combosSection");
@@ -279,10 +288,11 @@ function applyOverridesToMenu(){
       d._priceFull = (o && o.price_full_override != null) ? Number(o.price_full_override) : d.priceFull;
       d._desc      = (o && o.description_override) ? o.description_override : d.desc;
       d._pcs       = (o && o.pcs_override)         ? o.pcs_override         : d.pcs;
-      // custom photo set from admin → use it (else fall back to static image)
-      d._imageUrl  = (o && o.image_path)
-        ? `${(window.SUPABASE_URL || "").replace(/\/$/, "")}/storage/v1/object/public/dish-images/${o.image_path}`
-        : null;
+      // custom photo set from admin → serve the migrated copy from Vercel
+      // (cheap bandwidth); keep the Supabase URL as a fallback for any photo
+      // uploaded after the migration.
+      d._imageUrl = (o && o.image_path) ? `/dish-uploads/${o.image_path}` : null;
+      d._imageAlt = (o && o.image_path) ? supabaseStorageUrl(o.image_path)  : null;
     });
   });
 }
@@ -844,7 +854,7 @@ function dishCard(dish, cat, idx){
       </div>`}
     </div>
   `;
-  applyDishBg(card.querySelector(".img"), img);
+  applyDishBg(card.querySelector(".img"), img, dish._imageAlt);
 
   // wire add button (or sold-out badge instead)
   refreshDishAction(card, dish, cat);
@@ -1055,7 +1065,7 @@ function renderPopular(){
         </div>
       </div>
     `;
-    applyDishBg(card.querySelector(".img"), img);
+    applyDishBg(card.querySelector(".img"), img, dish._imageAlt);
     card.querySelector(".add").addEventListener("click", () => {
       addToCart(dish, cat);
       bumpCartIcon();
@@ -1335,7 +1345,7 @@ function renderUpsell(){
         </div>
       </div>
     `;
-    applyDishBg(card.querySelector(".img"), dish._imageUrl || getDishImage(dish.name, cat.id));
+    applyDishBg(card.querySelector(".img"), dish._imageUrl || getDishImage(dish.name, cat.id), dish._imageAlt);
     card.querySelector(".add").addEventListener("click", () => addToCart(dish, cat));
     scroll.appendChild(card);
   });
@@ -1443,7 +1453,7 @@ function doSearch(q){
         </div>
       </div>
     `;
-    applyDishBg(card.querySelector(".sc-img"), dish._imageUrl || getDishImage(dish.name, cat.id));
+    applyDishBg(card.querySelector(".sc-img"), dish._imageUrl || getDishImage(dish.name, cat.id), dish._imageAlt);
     const act = card.querySelector(".sc-act");
     if (soldOut){
       act.innerHTML = `<span class="sc-soldout">SOLD OUT</span>`;

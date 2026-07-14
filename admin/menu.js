@@ -268,14 +268,7 @@ function customDishRow(d, cat){
     </div>
   `;
   const imgEl = row.querySelector(".mm-img");
-  const customUrl = d.image_path ? publicImageUrl(d.image_path) : null;
-  const fallback = `/${window.FALLBACK_DISH_IMG || "Assorted_Chinese_food_set.jpg.webp"}`;
-  imgEl.style.backgroundImage = `url("${customUrl || fallback}")`;
-  if (customUrl){
-    const probe = new Image();
-    probe.src = customUrl;
-    probe.onerror = () => { imgEl.style.backgroundImage = `url("${fallback}")`; };
-  }
+  bgImageWithFallback(imgEl, d.image_path, `/${window.FALLBACK_DISH_IMG || "Assorted_Chinese_food_set.jpg.webp"}`);
   row.querySelector("[data-toggle]").addEventListener("change", e =>
     toggleCustomAvailable(d.id, d.name, e.target.checked));
   row.querySelector(".delete-btn").addEventListener("click", () =>
@@ -455,6 +448,24 @@ function publicImageUrl(path){
   return `${base}/storage/v1/object/public/dish-images/${path}`;
 }
 
+// Paint a dish photo trying the cheap Vercel copy first, then Supabase,
+// then a static fallback — so the admin list doesn't burn Supabase egress.
+function bgImageWithFallback(el, image_path, staticFallback){
+  el.style.backgroundImage = `url("${staticFallback}")`;
+  if (!image_path) return;
+  const cands = [`/dish-uploads/${image_path}`, publicImageUrl(image_path)];
+  let i = 0;
+  const next = () => {
+    if (i >= cands.length) return;
+    const u = cands[i++];
+    const pr = new Image();
+    pr.onload  = () => { el.style.backgroundImage = `url("${u}")`; };
+    pr.onerror = next;
+    pr.src = u;
+  };
+  next();
+}
+
 async function onAddDish(e){
   e.preventDefault();
   const errEl = document.getElementById("ndErr");
@@ -569,14 +580,9 @@ function dishRow(dish, cat){
     </div>
   `;
 
-  const img = (o && o.image_path) ? publicImageUrl(o.image_path) : getDishImage(dish.name, cat.id);
   const imgEl = row.querySelector(".mm-img");
-  imgEl.style.backgroundImage = `url("${img}")`;
-  const probe = new Image();
-  probe.src = img;
-  probe.onerror = () => {
-    imgEl.style.backgroundImage = `url("../${window.FALLBACK_DISH_IMG || "Assorted_Chinese_food_set.jpg.webp"}")`;
-  };
+  bgImageWithFallback(imgEl, (o && o.image_path) || null,
+    (o && o.image_path) ? `../${window.FALLBACK_DISH_IMG || "Assorted_Chinese_food_set.jpg.webp"}` : getDishImage(dish.name, cat.id));
 
   row.querySelector("[data-toggle]").addEventListener("change", e =>
     toggleAvailable(slug, dish.name, e.target.checked));
