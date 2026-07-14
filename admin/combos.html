@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>WOK!N · Admin · Combos</title>
+<meta name="robots" content="noindex, nofollow" />
+<meta name="theme-color" content="#1A1A1A" />
+<link rel="icon" type="image/jpeg" href="/Wokin.- logo.jpeg" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&family=Caveat:wght@500;700&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="auth" id="authScreen">
+  <div class="auth-card">
+    <div class="auth-head">
+      <img src="/Wokin.- logo.jpeg" alt="WOK!N" />
+      <div><span class="cn">炒</span><b>WOK!N</b><em>ADMIN · BACK-OF-HOUSE</em></div>
+    </div>
+    <h1>Sign <em>in.</em></h1>
+    <p class="auth-sub">Restaurant staff only.</p>
+    <form id="loginForm" class="auth-form" novalidate action="javascript:void(0)">
+      <div class="field"><label for="email">Email</label><input type="email" id="email" required autocomplete="username" /></div>
+      <div class="field"><label for="password">Password</label><input type="password" id="password" required autocomplete="current-password" /></div>
+      <p class="auth-err" id="authErr" hidden></p>
+      <button type="button" id="loginBtn" class="btn-primary big">SIGN IN →</button>
+    </form>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="appScreen" hidden>
+  <header class="top">
+    <a href="/admin/" class="brand">
+      <img src="/Wokin.- logo.jpeg" alt="WOK!N" />
+      <span class="cn">炒</span>
+      <span class="brand-text"><b>WOK!N</b><em>ADMIN</em></span>
+    </a>
+    <nav class="top-nav">
+      <a href="/admin/">ORDERS</a>
+      <a href="/admin/menu.html">MENU</a>
+      <a href="/admin/coupons.html">COUPONS</a>
+      <a href="/admin/hours.html">HOURS</a>
+      <a href="/admin/banners.html">DEALS</a>
+      <a href="/admin/combos.html" class="is-on">★ COMBOS</a>
+    </nav>
+    <div class="top-right">
+      <span class="who" id="whoami">—</span>
+      <button class="btn-ghost small" id="signOut">SIGN OUT</button>
+    </div>
+  </header>
+
+  <section class="cb-wrap">
+    <header class="cb-head">
+      <h2><span class="em">🍱</span> Combo deals <small>· shown in the “Combo Deals” section of the customer menu</small></h2>
+    </header>
+
+    <form id="comboForm" class="cb-form">
+      <h3 id="cbFormTitle">Add a combo</h3>
+      <div class="field">
+        <label for="cbName">Combo name</label>
+        <input type="text" id="cbName" maxlength="80" placeholder="e.g. Family Feast for 4" />
+      </div>
+      <div class="field">
+        <label for="cbDesc">What's included <span class="opt">optional</span></label>
+        <textarea id="cbDesc" rows="2" maxlength="200" placeholder="e.g. 2 mains + fried rice + 2 drinks"></textarea>
+      </div>
+      <div class="field">
+        <label for="cbPrice">Combo price (Rs.)</label>
+        <input type="number" id="cbPrice" step="5" min="0" placeholder="e.g. 2500" />
+      </div>
+      <div class="field">
+        <label>Combo photo</label>
+        <div class="img-uploader">
+          <div class="img-preview" id="cbImgPreview"><span class="img-empty">📷  Tap to upload</span></div>
+          <input type="file" id="cbImgFile" accept="image/jpeg,image/png,image/webp" hidden />
+          <div class="img-actions">
+            <button type="button" class="btn-ghost small" id="cbImgPick">CHOOSE PHOTO</button>
+            <button type="button" class="btn-ghost small" id="cbImgClear" hidden>REMOVE</button>
+            <p class="hint">JPG / PNG / WebP · auto-compressed on upload</p>
+          </div>
+        </div>
+      </div>
+      <div class="cb-form-actions">
+        <button type="submit" class="btn-primary" id="cbSave">+ ADD COMBO</button>
+        <button type="button" class="btn-ghost" id="cbCancel" hidden>CANCEL EDIT</button>
+      </div>
+    </form>
+
+    <div class="cb-list" id="cbList"></div>
+  </section>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/supabase-client.js"></script>
+<script src="/admin/combos.js"></script>
+</body>
+</html>

@@ -135,6 +135,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   recalcCart();
   subscribeMenuOverrides();
   loadDeals();
+  loadCombos();
 
   // User lands on the site freely; pop-up rises 1.5s later
   // (only the very first time — once they've picked, we skip).
@@ -175,6 +176,74 @@ async function loadDeals(){
     bar.hidden = false;
   } catch(e){
     showBrand();   // table may not exist yet — keep the brand ticker
+  }
+}
+
+/* ==================================================================
+   COMBO DEALS  (admin-managed bundle offers)
+=================================================================== */
+function comboImageUrl(c){
+  if (!c.image_path) return null;
+  return `${(window.SUPABASE_URL || "").replace(/\/$/, "")}/storage/v1/object/public/dish-images/${c.image_path}`;
+}
+
+async function loadCombos(){
+  const sec  = document.getElementById("combosSection");
+  const grid = document.getElementById("combosGrid");
+  if (!sec || !grid || !window.db) return;
+  try {
+    const { data, error } = await window.db.from("combos")
+      .select("*").eq("is_active", true).order("position", { ascending: true });
+    if (error) throw error;
+    const combos = data || [];
+    if (!combos.length){ sec.hidden = true; return; }
+    grid.innerHTML = "";
+    combos.forEach(c => grid.appendChild(comboCard(c)));
+    sec.hidden = false;
+  } catch(e){ sec.hidden = true; }   // table may not exist yet
+}
+
+function comboCard(combo){
+  const card = document.createElement("article");
+  card.className = "combo-card";
+  const img = document.createElement("div"); img.className = "img";
+  const pad = document.createElement("div"); pad.className = "pad";
+  const h3  = document.createElement("h3"); h3.textContent = combo.name;
+  pad.appendChild(h3);
+  if (combo.description){ const p = document.createElement("p"); p.textContent = combo.description; pad.appendChild(p); }
+  const foot = document.createElement("div"); foot.className = "foot";
+  const price = document.createElement("b"); price.textContent = fmtPKR(combo.price);
+  const btn = document.createElement("button"); btn.className = "add-btn"; btn.textContent = "ADD +";
+  btn.addEventListener("click", () => {
+    addComboToCart(combo);
+    card.classList.add("is-flash");
+    setTimeout(() => card.classList.remove("is-flash"), 600);
+  });
+  foot.appendChild(price); foot.appendChild(btn);
+  pad.appendChild(foot);
+  card.appendChild(img); card.appendChild(pad);
+  applyDishBg(img, comboImageUrl(combo));
+  return card;
+}
+
+function addComboToCart(combo){
+  const id = "combo::" + combo.id;
+  const existing = state.cart.find(c => c.id === id);
+  if (existing){ existing.qty += 1; }
+  else {
+    state.cart.push({
+      id, name: combo.name, desc: "🍱 Combo deal", variant: null,
+      image: comboImageUrl(combo) || (window.FALLBACK_DISH_IMG || "Assorted_Chinese_food_set.jpg.webp"),
+      price: Number(combo.price) || 0, qty: 1, customId: null,
+    });
+  }
+  if (state.coupon){ state.couponDiscount = 0; state.coupon = null; state.couponLabel = ""; }
+  saveState();
+  recalcCart();
+  bumpCartIcon();
+  if (typeof fbq === "function"){
+    fbq("track", "AddToCart", { value: Math.round(Number(combo.price)||0), currency: "PKR",
+      contents: [{ id: "combo:" + combo.name, quantity: 1 }], num_items: 1 });
   }
 }
 

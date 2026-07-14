@@ -473,6 +473,26 @@ body.is-store-closed .fab-cart-mid strong{ color:#aaa; }
 .ticker-row code{ background:var(--gold-bright); color:var(--ink); padding:2px 8px;
   border-radius:4px; font-family:'Bebas Neue',sans-serif; font-size:13px;}
 
+/* Combo deals section (admin-managed) */
+.combos{ padding:34px 20px 6px; max-width:1200px; margin:0 auto; }
+.combos[hidden]{ display:none; }
+.combos-head{ text-align:center; margin-bottom:20px; }
+.combos-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:16px; }
+.combo-card{ display:flex; flex-direction:column; background:var(--cream); border:3px solid var(--ink);
+  border-radius:16px; overflow:hidden; box-shadow:4px 4px 0 var(--gold-bright); position:relative;
+  transition:transform var(--t-fast), box-shadow var(--t-fast); }
+.combo-card.is-flash{ transform:translate(-2px,-2px); box-shadow:6px 6px 0 var(--red); }
+.combo-card .img{ height:150px; background:var(--paper) center/cover no-repeat; border-bottom:3px solid var(--ink); }
+.combo-card .pad{ padding:14px 16px 16px; display:flex; flex-direction:column; gap:6px; flex:1; }
+.combo-card h3{ font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:.02em; line-height:1.05; color:var(--ink); }
+.combo-card p{ font-size:13px; color:var(--mute); line-height:1.4; margin:0; }
+.combo-card .foot{ margin-top:auto; padding-top:10px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.combo-card .foot b{ font-family:'Bebas Neue',sans-serif; font-size:24px; color:var(--red); }
+.combo-card .add-btn{ padding:10px 20px; background:var(--ink); color:#fff; font-family:'Bebas Neue',sans-serif;
+  letter-spacing:.14em; font-size:15px; border-radius:var(--r-pill); white-space:nowrap; transition:background var(--t-fast); }
+.combo-card .add-btn:hover{ background:var(--red); }
+@media (max-width:600px){ .combos-grid{ grid-template-columns:1fr 1fr; gap:12px; } .combo-card h3{ font-size:18px; } }
+
 /* Deals marquee (admin-managed promotions) — prominent */
 .deals-bar{ display:flex; align-items:stretch; background:var(--gold-bright); color:var(--ink);
   border-bottom:3px solid var(--ink); position:relative; }
