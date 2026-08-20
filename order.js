@@ -191,7 +191,7 @@ async function loadDeals(){
    `immutable` for a year, so a re-shoot at the same path would keep
    showing the old picture. Bump this whenever the photo set is
    replaced — it changes the URL without touching the database. */
-const DISH_PHOTO_REV = "2026-08-20";
+const DISH_PHOTO_REV = "2026-08-20.2";
 function dishPhotoUrl(path){
   return path ? `/dish-uploads/${path}?v=${DISH_PHOTO_REV}` : null;
 }

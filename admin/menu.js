@@ -443,7 +443,7 @@ function resetEditImage(){
 }
 
 /* Must match DISH_PHOTO_REV in order.js — see the note there. */
-const DISH_PHOTO_REV = "2026-08-20";
+const DISH_PHOTO_REV = "2026-08-20.2";
 function dishPhotoUrl(path){
   return path ? `/dish-uploads/${path}?v=${DISH_PHOTO_REV}` : null;
 }
