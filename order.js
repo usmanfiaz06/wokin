@@ -187,6 +187,15 @@ async function loadDeals(){
   }
 }
 
+/* Dish photos live at /dish-uploads/<image_path> and are served
+   `immutable` for a year, so a re-shoot at the same path would keep
+   showing the old picture. Bump this whenever the photo set is
+   replaced — it changes the URL without touching the database. */
+const DISH_PHOTO_REV = "2026-08-20";
+function dishPhotoUrl(path){
+  return path ? `/dish-uploads/${path}?v=${DISH_PHOTO_REV}` : null;
+}
+
 /* ==================================================================
    COMBO DEALS  (admin-managed bundle offers)
 =================================================================== */
@@ -291,7 +300,7 @@ function applyOverridesToMenu(){
       // custom photo set from admin → serve the migrated copy from Vercel
       // (cheap bandwidth); keep the Supabase URL as a fallback for any photo
       // uploaded after the migration.
-      d._imageUrl = (o && o.image_path) ? `/dish-uploads/${o.image_path}` : null;
+      d._imageUrl = (o && o.image_path) ? dishPhotoUrl(o.image_path) : null;
       d._imageAlt = (o && o.image_path) ? supabaseStorageUrl(o.image_path)  : null;
     });
   });

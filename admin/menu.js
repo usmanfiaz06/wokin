@@ -442,6 +442,12 @@ function resetEditImage(){
   if (fi) fi.value = "";
 }
 
+/* Must match DISH_PHOTO_REV in order.js — see the note there. */
+const DISH_PHOTO_REV = "2026-08-20";
+function dishPhotoUrl(path){
+  return path ? `/dish-uploads/${path}?v=${DISH_PHOTO_REV}` : null;
+}
+
 function publicImageUrl(path){
   if (!path) return null;
   const base = (window.SUPABASE_URL || "").replace(/\/$/, "");
@@ -453,7 +459,7 @@ function publicImageUrl(path){
 function bgImageWithFallback(el, image_path, staticFallback){
   el.style.backgroundImage = `url("${staticFallback}")`;
   if (!image_path) return;
-  const cands = [`/dish-uploads/${image_path}`, publicImageUrl(image_path)];
+  const cands = [dishPhotoUrl(image_path), publicImageUrl(image_path)];
   let i = 0;
   const next = () => {
     if (i >= cands.length) return;
