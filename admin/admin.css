@@ -1029,3 +1029,73 @@ input{ font:inherit; color:inherit; }
   font-size:14px; border-bottom:1px solid rgba(255,255,255,.06); }
 .cb-dd-item:last-child{ border-bottom:none; }
 .cb-dd-item:hover{ background:var(--red); color:#fff; }
+
+/* =====================================================================
+   QR GUESTS  (leads.html)  —  people who scanned the table QR at /deals
+   ===================================================================== */
+.ld-wrap{ max-width:900px; margin:0 auto; padding:26px 20px 60px; }
+.ld-head h2{ font-family:'Bebas Neue',sans-serif; font-size:30px; letter-spacing:.02em; color:var(--cream); margin-bottom:4px; }
+.ld-head h2 small{ font-family:'Inter',sans-serif; font-size:13px; font-weight:400; color:var(--mute); letter-spacing:0; }
+.ld-head h2 small b{ color:var(--gold-bright); font-weight:600; }
+
+.ld-stats{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:20px 0 18px;
+}
+.ld-stat{
+  padding:14px 16px; background:var(--ink-2); border:2px solid var(--ink);
+  border-radius:var(--r-card); border-left:4px solid var(--red);
+}
+.ld-stat .lbl{ display:block; font-family:'Bebas Neue',sans-serif; letter-spacing:.2em;
+  font-size:11px; color:var(--mute); }
+.ld-stat b{ display:block; margin-top:4px; font-family:'Bebas Neue',sans-serif;
+  font-size:30px; line-height:1; color:var(--cream); }
+
+.ld-tools{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+.ld-tools input{
+  flex:1; min-width:220px; padding:12px 15px;
+  border:2px solid var(--ink); border-radius:10px;
+  background:var(--ink-2); color:var(--cream);
+}
+.ld-tools input::placeholder{ color:rgba(244,233,212,.35); }
+.ld-tools input:focus{ outline:none; border-color:var(--gold-bright); }
+
+/* admin.css has no global .hint rule, so scope one for this page. */
+.ld-wrap .hint{ font-size:12.5px; line-height:1.5; color:var(--mute); }
+.ld-wrap .hint b{ color:var(--gold-bright); font-weight:600; }
+
+.ld-list{ display:flex; flex-direction:column; gap:9px; }
+.ld-empty{
+  color:var(--mute); text-align:center; padding:34px 20px; line-height:1.5;
+  border:2px dashed var(--ink); border-radius:var(--r-card);
+}
+
+.ld-row{
+  display:flex; align-items:center; gap:14px; padding:12px 15px;
+  background:var(--ink-2); border:2px solid var(--ink);
+  border-left:4px solid var(--gold); border-radius:var(--r-card);
+}
+.ld-av{
+  width:38px; height:38px; flex-shrink:0; border-radius:50%;
+  display:grid; place-items:center;
+  background:var(--red); color:#fff;
+  font-family:'Bebas Neue',sans-serif; font-size:19px;
+}
+.ld-main{ flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; }
+.ld-main b{ font-size:15px; color:var(--cream); }
+.ld-links{ display:flex; gap:14px; flex-wrap:wrap; font-size:12.5px; }
+.ld-links a{ color:rgba(244,233,212,.65); text-decoration:none; overflow-wrap:anywhere; }
+.ld-links a:hover{ color:var(--gold-bright); text-decoration:underline; }
+.ld-when{ font-size:12px; color:var(--mute); white-space:nowrap; flex-shrink:0; }
+.ld-del:hover{ background:var(--red); color:#fff; border-color:var(--red); }
+
+@media (max-width:640px){
+  .ld-stats{ grid-template-columns:repeat(2,1fr); }
+  /* Stack the row: avatar · timestamp · delete on top, the guest's
+     details full-width underneath, so numbers never wrap mid-digit. */
+  .ld-row{ flex-wrap:wrap; row-gap:8px; }
+  .ld-av{ order:1; }
+  .ld-when{ order:2; margin-left:auto; }
+  .ld-del{ order:3; }
+  .ld-main{ order:4; flex:1 1 100%; }
+  .ld-links{ gap:4px 14px; }
+}

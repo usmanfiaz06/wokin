@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+
+<title>WOK!N · Deals &amp; Discounts</title>
+<meta name="description" content="Live offers at WOK!N — Office Hours 20% off, Golden Hour weekends, up to 50% off on bank cards, plus the lunch &amp; combo deals." />
+
+<!-- In-restaurant QR page. Deliberately NOT linked from the website and
+     kept out of search results. -->
+<meta name="robots" content="noindex, nofollow" />
+<meta name="theme-color" content="#1A1A1A" />
+
+<link rel="icon" type="image/jpeg" href="/Wokin.- logo.jpeg" />
+<link rel="apple-touch-icon" href="/Wokin.- logo.jpeg" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800;900&family=Permanent+Marker&family=Caveat:wght@500;700&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/deals.css">
+</head>
+<body>
+
+<!-- ==================================================================
+     1 · GATE  —  name / mobile / email before the offers unlock
+=================================================================== -->
+<main class="gate" id="gateScreen">
+  <div class="gate-glow" aria-hidden="true"></div>
+
+  <div class="gate-inner">
+    <header class="gate-brand">
+      <img src="/Wokin.- logo.jpeg" alt="WOK!N" />
+      <span class="cn" aria-hidden="true">炒</span>
+    </header>
+
+    <p class="kicker">SCANNED AT THE TABLE</p>
+    <h1>TODAY'S<br /><em>DEALS</em></h1>
+    <p class="gate-sub">
+      Flat <b>20% off</b> in Office Hours, weekend <b>Golden Hour</b>,
+      and up to <b>50% off</b> on bank cards.
+      <span>Tell us who you are and they unlock. <i>One time only.</i></span>
+    </p>
+
+    <form class="gate-form" id="leadForm" novalidate action="javascript:void(0)">
+      <div class="field">
+        <label for="fName">Your name</label>
+        <input type="text" id="fName" name="name" maxlength="60"
+               autocomplete="name" placeholder="e.g. Ali Raza" required />
+        <p class="err" id="errName" hidden></p>
+      </div>
+
+      <div class="field">
+        <label for="fPhone">Mobile number</label>
+        <div class="phone-wrap">
+          <span class="phone-cc">🇵🇰 +92</span>
+          <input type="tel" id="fPhone" name="phone" inputmode="numeric" maxlength="14"
+                 autocomplete="tel" placeholder="300 1234567" required />
+        </div>
+        <p class="err" id="errPhone" hidden></p>
+      </div>
+
+      <div class="field">
+        <label for="fEmail">Email</label>
+        <input type="email" id="fEmail" name="email" maxlength="120"
+               autocomplete="email" inputmode="email" placeholder="you@email.com" required />
+        <p class="err" id="errEmail" hidden></p>
+      </div>
+
+      <p class="form-err" id="formErr" hidden></p>
+
+      <button type="submit" class="unlock-btn" id="unlockBtn">
+        <span>UNLOCK THE DEALS</span>
+        <i aria-hidden="true">→</i>
+      </button>
+
+      <p class="consent">
+        We'll only use this to send you WOK!N offers. No spam, ever.
+      </p>
+    </form>
+  </div>
+</main>
+
+<!-- ==================================================================
+     2 · DEALS  —  revealed after the form
+=================================================================== -->
+<div class="deals" id="dealsScreen" hidden>
+
+  <header class="hero">
+    <div class="hero-bar">
+      <img src="/Wokin.- logo.jpeg" alt="WOK!N" class="hero-logo" />
+      <div class="hero-id">
+        <b>WOK!N</b>
+        <em>MODERN PAN-ASIAN KITCHEN</em>
+      </div>
+      <span class="cn" aria-hidden="true">炒</span>
+    </div>
+
+    <p class="hello" id="helloLine">Deals unlocked.</p>
+    <h2>DEALS &amp;<br /><em>DISCOUNTS</em></h2>
+
+    <!-- live status pill: "ON RIGHT NOW" / next offer -->
+    <div class="live-pill" id="livePill" hidden>
+      <span class="dot" aria-hidden="true"></span>
+      <span id="liveText"></span>
+    </div>
+  </header>
+
+  <!-- website promo banners, if any are active -->
+  <div class="ticker" id="ticker" hidden>
+    <div class="ticker-track" id="tickerTrack"></div>
+  </div>
+
+  <main class="sheet">
+
+    <!-- ---------- the three headline offers ---------- -->
+    <section class="block" aria-labelledby="offersTitle">
+      <h3 class="block-title" id="offersTitle"><span>RUNNING</span> OFFERS</h3>
+
+      <!-- 1 · OFFICE HOURS -->
+      <article class="deal deal--red" id="dealOffice">
+        <div class="deal-top">
+          <span class="deal-no">01</span>
+          <span class="deal-live" hidden>● ON NOW</span>
+        </div>
+        <h4>WOK!N <em>OFFICE HOURS</em></h4>
+        <div class="deal-big">FLAT <b>20%</b> OFF</div>
+        <ul class="deal-meta">
+          <li><i aria-hidden="true">📅</i> Monday – Friday</li>
+          <li><i aria-hidden="true">🕓</i> 4:00 PM – 6:00 PM</li>
+        </ul>
+        <p class="deal-note">Beat the rush, beat the bill. Straight 20% off your table.</p>
+      </article>
+
+      <!-- 2 · GOLDEN HOUR -->
+      <article class="deal deal--gold" id="dealGolden">
+        <div class="deal-top">
+          <span class="deal-no">02</span>
+          <span class="deal-live" hidden>● ON NOW</span>
+        </div>
+        <h4>WOK!N <em>GOLDEN HOUR</em></h4>
+        <div class="deal-big">FLAT <b>20%</b> OFF</div>
+        <ul class="deal-meta">
+          <li><i aria-hidden="true">📅</i> Saturday &amp; Sunday</li>
+          <li><i aria-hidden="true">🕛</i> 12:00 PM – 4:00 PM</li>
+        </ul>
+        <p class="deal-note">The weekend, early and golden. Same 20% off, all afternoon.</p>
+      </article>
+
+      <!-- 3 · BANK CARDS -->
+      <article class="deal deal--ink" id="dealBank">
+        <div class="deal-top">
+          <span class="deal-no">03</span>
+          <span class="deal-chip">ALL WEEK</span>
+        </div>
+        <h4>BANK <em>CARD OFFERS</em></h4>
+        <div class="deal-big">UP TO <b>50%</b> OFF</div>
+        <ul class="deal-meta">
+          <li><i aria-hidden="true">💳</i> Selected debit &amp; credit cards</li>
+          <li><i aria-hidden="true">🍽️</i> Dine-in</li>
+        </ul>
+        <p class="deal-note callout">
+          Show your card to the waiter — they'll confirm the exact discount
+          percentage on your bank.
+        </p>
+      </article>
+    </section>
+
+    <!-- ---------- lunch / combo deals from the website ---------- -->
+    <section class="block" id="combosBlock" hidden aria-labelledby="combosTitle">
+      <h3 class="block-title" id="combosTitle"><span>LUNCH &amp;</span> COMBO DEALS</h3>
+      <p class="block-sub">Straight off the WOK!N menu — same price, dine-in or delivered.</p>
+      <div class="combo-list" id="comboList"></div>
+    </section>
+
+    <div class="combos-loading" id="combosLoading">
+      <span class="spin" aria-hidden="true"></span> Loading lunch deals…
+    </div>
+
+    <!-- ---------- fine print + CTA ---------- -->
+    <section class="fine">
+      <h5>GOOD TO KNOW</h5>
+      <ul>
+        <li>Discounts apply to dine-in unless the waiter says otherwise.</li>
+        <li>One offer per bill — deals don't stack with each other.</li>
+        <li>Bank card discount depends on your bank's running promotion.</li>
+        <li>WOK!N reserves the right to change or end an offer at any time.</li>
+      </ul>
+    </section>
+
+    <a class="order-cta" href="/" target="_blank" rel="noopener">
+      <span>
+        <b>NOT AT THE TABLE?</b>
+        <em>Order online · free delivery over Rs. 1,800</em>
+      </span>
+      <i aria-hidden="true">→</i>
+    </a>
+
+    <footer class="foot">
+      <span class="cn" aria-hidden="true">炒</span>
+      <b>WOK!N</b>
+      <em>Hand-tossed in a screaming-hot wok.</em>
+    </footer>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/supabase-client.js"></script>
+<script src="/deals.js"></script>
+</body>
+</html>

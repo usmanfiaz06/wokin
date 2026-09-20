@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>WOK!N · Admin · Hours</title>
+<title>WOK!N · Admin · Guests</title>
 <meta name="robots" content="noindex, nofollow" />
 <meta name="theme-color" content="#1A1A1A" />
 <link rel="icon" type="image/jpeg" href="/Wokin.- logo.jpeg" />
@@ -59,20 +59,11 @@
       <a href="/admin/">ORDERS</a>
       <a href="/admin/menu.html">MENU</a>
       <a href="/admin/coupons.html">COUPONS</a>
-      <a href="/admin/hours.html" class="is-on">★ HOURS</a>
+      <a href="/admin/hours.html">HOURS</a>
       <a href="/admin/banners.html">DEALS</a>
       <a href="/admin/combos.html">COMBOS</a>
-      <a href="/admin/leads.html">GUESTS</a>
+      <a href="/admin/leads.html" class="is-on">★ GUESTS</a>
     </nav>
-
-    <div class="top-mid">
-      <span class="live-dot" id="liveDot"></span>
-      <span class="live-text" id="liveText">OPEN</span>
-      <span class="separator">·</span>
-      <span id="pktClock">--:--</span>
-      <span class="separator">·</span>
-      <span style="color:rgba(244,233,212,.5)">PKT</span>
-    </div>
 
     <div class="top-right">
       <span class="who" id="whoami">—</span>
@@ -80,39 +71,30 @@
     </div>
   </header>
 
-  <!-- Force-closed (kill-switch) -->
-  <section class="hr-kill">
-    <div class="hr-kill-text">
-      <p class="cm-section" style="margin:0">★ KILL SWITCH</p>
-      <h2 id="killHeadline">We are <em>OPEN</em></h2>
-      <p class="hr-kill-sub">Turn this on to immediately close the store regardless of opening hours. Customers see a banner and cannot place orders.</p>
-    </div>
-    <div class="hr-kill-controls">
-      <label class="m-toggle big">
-        <input type="checkbox" id="forceClosed" />
-        <span class="m-toggle-track"></span>
-        <span class="m-toggle-text">
-          <b id="forceLabel">Force closed</b>
-          <em>Overrides all hours below</em>
-        </span>
-      </label>
-      <div class="field" style="margin-top:14px">
-        <label for="closedMessage">Closed banner message</label>
-        <textarea id="closedMessage" rows="2" placeholder="We're closed right now. Open again at 10:00 AM."></textarea>
-        <span class="hint">Customers see this on the banner when the store is closed.</span>
-      </div>
-      <button class="btn-primary small" id="saveSettings">SAVE</button>
-    </div>
-  </section>
-
-  <!-- Weekly schedule -->
-  <section class="hours-wrap">
-    <header class="hours-head">
-      <h2><span class="em">🕒</span> Weekly hours <small>· Pakistan Standard Time</small></h2>
-      <button class="btn-ghost small" id="copyMonHours" title="Copy Monday's hours to every other open day">↳ APPLY MONDAY TO ALL</button>
+  <section class="ld-wrap">
+    <header class="ld-head">
+      <h2><span class="em">📇</span> QR guests <small>· everyone who scanned the table QR at <b>/deals</b></small></h2>
     </header>
-    <div class="hours-grid" id="hoursGrid"></div>
-    <p class="hr-tip">Tip: if a day closes after midnight (e.g. opens 18:00, closes 02:00), the close time can be earlier than open time — we'll handle it.</p>
+
+    <div class="ld-stats">
+      <div class="ld-stat"><span class="lbl">TODAY</span><b id="stToday">—</b></div>
+      <div class="ld-stat"><span class="lbl">LAST 7 DAYS</span><b id="stWeek">—</b></div>
+      <div class="ld-stat"><span class="lbl">TOTAL SCANS</span><b id="stTotal">—</b></div>
+      <div class="ld-stat"><span class="lbl">UNIQUE NUMBERS</span><b id="stUnique">—</b></div>
+    </div>
+
+    <div class="ld-tools">
+      <input type="search" id="ldSearch" placeholder="Search name, mobile or email…" />
+      <button class="btn-ghost small" id="ldCopy">COPY NUMBERS</button>
+      <button class="btn-ghost small" id="ldExport">EXPORT CSV</button>
+      <button class="btn-ghost small" id="ldRefresh">↻ REFRESH</button>
+    </div>
+    <p class="hint" style="margin:8px 2px 18px">
+      New scans appear here live. Numbers are stored as <b>+92…</b> so they paste
+      straight into WhatsApp or an SMS blast.
+    </p>
+
+    <div class="ld-list" id="ldList"></div>
   </section>
 
 </div>
@@ -122,6 +104,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/supabase-client.js"></script>
-<script src="/admin/hours.js"></script>
+<script src="/admin/leads.js"></script>
 </body>
 </html>
