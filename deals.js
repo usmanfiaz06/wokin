@@ -22,7 +22,7 @@ const SAVE_TIMEOUT_MS = 3500;             // never hold the offers hostage
 const SHARE_TEXT = [
   "Hey! Check out the amazing deals I've found at WOK!N \u2014 the finest pan-Asian restaurant in Gulberg Greens \uD83D\uDD25",
   "",
-  "Flat 20% off in Office Hours, weekend Golden Hour, and up to 50% off on bank cards.",
+  "Flat 20% off in weekend Golden Hour, and up to 50% off on bank cards.",
   "",
   "",
 ].join("\n");
@@ -30,10 +30,7 @@ const SHARE_TEXT = [
 /* Offer windows, in Pakistan Standard Time.
    days: 0=Sun … 6=Sat · from/to are 24h hours. */
 const WINDOWS = [
-  { id:"dealOffice", label:"OFFICE HOURS", days:[1,2,3,4,5], from:16, to:18,
-    when:"Mon–Fri, 4–6 PM" },
-  { id:"dealGolden", label:"GOLDEN HOUR",  days:[0,6],       from:12, to:16,
-    when:"Sat & Sun, 12–4 PM" },
+  { id:"dealGolden", label:"GOLDEN HOUR", days:[0,6], from:12, to:16 },
 ];
 
 const DAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
