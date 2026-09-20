@@ -15,6 +15,7 @@
 const LEAD_KEY    = "wokin_qr_lead";      // the saved guest on this device
 const PENDING_KEY = "wokin_qr_pending";   // lead that failed to save, retried later
 const SOURCE      = "qr-deals";
+const SAVE_TIMEOUT_MS = 3500;             // never hold the offers hostage
 
 /* What a guest sends when they tap "Share on WhatsApp". The page's own
    URL is appended so whoever receives it lands on this same page. */
@@ -142,19 +143,31 @@ async function saveLead(lead){
   try {
     // No .select() on purpose — anon has INSERT rights only, so the guest
     // list can't be read back from the browser.
-    const { error } = await window.db.from("qr_leads").insert({
+    const insert = window.db.from("qr_leads").insert({
       name:  lead.name,
       phone: lead.phone,
       email: lead.email,
       source: lead.source || SOURCE,
       user_agent: (navigator.userAgent || "").slice(0, 300),
     });
+    // On restaurant wifi the request can stall rather than fail, and a
+    // guest staring at a spinner is worse than a lead saved a visit late.
+    // Give up waiting after a few seconds; the caller queues it for retry.
+    const { error } = await withTimeout(insert, SAVE_TIMEOUT_MS);
     if (error) throw error;
     return true;
   } catch (err){
     console.warn("[wokin/deals] lead not saved:", err.message || err);
     return false;
   }
+}
+
+function withTimeout(promise, ms){
+  let timer;
+  return Promise.race([
+    Promise.resolve(promise).finally(() => clearTimeout(timer)),
+    new Promise((_, reject) => { timer = setTimeout(() => reject(new Error("save timed out")), ms); }),
+  ]);
 }
 
 function rememberLead(lead){
