@@ -15,7 +15,16 @@
 const LEAD_KEY    = "wokin_qr_lead";      // the saved guest on this device
 const PENDING_KEY = "wokin_qr_pending";   // lead that failed to save, retried later
 const SOURCE      = "qr-deals";
-const FALLBACK_IMG = "/Assorted_Chinese_food_set.jpg.webp";
+
+/* What a guest sends when they tap "Share on WhatsApp". The page's own
+   URL is appended so whoever receives it lands on this same page. */
+const SHARE_TEXT = [
+  "Hey! Check out the amazing deals I've found at WOK!N \u2014 the finest pan-Asian restaurant in Gulberg Greens \uD83D\uDD25",
+  "",
+  "Flat 20% off in Office Hours, weekend Golden Hour, and up to 50% off on bank cards.",
+  "",
+  "",
+].join("\n");
 
 /* Offer windows, in Pakistan Standard Time.
    days: 0=Sun … 6=Sat · from/to are 24h hours. */
@@ -190,11 +199,22 @@ function showDeals(lead, opts = {}){
 
   window.scrollTo(0, 0);
 
+  setShareLink();
   markLiveOffer();
   setInterval(markLiveOffer, 60000);   // keep the "ON NOW" badge honest
 
-  loadCombos();
   loadBanners();
+}
+
+/* ---- share on whatsapp ---- */
+function setShareLink(){
+  const link = document.getElementById("waShare");
+  if (!link) return;
+  // Share the page the guest is actually on, so the friend who opens it
+  // gets the live offers (and signs up on the same gate).
+  const url  = location.origin + location.pathname.replace(/\.html$/, "");
+  const text = SHARE_TEXT + url;
+  link.href = "https://wa.me/?text=" + encodeURIComponent(text);
 }
 
 /* ---- which offer is running right now (Pakistan time) ---- */
@@ -264,86 +284,6 @@ function fmtHour(h){
   const hour   = h % 12 === 0 ? 12 : h % 12;
   return `${hour}:00 ${suffix}`;
 }
-
-/* ---- lunch / combo deals, straight from the live website menu ---- */
-async function loadCombos(){
-  const block   = document.getElementById("combosBlock");
-  const list    = document.getElementById("comboList");
-  const loading = document.getElementById("combosLoading");
-  const done = () => { loading.hidden = true; };
-
-  if (!window.db){ done(); return; }
-
-  try {
-    const { data, error } = await window.db.from("combos")
-      .select("*").eq("is_active", true).order("position", { ascending:true });
-    if (error) throw error;
-
-    const combos = data || [];
-    if (!combos.length){ done(); return; }
-
-    list.innerHTML = "";
-    combos.forEach(c => list.appendChild(comboCard(c)));
-    block.hidden = false;
-    done();
-  } catch (err){
-    // Table missing or network down — the section simply doesn't appear.
-    console.warn("[wokin/deals] combos unavailable:", err.message || err);
-    done();
-  }
-}
-
-function comboCard(combo){
-  const card = document.createElement("article");
-  card.className = "combo";
-
-  const img = document.createElement("div");
-  img.className = "combo-img";
-  applyBg(img, comboImageUrl(combo));
-
-  const body = document.createElement("div");
-  body.className = "combo-body";
-
-  const h4 = document.createElement("h4");
-  h4.textContent = combo.name;                       // textContent = XSS-safe
-  body.appendChild(h4);
-
-  if (combo.description){
-    const p = document.createElement("p");
-    p.textContent = combo.description;
-    body.appendChild(p);
-  }
-
-  const price = document.createElement("div");
-  price.className = "combo-price";
-  const b = document.createElement("b");
-  b.textContent = fmtPKR(combo.price);
-  const tag = document.createElement("span");
-  tag.textContent = "COMBO PRICE";
-  price.appendChild(b); price.appendChild(tag);
-  body.appendChild(price);
-
-  card.appendChild(img);
-  card.appendChild(body);
-  return card;
-}
-
-function comboImageUrl(c){
-  if (!c.image_path) return null;
-  const base = (window.SUPABASE_URL || "").replace(/\/$/, "");
-  return `${base}/storage/v1/object/public/dish-images/${c.image_path}`;
-}
-
-/* Paint the generic food shot first, swap in the real photo once it loads. */
-function applyBg(el, url){
-  el.style.backgroundImage = `url("${FALLBACK_IMG}")`;
-  if (!url) return;
-  const probe = new Image();
-  probe.onload = () => { el.style.backgroundImage = `url("${url}")`; };
-  probe.src = url;
-}
-
-const fmtPKR = n => "Rs. " + Math.round(Number(n) || 0).toLocaleString("en-PK");
 
 /* ---- the website's scrolling promo banners ---- */
 async function loadBanners(){

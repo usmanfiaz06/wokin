@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 
 <title>WOK!N · Deals &amp; Discounts</title>
-<meta name="description" content="Live offers at WOK!N — Office Hours 20% off, Golden Hour weekends, up to 50% off on bank cards, plus the lunch &amp; combo deals." />
+<meta name="description" content="Live offers at WOK!N — the finest pan-Asian restaurant in Gulberg Greens." />
 
 <!-- In-restaurant QR page. Deliberately NOT linked from the website and
      kept out of search results. -->
@@ -23,24 +23,32 @@
 <body>
 
 <!-- ==================================================================
-     1 · GATE  —  name / mobile / email before the offers unlock
+     1 · GATE  —  name / mobile / email before the offers unlock.
+     Deliberately says nothing about what the offers actually are.
 =================================================================== -->
 <main class="gate" id="gateScreen">
   <div class="gate-glow" aria-hidden="true"></div>
 
   <div class="gate-inner">
-    <header class="gate-brand">
-      <img src="/Wokin.- logo.jpeg" alt="WOK!N" />
-      <span class="cn" aria-hidden="true">炒</span>
-    </header>
+    <header class="gate-head">
+      <img class="logo logo--lg" src="/wokin-logo-mark.png"
+           alt="WOK!N — Modern Pan Asian" width="562" height="258" />
 
-    <p class="kicker">SCANNED AT THE TABLE</p>
-    <h1>TODAY'S<br /><em>DEALS</em></h1>
-    <p class="gate-sub">
-      Flat <b>20% off</b> in Office Hours, weekend <b>Golden Hour</b>,
-      and up to <b>50% off</b> on bank cards.
-      <span>Tell us who you are and they unlock. <i>One time only.</i></span>
-    </p>
+      <p class="kicker">SCANNED AT THE TABLE</p>
+      <h1>TODAY'S<br /><em>DEALS</em></h1>
+
+      <div class="locked">
+        <span class="lock" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm-3 8V7a3 3 0 1 1 6 0v3H9z"/></svg>
+        </span>
+        <b>3 OFFERS RUNNING RIGHT NOW</b>
+      </div>
+
+      <p class="gate-sub">
+        Tell us who you are and they unlock instantly.
+        <span>Takes ten seconds. <i>One time only.</i></span>
+      </p>
+    </header>
 
     <form class="gate-form" id="leadForm" novalidate action="javascript:void(0)">
       <div class="field">
@@ -88,11 +96,8 @@
 
   <header class="hero">
     <div class="hero-bar">
-      <img src="/Wokin.- logo.jpeg" alt="WOK!N" class="hero-logo" />
-      <div class="hero-id">
-        <b>WOK!N</b>
-        <em>MODERN PAN-ASIAN KITCHEN</em>
-      </div>
+      <img class="logo logo--sm" src="/wokin-logo-mark.png"
+           alt="WOK!N — Modern Pan Asian" width="562" height="258" />
       <span class="cn" aria-hidden="true">炒</span>
     </div>
 
@@ -119,63 +124,90 @@
 
       <!-- 1 · OFFICE HOURS -->
       <article class="deal deal--red" id="dealOffice">
+        <span class="deal-watermark" aria-hidden="true">01</span>
         <div class="deal-top">
-          <span class="deal-no">01</span>
+          <span class="deal-no">OFFER 01</span>
           <span class="deal-live" hidden>● ON NOW</span>
         </div>
+
         <h4>WOK!N <em>OFFICE HOURS</em></h4>
-        <div class="deal-big">FLAT <b>20%</b> OFF</div>
-        <ul class="deal-meta">
-          <li><i aria-hidden="true">📅</i> Monday – Friday</li>
-          <li><i aria-hidden="true">🕓</i> 4:00 PM – 6:00 PM</li>
-        </ul>
-        <p class="deal-note">Beat the rush, beat the bill. Straight 20% off your table.</p>
+
+        <div class="deal-big"><span>FLAT</span><b>20<sup>%</sup></b><span>OFF</span></div>
+
+        <dl class="deal-meta">
+          <div><dt>DAYS</dt><dd>Monday – Friday</dd></div>
+          <div><dt>TIME</dt><dd>4:00 – 6:00 PM</dd></div>
+        </dl>
+
+        <p class="deal-note">Beat the rush, beat the bill — a straight 20% off your table.</p>
       </article>
 
       <!-- 2 · GOLDEN HOUR -->
       <article class="deal deal--gold" id="dealGolden">
+        <span class="deal-watermark" aria-hidden="true">02</span>
         <div class="deal-top">
-          <span class="deal-no">02</span>
+          <span class="deal-no">OFFER 02</span>
           <span class="deal-live" hidden>● ON NOW</span>
         </div>
+
         <h4>WOK!N <em>GOLDEN HOUR</em></h4>
-        <div class="deal-big">FLAT <b>20%</b> OFF</div>
-        <ul class="deal-meta">
-          <li><i aria-hidden="true">📅</i> Saturday &amp; Sunday</li>
-          <li><i aria-hidden="true">🕛</i> 12:00 PM – 4:00 PM</li>
-        </ul>
+
+        <div class="deal-big"><span>FLAT</span><b>20<sup>%</sup></b><span>OFF</span></div>
+
+        <dl class="deal-meta">
+          <div><dt>DAYS</dt><dd>Saturday &amp; Sunday</dd></div>
+          <div><dt>TIME</dt><dd>12:00 – 4:00 PM</dd></div>
+        </dl>
+
         <p class="deal-note">The weekend, early and golden. Same 20% off, all afternoon.</p>
       </article>
 
       <!-- 3 · BANK CARDS -->
       <article class="deal deal--ink" id="dealBank">
+        <span class="deal-watermark" aria-hidden="true">03</span>
         <div class="deal-top">
-          <span class="deal-no">03</span>
+          <span class="deal-no">OFFER 03</span>
           <span class="deal-chip">ALL WEEK</span>
         </div>
+
         <h4>BANK <em>CARD OFFERS</em></h4>
-        <div class="deal-big">UP TO <b>50%</b> OFF</div>
-        <ul class="deal-meta">
-          <li><i aria-hidden="true">💳</i> Selected debit &amp; credit cards</li>
-          <li><i aria-hidden="true">🍽️</i> Dine-in</li>
-        </ul>
+
+        <div class="deal-big"><span>UP TO</span><b>50<sup>%</sup></b><span>OFF</span></div>
+
+        <dl class="deal-meta">
+          <div><dt>CARDS</dt><dd>Selected debit &amp; credit</dd></div>
+          <div><dt>WHERE</dt><dd>Dine-in</dd></div>
+        </dl>
+
         <p class="deal-note callout">
           Show your card to the waiter — they'll confirm the exact discount
-          percentage on your bank.
+          percentage for your bank.
         </p>
       </article>
     </section>
 
-    <!-- ---------- lunch / combo deals from the website ---------- -->
-    <section class="block" id="combosBlock" hidden aria-labelledby="combosTitle">
-      <h3 class="block-title" id="combosTitle"><span>LUNCH &amp;</span> COMBO DEALS</h3>
-      <p class="block-sub">Straight off the WOK!N menu — same price, dine-in or delivered.</p>
-      <div class="combo-list" id="comboList"></div>
+    <!-- ---------- how to claim ---------- -->
+    <section class="block" aria-labelledby="claimTitle">
+      <h3 class="block-title" id="claimTitle"><span>HOW TO</span> CLAIM</h3>
+      <ol class="steps">
+        <li><b>1</b><span>Show this screen to your waiter before the bill is made.</span></li>
+        <li><b>2</b><span>Paying by card? Hand it over so they can check your bank's offer.</span></li>
+        <li><b>3</b><span>They apply the best discount for you. That's it.</span></li>
+      </ol>
     </section>
 
-    <div class="combos-loading" id="combosLoading">
-      <span class="spin" aria-hidden="true"></span> Loading lunch deals…
-    </div>
+    <!-- ---------- share with friends ---------- -->
+    <a class="wa-share" id="waShare" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M17.47 14.38c-.3-.15-1.75-.86-2.02-.96-.27-.1-.47-.15-.67.15-.2.3-.77.96-.94 1.16-.17.2-.35.22-.64.07-.3-.15-1.25-.46-2.38-1.47-.88-.78-1.47-1.75-1.64-2.05-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.6-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.7.63.71.22 1.36.19 1.87.12.57-.09 1.75-.72 2-1.41.25-.69.25-1.28.17-1.4-.07-.13-.27-.2-.57-.35z"/>
+        <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.87 9.87 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2zm0 18.15h-.01a8.2 8.2 0 0 1-4.18-1.15l-.3-.18-3.11.82.83-3.04-.2-.31a8.17 8.17 0 0 1-1.25-4.38c0-4.54 3.7-8.23 8.24-8.23 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 0 1 2.41 5.82c0 4.54-3.69 8.23-8.25 8.23z"/>
+      </svg>
+      <span>
+        <b>SHARE ON WHATSAPP</b>
+        <em>Send these deals to your friends</em>
+      </span>
+      <i aria-hidden="true">→</i>
+    </a>
 
     <!-- ---------- fine print + CTA ---------- -->
     <section class="fine">
@@ -199,7 +231,7 @@
     <footer class="foot">
       <span class="cn" aria-hidden="true">炒</span>
       <b>WOK!N</b>
-      <em>Hand-tossed in a screaming-hot wok.</em>
+      <em>The finest pan-Asian taste in Gulberg Greens.</em>
     </footer>
   </main>
 </div>
