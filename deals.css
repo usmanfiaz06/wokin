@@ -198,8 +198,13 @@ body{
 .unlock-btn:disabled{ opacity:.6; cursor:progress; }
 
 .consent{
-  margin:2px 0 0; text-align:center;
-  font-size:12px; line-height:1.5; color:var(--mute);
+  margin:4px 0 0; text-align:center;
+  font-size:12px; line-height:1.55; color:var(--mute);
+}
+.consent b{ color:rgba(251,241,222,.8); font-weight:600; }
+.consent span{
+  display:block; margin-top:5px;
+  font-size:11px; line-height:1.5; color:rgba(154,142,124,.75);
 }
 
 /* Short phones (iPhone SE and friends): tighten the gate so the
