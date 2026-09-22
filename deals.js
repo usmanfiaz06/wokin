@@ -35,6 +35,50 @@ const WINDOWS = [
 
 const DAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 
+/* The customer site keeps its cart here. Same origin, so a deal added
+   from this page is already waiting when the guest lands on the menu. */
+const CART_KEY       = "wokin_order_state_v1";
+const DISH_PHOTO_REV = "2026-08-20.2";
+const FALLBACK_IMG   = "/Assorted_Chinese_food_set.jpg.webp";
+
+/* Delivery bundles. `hero` names the menu dish whose photo fronts the
+   card — the photo itself is whatever the admin has set for that dish,
+   so these stay in step with the menu. Prices exclude tax, which the
+   order page adds at checkout, exactly as it does for every other line. */
+const DELIVERY_DEALS = [
+  { id:"duo", name:"WOK!N DUO", price:2695, serves:"For 2 people",
+    hero:"Chicken Manchurian",
+    items:["Half chicken dish","Half fried rice","2 mint margaritas"],
+    note:"Selected dishes apply" },
+
+  { id:"duo-plus", name:"WOK!N DUO PLUS", price:3395, serves:"For 2–3 people",
+    hero:"Chicken Chow Mein",
+    items:["Half soup","Half chicken dish","Half fried rice or half chow mein",
+           "2 mint margaritas","Fish crackers"],
+    note:"Selected dishes apply" },
+
+  { id:"trio", name:"WOK!N TRIO FEAST", price:4995, serves:"For 3–4 people",
+    hero:"Steamed Chicken Dumplings", popular:true,
+    items:["Steamed chicken dumplings","Half chicken dish","Half beef dish",
+           "Full fried rice","3 mint margaritas","Fish crackers"],
+    note:"Selected dishes apply" },
+
+  { id:"family", name:"WOK!N FAMILY FEAST", price:8495, serves:"For 4–5 people",
+    hero:"Spicy Honey Chicken Wings",
+    items:["Full soup, including Wok!n Special 19B","Spicy honey chicken wings",
+           "Half chicken dish","Half beef dish","Full fried rice or full chow mein",
+           "4 mint margaritas","Fish crackers"],
+    note:"Selected dishes apply" },
+
+  { id:"signature", name:"WOK!N SIGNATURE FEAST", price:12495, serves:"For 4–5 people",
+    hero:"Prawn Tempura",
+    items:["Full soup, including Wok!n Special 19B","Prawn tempura",
+           "Half chicken dish","Half beef dish","Full fried rice","Half chow mein",
+           "4 mint margaritas","Fish crackers"] },
+];
+
+const fmtPKR = n => "Rs. " + Math.round(Number(n) || 0).toLocaleString("en-PK");
+
 /* ------------------------------------------------------------------ */
 /*  BOOT                                                              */
 /* ------------------------------------------------------------------ */
@@ -210,6 +254,9 @@ function showDeals(lead, opts = {}){
   window.scrollTo(0, 0);
 
   setShareLink();
+  renderDeliveryDeals();
+  bindTabs();
+  syncCartBar();
   markLiveOffer();
   setInterval(markLiveOffer, 60000);   // keep the "ON NOW" badge honest
 
@@ -293,6 +340,214 @@ function fmtHour(h){
   const suffix = h >= 12 ? "PM" : "AM";
   const hour   = h % 12 === 0 ? 12 : h % 12;
   return `${hour}:00 ${suffix}`;
+}
+
+/* ------------------------------------------------------------------ */
+/*  DELIVERY DEALS                                                    */
+/* ------------------------------------------------------------------ */
+function renderDeliveryDeals(){
+  const list = document.getElementById("ddList");
+  if (!list) return;
+  list.innerHTML = "";
+  DELIVERY_DEALS.forEach(d => list.appendChild(dealCard(d)));
+  loadDishPhotos();               // swap in the real photos once they arrive
+}
+
+function dealCard(deal){
+  const card = document.createElement("article");
+  card.className = "dd" + (deal.popular ? " is-popular" : "");
+
+  const fig = document.createElement("div");
+  fig.className = "dd-img";
+  fig.dataset.dish = slugifyDish(deal.hero);
+  fig.style.backgroundImage = `url("${FALLBACK_IMG}")`;
+  if (deal.popular){
+    const flag = document.createElement("span");
+    flag.className = "dd-flag";
+    flag.textContent = "★ MOST POPULAR";
+    fig.appendChild(flag);
+  }
+  const serves = document.createElement("span");
+  serves.className = "dd-serves";
+  serves.textContent = deal.serves;
+  fig.appendChild(serves);
+  card.appendChild(fig);
+
+  const body = document.createElement("div");
+  body.className = "dd-body";
+
+  const h4 = document.createElement("h4");
+  h4.textContent = deal.name;
+  body.appendChild(h4);
+
+  const ul = document.createElement("ul");
+  ul.className = "dd-items";
+  deal.items.forEach(t => {
+    const li = document.createElement("li");
+    li.textContent = t;            // textContent = XSS-safe
+    ul.appendChild(li);
+  });
+  body.appendChild(ul);
+
+  if (deal.note){
+    const note = document.createElement("p");
+    note.className = "dd-note";
+    note.textContent = deal.note;
+    body.appendChild(note);
+  }
+
+  const foot = document.createElement("div");
+  foot.className = "dd-foot";
+
+  const price = document.createElement("div");
+  price.className = "dd-price";
+  const b = document.createElement("b");
+  b.textContent = fmtPKR(deal.price);
+  const tax = document.createElement("span");
+  tax.textContent = "+ tax";
+  price.appendChild(b); price.appendChild(tax);
+  foot.appendChild(price);
+
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "dd-add";
+  btn.textContent = "ADD TO ORDER";
+  btn.addEventListener("click", () => {
+    addDealToCart(deal);
+    btn.classList.add("is-added");
+    btn.textContent = "ADDED ✓";
+    setTimeout(() => { btn.classList.remove("is-added"); btn.textContent = "ADD TO ORDER"; }, 1600);
+  });
+  foot.appendChild(btn);
+
+  body.appendChild(foot);
+  card.appendChild(body);
+  return card;
+}
+
+/* Same slug rule the menu uses, so a deal's hero dish lines up with the
+   photo the admin set for it. */
+function slugifyDish(s){
+  return String(s).toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/['’"`]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+/* menu_overrides holds dish_slug → image_path for every photographed
+   dish. One read gives every card its picture. */
+async function loadDishPhotos(){
+  if (!window.db) return;
+  try {
+    const { data, error } = await window.db.from("menu_overrides")
+      .select("dish_slug,image_path");
+    if (error) throw error;
+
+    const bySlug = new Map();
+    (data || []).forEach(r => { if (r.image_path) bySlug.set(r.dish_slug, r.image_path); });
+
+    document.querySelectorAll(".dd-img[data-dish]").forEach(el => {
+      const path = bySlug.get(el.dataset.dish);
+      if (!path) return;
+      const url = `/dish-uploads/${path}?v=${DISH_PHOTO_REV}`;
+      // Only swap once it has actually loaded, so a missing file leaves
+      // the food fallback in place rather than an empty box.
+      const probe = new Image();
+      probe.onload = () => { el.style.backgroundImage = `url("${url}")`; };
+      probe.src = url;
+    });
+  } catch (err){
+    console.warn("[wokin/deals] dish photos unavailable:", err.message || err);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  CART  —  writes into the customer site's own basket                */
+/* ------------------------------------------------------------------ */
+function readCartState(){
+  try {
+    const raw = localStorage.getItem(CART_KEY);
+    const s = raw ? JSON.parse(raw) : null;
+    if (s && Array.isArray(s.cart)) return s;
+  } catch(e){}
+  // Matches the shape order.js starts from when there's nothing stored.
+  return { type:null, area:null, cart:[], coupon:null, couponDiscount:0,
+           couponLabel:"", payment:"cash" };
+}
+
+function addDealToCart(deal){
+  const state = readCartState();
+  const id = "deal::" + deal.id;
+
+  const line = state.cart.find(c => c.id === id);
+  if (line) line.qty += 1;
+  else state.cart.push({
+    id, name: deal.name, desc: "🛵 Delivery deal · " + deal.serves, variant: null,
+    image: FALLBACK_IMG.replace(/^\//, ""), price: deal.price, qty: 1, customId: null,
+  });
+
+  // A changed cart invalidates any coupon the order page had validated,
+  // same as adding a combo there does.
+  if (state.coupon){ state.coupon = null; state.couponDiscount = 0; state.couponLabel = ""; }
+
+  try { localStorage.setItem(CART_KEY, JSON.stringify(state)); }
+  catch(e){ /* private mode — the bar just won't persist */ }
+
+  syncCartBar();
+}
+
+/* The bar only counts what this page added; the rest of the basket is
+   the order page's business. */
+function syncCartBar(){
+  const bar = document.getElementById("cartBar");
+  if (!bar) return;
+  const deals = readCartState().cart.filter(c => String(c.id).startsWith("deal::"));
+  const qty   = deals.reduce((n, c) => n + (c.qty || 0), 0);
+  document.body.classList.toggle("has-cart-bar", qty > 0);
+  if (!qty){ bar.hidden = true; return; }
+
+  const total = deals.reduce((n, c) => n + (c.price || 0) * (c.qty || 0), 0);
+  document.getElementById("cartBarCount").textContent = qty;
+  document.getElementById("cartBarLine").textContent  = qty === 1 ? "1 deal added" : qty + " deals added";
+  document.getElementById("cartBarSum").textContent   = fmtPKR(total) + " + tax";
+  bar.hidden = false;
+}
+
+/* ------------------------------------------------------------------ */
+/*  SECTION TABS  —  jump links, not filters                          */
+/* ------------------------------------------------------------------ */
+function bindTabs(){
+  const bar  = document.getElementById("tabs");
+  const tabs = [...document.querySelectorAll(".tab")];
+  if (!bar || !tabs.length) return;
+
+  tabs.forEach(t => t.addEventListener("click", e => {
+    e.preventDefault();
+    const target = document.getElementById(t.dataset.target);
+    if (!target) return;
+    // Land the heading just under the sticky bar rather than behind it.
+    const y = window.scrollY + target.getBoundingClientRect().top - bar.offsetHeight - 12;
+    window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
+  }));
+
+  // Highlight whichever section the guest has actually scrolled to, so
+  // the tabs stay honest while the page runs on past the discounts.
+  let ticking = false;
+  const spy = () => {
+    ticking = false;
+    const line = bar.getBoundingClientRect().bottom + 16;
+    let active = tabs[0];
+    tabs.forEach(t => {
+      const sec = document.getElementById(t.dataset.target);
+      if (sec && sec.getBoundingClientRect().top <= line) active = t;
+    });
+    tabs.forEach(t => t.classList.toggle("is-on", t === active));
+  };
+  window.addEventListener("scroll", () => {
+    if (!ticking){ ticking = true; requestAnimationFrame(spy); }
+  }, { passive: true });
+  spy();
 }
 
 /* ---- the website's scrolling promo banners ---- */
