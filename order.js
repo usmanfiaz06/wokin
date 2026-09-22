@@ -144,6 +144,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   subscribeMenuOverrides();
   loadDeals();
   loadCombos();
+  renderDeliveryDeals();
 
   // User lands on the site freely; pop-up rises 1.5s later
   // (only the very first time — once they've picked, we skip).
@@ -152,7 +153,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (!hasChosen) {
     setTimeout(openLocModal, 1500);
   }
+
+  // Arriving from the QR page's "Order now" (/?cart=1) → show the basket.
+  // Delivery details come first though: if they haven't been picked yet,
+  // the location pop-up runs and the cart opens once it's answered.
+  if (new URLSearchParams(location.search).has("cart")){
+    if (hasChosen) setTimeout(openCart, 350);
+    else _openCartAfterLocation = true;
+  }
 });
+
+let _openCartAfterLocation = false;
 
 
 /* ==================================================================
@@ -194,6 +205,133 @@ async function loadDeals(){
 const DISH_PHOTO_REV = "2026-08-20.2";
 function dishPhotoUrl(path){
   return path ? `/dish-uploads/${path}?v=${DISH_PHOTO_REV}` : null;
+}
+
+/* ==================================================================
+   DELIVERY DEALS  (defined in delivery-deals.js, shared with /deals)
+=================================================================== */
+function renderDeliveryDeals(){
+  const sec  = document.getElementById("ddealsSection");
+  const grid = document.getElementById("ddealsGrid");
+  if (!sec || !grid || typeof DELIVERY_DEALS === "undefined") return;
+
+  grid.innerHTML = "";
+  DELIVERY_DEALS.forEach(d => grid.appendChild(deliveryDealCard(d)));
+  sec.hidden = false;
+  paintDeliveryDealPhotos();
+}
+
+function deliveryDealCard(deal){
+  const card = document.createElement("article");
+  card.className = "dd-card" + (deal.popular ? " is-popular" : "");
+
+  const img = document.createElement("div");
+  img.className = "img";
+  img.dataset.dish = slugifyDish(deal.hero);
+  if (deal.popular){
+    const flag = document.createElement("span");
+    flag.className = "dd-flag";
+    flag.textContent = "★ MOST POPULAR";
+    img.appendChild(flag);
+  }
+  const serves = document.createElement("span");
+  serves.className = "dd-serves";
+  serves.textContent = deal.serves;
+  img.appendChild(serves);
+  card.appendChild(img);
+
+  const pad = document.createElement("div");
+  pad.className = "pad";
+
+  const h3 = document.createElement("h3");
+  h3.textContent = deal.name;
+  pad.appendChild(h3);
+
+  const ul = document.createElement("ul");
+  ul.className = "dd-items";
+  deal.items.forEach(item => {
+    const li = document.createElement("li");
+    if (typeof item === "string"){
+      li.textContent = item;
+    } else {
+      li.className = "dd-pick";
+      const lbl = document.createElement("span");
+      lbl.textContent = item.label;
+      const sel = document.createElement("select");
+      sel.className = "dd-pick-sel";
+      sel.setAttribute("aria-label", item.label);
+      pickOptions(item.pick).forEach(n => {
+        const o = document.createElement("option");
+        o.value = o.textContent = n;
+        sel.appendChild(o);
+      });
+      const want = PICKS[item.pick] && PICKS[item.pick].fallback;
+      if (want && [...sel.options].some(o => o.value === want)) sel.value = want;
+      li.appendChild(lbl); li.appendChild(sel);
+    }
+    ul.appendChild(li);
+  });
+  pad.appendChild(ul);
+
+  if (deal.note){
+    const note = document.createElement("p");
+    note.className = "dd-note";
+    note.textContent = deal.note;
+    pad.appendChild(note);
+  }
+
+  const foot = document.createElement("div");
+  foot.className = "foot";
+  const price = document.createElement("b");
+  price.textContent = fmtPKR(deal.price);
+  const btn = document.createElement("button");
+  btn.className = "add-btn";
+  btn.textContent = "ADD +";
+  btn.addEventListener("click", () => {
+    addDeliveryDealToCart(deal, card);
+    card.classList.add("is-flash");
+    setTimeout(() => card.classList.remove("is-flash"), 600);
+  });
+  foot.appendChild(price); foot.appendChild(btn);
+  pad.appendChild(foot);
+
+  card.appendChild(pad);
+  return card;
+}
+
+/* Same two-candidate chain every other dish photo uses. */
+function paintDeliveryDealPhotos(){
+  document.querySelectorAll("#ddealsGrid .img[data-dish]").forEach(el => {
+    const o = menuOverrides.get(el.dataset.dish);
+    const path = o && o.image_path;
+    applyDishBg(el, path ? dishPhotoUrl(path) : null,
+                    path ? supabaseStorageUrl(path) : null);
+  });
+}
+
+function addDeliveryDealToCart(deal, card){
+  const picks = [...card.querySelectorAll(".dd-pick-sel")].map(s => s.value).filter(Boolean);
+  const variant = picks.length ? picks.join(" · ") : null;
+  // Different picks are a separate line, not a bigger quantity.
+  const id = "deal::" + deal.id + (picks.length ? "::" + picks.join("|") : "");
+
+  const existing = state.cart.find(c => c.id === id);
+  if (existing){ existing.qty += 1; }
+  else {
+    state.cart.push({
+      id, name: deal.name, desc: "🛵 Delivery deal · " + deal.serves, variant,
+      image: window.FALLBACK_DISH_IMG || "Assorted_Chinese_food_set.jpg.webp",
+      price: Number(deal.price) || 0, qty: 1, customId: null,
+    });
+  }
+  if (state.coupon){ state.couponDiscount = 0; state.coupon = null; state.couponLabel = ""; }
+  saveState();
+  recalcCart();
+  bumpCartIcon();
+  if (typeof fbq === "function"){
+    fbq("track", "AddToCart", { value: Math.round(Number(deal.price)||0), currency: "PKR",
+      contents: [{ id: "deal:" + deal.id, quantity: 1 }], num_items: 1 });
+  }
 }
 
 /* ==================================================================
@@ -687,6 +825,10 @@ function bindLocationModal(){
     if (sel) sel.value = state.area;
     recalcCart();
     closeLocModal();
+    if (_openCartAfterLocation){
+      _openCartAfterLocation = false;
+      setTimeout(openCart, 320);        // let the modal finish closing
+    }
   });
 
   renderAreaList("");

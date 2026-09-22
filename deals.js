@@ -41,42 +41,6 @@ const CART_KEY       = "wokin_order_state_v1";
 const DISH_PHOTO_REV = "2026-08-20.2";
 const FALLBACK_IMG   = "/Assorted_Chinese_food_set.jpg.webp";
 
-/* Delivery bundles. `hero` names the menu dish whose photo fronts the
-   card — the photo itself is whatever the admin has set for that dish,
-   so these stay in step with the menu. Prices exclude tax, which the
-   order page adds at checkout, exactly as it does for every other line. */
-const DELIVERY_DEALS = [
-  { id:"duo", name:"WOK!N DUO", price:2695, serves:"For 2 people",
-    hero:"Chicken Manchurian",
-    items:["Half chicken dish","Half fried rice","2 mint margaritas"],
-    note:"Selected dishes apply" },
-
-  { id:"duo-plus", name:"WOK!N DUO PLUS", price:3395, serves:"For 2–3 people",
-    hero:"Chicken Chow Mein",
-    items:["Half soup","Half chicken dish","Half fried rice or half chow mein",
-           "2 mint margaritas","Fish crackers"],
-    note:"Selected dishes apply" },
-
-  { id:"trio", name:"WOK!N TRIO FEAST", price:4995, serves:"For 3–4 people",
-    hero:"Steamed Chicken Dumplings", popular:true,
-    items:["Steamed chicken dumplings","Half chicken dish","Half beef dish",
-           "Full fried rice","3 mint margaritas","Fish crackers"],
-    note:"Selected dishes apply" },
-
-  { id:"family", name:"WOK!N FAMILY FEAST", price:8495, serves:"For 4–5 people",
-    hero:"Spicy Honey Chicken Wings",
-    items:["Full soup, including Wok!n Special 19B","Spicy honey chicken wings",
-           "Half chicken dish","Half beef dish","Full fried rice or full chow mein",
-           "4 mint margaritas","Fish crackers"],
-    note:"Selected dishes apply" },
-
-  { id:"signature", name:"WOK!N SIGNATURE FEAST", price:12495, serves:"For 4–5 people",
-    hero:"Prawn Tempura",
-    items:["Full soup, including Wok!n Special 19B","Prawn tempura",
-           "Half chicken dish","Half beef dish","Full fried rice","Half chow mein",
-           "4 mint margaritas","Fish crackers"] },
-];
-
 const fmtPKR = n => "Rs. " + Math.round(Number(n) || 0).toLocaleString("en-PK");
 
 /* ------------------------------------------------------------------ */
@@ -382,9 +346,28 @@ function dealCard(deal){
 
   const ul = document.createElement("ul");
   ul.className = "dd-items";
-  deal.items.forEach(t => {
+  deal.items.forEach(item => {
     const li = document.createElement("li");
-    li.textContent = t;            // textContent = XSS-safe
+    if (typeof item === "string"){
+      li.textContent = item;                   // textContent = XSS-safe
+    } else {
+      // "Half chicken dish" doesn't say which one — let the guest choose.
+      li.className = "dd-pick";
+      const lbl = document.createElement("span");
+      lbl.className = "dd-pick-lbl";
+      lbl.textContent = item.label;
+      const sel = document.createElement("select");
+      sel.className = "dd-pick-sel";
+      sel.setAttribute("aria-label", item.label);
+      pickOptions(item.pick).forEach(name => {
+        const o = document.createElement("option");
+        o.value = o.textContent = name;
+        sel.appendChild(o);
+      });
+      const want = PICKS[item.pick] && PICKS[item.pick].fallback;
+      if (want && [...sel.options].some(o => o.value === want)) sel.value = want;
+      li.appendChild(lbl); li.appendChild(sel);
+    }
     ul.appendChild(li);
   });
   body.appendChild(ul);
@@ -413,7 +396,7 @@ function dealCard(deal){
   btn.className = "dd-add";
   btn.textContent = "ADD TO ORDER";
   btn.addEventListener("click", () => {
-    addDealToCart(deal);
+    addDealToCart(deal, card);
     btn.classList.add("is-added");
     btn.textContent = "ADDED ✓";
     setTimeout(() => { btn.classList.remove("is-added"); btn.textContent = "ADD TO ORDER"; }, 1600);
@@ -450,12 +433,24 @@ async function loadDishPhotos(){
     document.querySelectorAll(".dd-img[data-dish]").forEach(el => {
       const path = bySlug.get(el.dataset.dish);
       if (!path) return;
-      const url = `/dish-uploads/${path}?v=${DISH_PHOTO_REV}`;
-      // Only swap once it has actually loaded, so a missing file leaves
-      // the food fallback in place rather than an empty box.
-      const probe = new Image();
-      probe.onload = () => { el.style.backgroundImage = `url("${url}")`; };
-      probe.src = url;
+      // Vercel holds the copies migrated off Supabase; anything uploaded
+      // since lives only in Supabase storage. Try both, same order the
+      // menu does, and keep the food fallback if neither loads.
+      const base = (window.SUPABASE_URL || "").replace(/\/$/, "");
+      const candidates = [
+        `/dish-uploads/${path}?v=${DISH_PHOTO_REV}`,
+        `${base}/storage/v1/object/public/dish-images/${path}`,
+      ];
+      let i = 0;
+      const tryNext = () => {
+        if (i >= candidates.length) return;
+        const url = candidates[i++];
+        const probe = new Image();
+        probe.onload  = () => { el.style.backgroundImage = `url("${url}")`; };
+        probe.onerror = tryNext;
+        probe.src = url;
+      };
+      tryNext();
     });
   } catch (err){
     console.warn("[wokin/deals] dish photos unavailable:", err.message || err);
@@ -476,14 +471,24 @@ function readCartState(){
            couponLabel:"", payment:"cash" };
 }
 
-function addDealToCart(deal){
+function addDealToCart(deal, card){
   const state = readCartState();
-  const id = "deal::" + deal.id;
+
+  // The chosen dishes ride along in `variant` — that's the field the
+  // order actually stores and the kitchen ticket prints. `desc` isn't.
+  const picks = card
+    ? [...card.querySelectorAll(".dd-pick-sel")].map(s => s.value).filter(Boolean)
+    : [];
+  const variant = picks.length ? picks.join(" · ") : null;
+
+  // Two different sets of picks are two different lines, not one line
+  // of quantity two.
+  const id = "deal::" + deal.id + (picks.length ? "::" + picks.join("|") : "");
 
   const line = state.cart.find(c => c.id === id);
   if (line) line.qty += 1;
   else state.cart.push({
-    id, name: deal.name, desc: "🛵 Delivery deal · " + deal.serves, variant: null,
+    id, name: deal.name, desc: "🛵 Delivery deal · " + deal.serves, variant,
     image: FALLBACK_IMG.replace(/^\//, ""), price: deal.price, qty: 1, customId: null,
   });
 

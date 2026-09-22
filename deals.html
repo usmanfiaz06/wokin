@@ -250,7 +250,7 @@
 </div>
 
   <!-- appears once a deal is in the cart -->
-  <a class="cart-bar" id="cartBar" href="/" hidden>
+  <a class="cart-bar" id="cartBar" href="/?cart=1" hidden>
     <span class="cart-bar-count" id="cartBarCount">1</span>
     <span class="cart-bar-txt">
       <b id="cartBarLine">1 deal added</b>
@@ -260,6 +260,9 @@
   </a>
 </div>
 
+<!-- the live menu, so a deal's "half chicken dish" can be picked for real -->
+<script src="/menu-data.js"></script>
+<script src="/delivery-deals.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/supabase-client.js"></script>
 <script src="/deals.js"></script>

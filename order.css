@@ -1196,3 +1196,75 @@ body.is-store-closed .fab-cart-mid strong{ color:#aaa; }
   .cart-drawer{ width:100%; }
   .popular{ padding:32px 18px 16px;}
 }
+
+/* =====================================================================
+   DELIVERY DEALS  (home page section; the QR page styles its own)
+   ===================================================================== */
+.ddeals{ padding:34px 20px 6px; max-width:1200px; margin:0 auto; }
+.ddeals[hidden]{ display:none; }
+.ddeals-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:16px; }
+
+.dd-card{
+  display:flex; flex-direction:column;
+  background:var(--cream); border:3px solid var(--ink);
+  border-radius:var(--r-card); overflow:hidden;
+  box-shadow:var(--shadow-card);
+  transition:transform var(--t-fast), box-shadow var(--t-fast);
+}
+.dd-card.is-popular{ border-color:var(--red); }
+.dd-card.is-flash{ transform:translate(-2px,-2px); box-shadow:6px 6px 0 var(--red); }
+
+.dd-card .img{
+  position:relative; height:150px;
+  background:var(--paper) center/cover no-repeat;
+  border-bottom:3px solid var(--ink);
+}
+.dd-card .img::after{
+  content:""; position:absolute; inset:0;
+  background:linear-gradient(180deg,rgba(26,26,26,.4) 0%,transparent 40%,rgba(26,26,26,.45) 100%);
+}
+.dd-card .dd-flag,
+.dd-card .dd-serves{
+  position:absolute; z-index:1;
+  padding:5px 11px; border-radius:var(--r-pill);
+  font-family:'Bebas Neue',sans-serif; font-size:11.5px; letter-spacing:.13em;
+}
+.dd-card .dd-flag{ top:10px; left:10px; background:var(--red); color:#fff; }
+.dd-card .dd-serves{ bottom:10px; left:10px; background:rgba(255,248,232,.94); color:var(--ink); }
+
+.dd-card .pad{ padding:14px 16px 16px; display:flex; flex-direction:column; gap:8px; flex:1; }
+.dd-card h3{
+  font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:.02em;
+  line-height:1.05; color:var(--ink);
+}
+.dd-card.is-popular h3{ color:var(--red-deep); }
+
+.dd-card .dd-items{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:5px; }
+.dd-card .dd-items > li{
+  position:relative; padding-left:16px;
+  font-size:12.5px; line-height:1.4; color:var(--mute);
+}
+.dd-card .dd-items > li::before{
+  content:""; position:absolute; left:2px; top:.5em;
+  width:6px; height:6px; border-radius:50%; background:var(--red); opacity:.8;
+}
+.dd-card .dd-items li.dd-pick{ display:flex; flex-direction:column; gap:5px; }
+.dd-card .dd-items li.dd-pick > span{ color:var(--ink); font-weight:600; }
+.dd-card .dd-pick-sel{
+  width:100%; padding:8px 30px 8px 10px;
+  font-family:'Inter',sans-serif; font-size:13px; color:var(--ink);
+  background-color:var(--paper);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23E31B23' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 10px center; background-size:11px;
+  border:2px solid var(--line); border-radius:9px;
+  -webkit-appearance:none; appearance:none; cursor:pointer;
+}
+.dd-card .dd-pick-sel:focus{ outline:none; border-color:var(--red); }
+
+.dd-card .dd-note{ margin:0; font-size:11px; font-style:italic; color:var(--mute); }
+
+.dd-card .foot{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  margin-top:auto; padding-top:10px; border-top:2px dashed var(--line);
+}
+.dd-card .foot b{ font-family:'Bebas Neue',sans-serif; font-size:24px; color:var(--red); }
