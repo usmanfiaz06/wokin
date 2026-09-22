@@ -357,15 +357,23 @@ function dealCard(deal){
       lbl.className = "dd-pick-lbl";
       lbl.textContent = item.label;
       const sel = document.createElement("select");
-      sel.className = "dd-pick-sel";
+      sel.className = "dd-pick-sel is-empty";
       sel.setAttribute("aria-label", item.label);
+      // Nothing is chosen for the guest — they pick, and that unlocks
+      // the add button.
+      const ph = document.createElement("option");
+      ph.value = ""; ph.textContent = "Select dish";
+      sel.appendChild(ph);
       pickOptions(item.pick).forEach(name => {
         const o = document.createElement("option");
         o.value = o.textContent = name;
         sel.appendChild(o);
       });
-      const want = PICKS[item.pick] && PICKS[item.pick].fallback;
-      if (want && [...sel.options].some(o => o.value === want)) sel.value = want;
+      sel.value = "";
+      sel.addEventListener("change", () => {
+        sel.classList.toggle("is-empty", !sel.value);
+        syncAddButton(card);
+      });
       li.appendChild(lbl); li.appendChild(sel);
     }
     ul.appendChild(li);
@@ -396,16 +404,29 @@ function dealCard(deal){
   btn.className = "dd-add";
   btn.textContent = "ADD TO ORDER";
   btn.addEventListener("click", () => {
+    if (btn.disabled) return;
     addDealToCart(deal, card);
     btn.classList.add("is-added");
     btn.textContent = "ADDED ✓";
-    setTimeout(() => { btn.classList.remove("is-added"); btn.textContent = "ADD TO ORDER"; }, 1600);
+    setTimeout(() => { btn.classList.remove("is-added"); syncAddButton(card); }, 1600);
   });
   foot.appendChild(btn);
 
   body.appendChild(foot);
   card.appendChild(body);
+  syncAddButton(card);
   return card;
+}
+
+/* A deal can't be added until every "which dish?" has an answer. */
+function syncAddButton(card){
+  const btn = card.querySelector(".dd-add");
+  if (!btn) return;
+  const pending = [...card.querySelectorAll(".dd-pick-sel")].some(s => !s.value);
+  btn.disabled = pending;
+  if (!btn.classList.contains("is-added")){
+    btn.textContent = pending ? "SELECT DISHES" : "ADD TO ORDER";
+  }
 }
 
 /* Same slug rule the menu uses, so a deal's hero dish lines up with the

@@ -258,15 +258,22 @@ function deliveryDealCard(deal){
       const lbl = document.createElement("span");
       lbl.textContent = item.label;
       const sel = document.createElement("select");
-      sel.className = "dd-pick-sel";
+      sel.className = "dd-pick-sel is-empty";
       sel.setAttribute("aria-label", item.label);
+      // No dish is chosen for them — picking one unlocks "ADD".
+      const ph = document.createElement("option");
+      ph.value = ""; ph.textContent = "Select dish";
+      sel.appendChild(ph);
       pickOptions(item.pick).forEach(n => {
         const o = document.createElement("option");
         o.value = o.textContent = n;
         sel.appendChild(o);
       });
-      const want = PICKS[item.pick] && PICKS[item.pick].fallback;
-      if (want && [...sel.options].some(o => o.value === want)) sel.value = want;
+      sel.value = "";
+      sel.addEventListener("change", () => {
+        sel.classList.toggle("is-empty", !sel.value);
+        syncDealAddButton(card);
+      });
       li.appendChild(lbl); li.appendChild(sel);
     }
     ul.appendChild(li);
@@ -288,6 +295,7 @@ function deliveryDealCard(deal){
   btn.className = "add-btn";
   btn.textContent = "ADD +";
   btn.addEventListener("click", () => {
+    if (btn.disabled) return;
     addDeliveryDealToCart(deal, card);
     card.classList.add("is-flash");
     setTimeout(() => card.classList.remove("is-flash"), 600);
@@ -296,7 +304,17 @@ function deliveryDealCard(deal){
   pad.appendChild(foot);
 
   card.appendChild(pad);
+  syncDealAddButton(card);
   return card;
+}
+
+/* A deal can't be added until every "which dish?" has an answer. */
+function syncDealAddButton(card){
+  const btn = card.querySelector(".add-btn");
+  if (!btn) return;
+  const pending = [...card.querySelectorAll(".dd-pick-sel")].some(s => !s.value);
+  btn.disabled = pending;
+  btn.textContent = pending ? "SELECT" : "ADD +";
 }
 
 /* Same two-candidate chain every other dish photo uses. */

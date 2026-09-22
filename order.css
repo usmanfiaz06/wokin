@@ -1260,6 +1260,8 @@ body.is-store-closed .fab-cart-mid strong{ color:#aaa; }
   -webkit-appearance:none; appearance:none; cursor:pointer;
 }
 .dd-card .dd-pick-sel:focus{ outline:none; border-color:var(--red); }
+.dd-card .dd-pick-sel.is-empty{ color:var(--mute); border-style:dashed; }
+.dd-card .add-btn:disabled{ opacity:.45; cursor:not-allowed; }
 
 .dd-card .dd-note{ margin:0; font-size:11px; font-style:italic; color:var(--mute); }
 

@@ -542,6 +542,14 @@ body{
   cursor:pointer;
 }
 .dd-pick-sel:focus{ outline:none; border-color:var(--red); }
+/* nothing picked yet — reads as a prompt, not an answer */
+.dd-pick-sel.is-empty{ color:var(--mute-ink); border-style:dashed; }
+
+.dd-add:disabled{
+  background:rgba(26,26,26,.28); box-shadow:0 4px 0 0 rgba(26,26,26,.18);
+  cursor:not-allowed;
+}
+.dd-add:disabled:active{ transform:none; box-shadow:0 4px 0 0 rgba(26,26,26,.18); }
 
 .dd-note{
   margin:11px 0 0;
