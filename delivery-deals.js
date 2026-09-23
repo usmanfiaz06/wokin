@@ -23,7 +23,7 @@ const DELIVERY_DEALS = [
   { id:"duo-plus", name:"WOK!N DUO PLUS", price:3395, serves:"For 2–3 people",
     hero:"Chicken Chow Mein",
     items:[
-      "Half soup",
+      { pick:"soup", label:"Half soup" },
       { pick:"poultry",      label:"Half chicken dish" },
       { pick:"rice-noodles", label:"Half fried rice or chow mein" },
       "2 mint margaritas",
@@ -46,7 +46,7 @@ const DELIVERY_DEALS = [
   { id:"family", name:"WOK!N FAMILY FEAST", price:8495, serves:"For 4–5 people",
     hero:"Spicy Honey Chicken Wings",
     items:[
-      "Full soup, including Wok!n Special 19B",
+      { pick:"soup", label:"Full soup (Wok!n Special included)" },
       "Spicy honey chicken wings",
       { pick:"poultry",      label:"Half chicken dish" },
       { pick:"beef",         label:"Half beef dish" },
@@ -59,7 +59,7 @@ const DELIVERY_DEALS = [
   { id:"signature", name:"WOK!N SIGNATURE FEAST", price:12495, serves:"For 4–5 people",
     hero:"Prawn Tempura",
     items:[
-      "Full soup, including Wok!n Special 19B",
+      { pick:"soup", label:"Full soup (Wok!n Special included)" },
       "Prawn tempura",
       { pick:"poultry",  label:"Half chicken dish" },
       { pick:"beef",     label:"Half beef dish" },
@@ -77,6 +77,7 @@ const PICKS = {
   beef:           { cats:["beef"],             fallback:"Beef in Garlic Sauce" },
   rice:           { cats:["rice"],             fallback:"Chicken Fried Rice" },
   noodles:        { cats:["noodles"],          fallback:"Chicken Chow Mein" },
+  soup:           { cats:["soup"],             fallback:"Hot 'N' Sour Soup" },
   "rice-noodles": { cats:["rice","noodles"],   fallback:"Chicken Fried Rice" },
 };
 
@@ -138,6 +139,7 @@ const DEAL_CATEGORIES = [
   { id:"beef",    label:"Beef dishes",    note:'for every "half beef dish" line' },
   { id:"rice",    label:"Rice",           note:"for the fried-rice lines" },
   { id:"noodles", label:"Noodles",        note:"for the chow mein lines" },
+  { id:"soup",    label:"Soups",          note:"for the soup lines" },
 ];
 
 
