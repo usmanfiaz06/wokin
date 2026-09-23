@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>WOK!N · Admin · Guests</title>
+<title>WOK!N · Admin · Delivery</title>
 <meta name="robots" content="noindex, nofollow" />
 <meta name="theme-color" content="#1A1A1A" />
 <link rel="icon" type="image/jpeg" href="/Wokin.- logo.jpeg" />
@@ -62,8 +62,8 @@
       <a href="/admin/hours.html">HOURS</a>
       <a href="/admin/banners.html">DEALS</a>
       <a href="/admin/combos.html">COMBOS</a>
-      <a href="/admin/leads.html" class="is-on">★ GUESTS</a>
-      <a href="/admin/delivery.html">DELIVERY</a>
+      <a href="/admin/leads.html">GUESTS</a>
+      <a href="/admin/delivery.html" class="is-on">★ DELIVERY</a>
     </nav>
 
     <div class="top-right">
@@ -72,30 +72,23 @@
     </div>
   </header>
 
-  <section class="ld-wrap">
-    <header class="ld-head">
-      <h2><span class="em">📇</span> QR guests <small>· everyone who scanned the table QR at <b>/deals</b></small></h2>
+  <section class="dl-wrap">
+    <header class="dl-head">
+      <h2><span class="em">🛵</span> Delivery deals <small>· which dishes a customer may pick in a deal</small></h2>
+      <p class="hint">
+        The bundles say “half chicken dish” without naming one, so the customer
+        chooses from a dropdown. Tick the dishes that dropdown is allowed to
+        offer — this is what “selected dishes apply” actually means.
+        <b>Leave a section with nothing ticked and every dish in it stays on offer.</b>
+      </p>
     </header>
 
-    <div class="ld-stats">
-      <div class="ld-stat"><span class="lbl">TODAY</span><b id="stToday">—</b></div>
-      <div class="ld-stat"><span class="lbl">LAST 7 DAYS</span><b id="stWeek">—</b></div>
-      <div class="ld-stat"><span class="lbl">TOTAL SCANS</span><b id="stTotal">—</b></div>
-      <div class="ld-stat"><span class="lbl">UNIQUE NUMBERS</span><b id="stUnique">—</b></div>
-    </div>
+    <div class="dl-groups" id="dlGroups"></div>
 
-    <div class="ld-tools">
-      <input type="search" id="ldSearch" placeholder="Search name, mobile or email…" />
-      <button class="btn-ghost small" id="ldCopy">COPY NUMBERS</button>
-      <button class="btn-ghost small" id="ldExport">EXPORT CSV</button>
-      <button class="btn-ghost small" id="ldRefresh">↻ REFRESH</button>
+    <div class="dl-save">
+      <button class="btn-primary" id="dlSave">SAVE CHANGES</button>
+      <span class="dl-status" id="dlStatus"></span>
     </div>
-    <p class="hint" style="margin:8px 2px 18px">
-      New scans appear here live. Numbers are stored as <b>+92…</b> so they paste
-      straight into WhatsApp or an SMS blast.
-    </p>
-
-    <div class="ld-list" id="ldList"></div>
   </section>
 
 </div>
@@ -105,6 +98,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/supabase-client.js"></script>
-<script src="/admin/leads.js"></script>
+<script src="/menu-data.js"></script>
+<script src="/delivery-deals.js"></script>
+<script src="/admin/delivery.js"></script>
 </body>
 </html>

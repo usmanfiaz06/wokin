@@ -80,21 +80,73 @@ const PICKS = {
   "rice-noodles": { cats:["rice","noodles"],   fallback:"Chicken Fried Rice" },
 };
 
+/* Which dishes staff allow in the deal dropdowns, by menu category.
+   Filled by loadDealDishOptions(); a category that isn't in here has no
+   restriction, so the deals keep working before anyone sets one. */
+const DEAL_DISH_OPTIONS = new Map();
+
+/* Read the admin's choices. Safe to call before the table exists — the
+   dropdowns just fall back to the whole category. */
+async function loadDealDishOptions(db){
+  if (!db) return;
+  try {
+    const { data, error } = await db.from("deal_dish_options").select("category,dish_names");
+    if (error) throw error;
+    DEAL_DISH_OPTIONS.clear();
+    (data || []).forEach(r => {
+      if (Array.isArray(r.dish_names) && r.dish_names.length){
+        DEAL_DISH_OPTIONS.set(r.category, r.dish_names);
+      }
+    });
+  } catch (e){
+    console.warn("[wokin] deal dish options unavailable (offering the full menu):", e.message || e);
+  }
+}
+
 function pickOptions(key){
   const spec = PICKS[key];
   if (!spec) return [];
   if (typeof MENU_DATA === "undefined") return [spec.fallback];
+
   const names = [];
   spec.cats.forEach(id => {
     const cat = MENU_DATA.find(c => c.id === id);
-    if (cat) cat.items.forEach(d => { if (!d.tags || !d.tags.includes("hidden")) names.push(d.name); });
+    if (!cat) return;
+    const allowed = DEAL_DISH_OPTIONS.get(id);
+    cat.items.forEach(d => {
+      if (d.tags && d.tags.includes("hidden")) return;
+      // An empty/absent list means staff haven't narrowed this category.
+      if (allowed && !allowed.includes(d.name)) return;
+      names.push(d.name);
+    });
   });
   return names.length ? names : [spec.fallback];
 }
+
+/* Every dish a category could offer, ignoring the admin's filter —
+   what the admin screen ticks boxes against. */
+function allCategoryDishes(catId){
+  if (typeof MENU_DATA === "undefined") return [];
+  const cat = MENU_DATA.find(c => c.id === catId);
+  if (!cat) return [];
+  return cat.items.filter(d => !d.tags || !d.tags.includes("hidden")).map(d => d.name);
+}
+
+/* The categories the deals actually draw on, in a sensible admin order. */
+const DEAL_CATEGORIES = [
+  { id:"poultry", label:"Chicken dishes", note:'for every "half chicken dish" line' },
+  { id:"beef",    label:"Beef dishes",    note:'for every "half beef dish" line' },
+  { id:"rice",    label:"Rice",           note:"for the fried-rice lines" },
+  { id:"noodles", label:"Noodles",        note:"for the chow mein lines" },
+];
 
 
 if (typeof window !== "undefined"){
   window.DELIVERY_DEALS = DELIVERY_DEALS;
   window.PICKS          = PICKS;
-  window.pickOptions    = pickOptions;
+  window.pickOptions         = pickOptions;
+  window.loadDealDishOptions = loadDealDishOptions;
+  window.allCategoryDishes   = allCategoryDishes;
+  window.DEAL_CATEGORIES     = DEAL_CATEGORIES;
+  window.DEAL_DISH_OPTIONS   = DEAL_DISH_OPTIONS;
 }

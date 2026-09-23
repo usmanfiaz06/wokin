@@ -1099,3 +1099,61 @@ input{ font:inherit; color:inherit; }
   .ld-main{ order:4; flex:1 1 100%; }
   .ld-links{ gap:4px 14px; }
 }
+
+/* =====================================================================
+   DELIVERY DEALS  (delivery.html) — which dishes a deal dropdown offers
+   ===================================================================== */
+.dl-wrap{ max-width:1000px; margin:0 auto; padding:26px 20px 60px; }
+.dl-head h2{ font-family:'Bebas Neue',sans-serif; font-size:30px; letter-spacing:.02em; color:var(--cream); margin-bottom:4px; }
+.dl-head h2 small{ font-family:'Inter',sans-serif; font-size:13px; font-weight:400; color:var(--mute); letter-spacing:0; }
+.dl-wrap .hint{ max-width:70ch; margin:8px 0 22px; font-size:13px; line-height:1.55; color:var(--mute); }
+.dl-wrap .hint b{ color:var(--gold-bright); font-weight:600; }
+
+.dl-groups{ display:flex; flex-direction:column; gap:14px; }
+
+.dl-group{
+  background:var(--ink-2); border:2px solid var(--ink);
+  border-left:4px solid var(--gold); border-radius:var(--r-card);
+  padding:16px 18px 18px;
+}
+.dl-group-head{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+.dl-group-title{ margin-right:auto; }
+.dl-group-title h3{ font-family:'Bebas Neue',sans-serif; font-size:21px; letter-spacing:.04em; color:var(--cream); }
+.dl-group-title small{ display:block; font-size:12px; color:var(--mute); }
+
+.dl-count{
+  font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:.14em;
+  color:var(--green); white-space:nowrap;
+}
+.dl-count.is-all{ color:var(--gold-bright); }
+
+.dl-dishes{
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:7px;
+}
+.dl-dish{
+  display:flex; align-items:center; gap:9px;
+  padding:9px 11px;
+  background:rgba(255,255,255,.03);
+  border:1.5px solid transparent; border-radius:9px;
+  font-size:13.5px; color:rgba(244,233,212,.8);
+  cursor:pointer; transition:background var(--t), border-color var(--t);
+}
+.dl-dish:hover{ background:rgba(255,255,255,.07); }
+.dl-dish input{ width:17px; height:17px; accent-color:var(--red); flex-shrink:0; cursor:pointer; }
+.dl-dish:has(input:checked){
+  background:rgba(227,27,35,.14); border-color:rgba(227,27,35,.5); color:var(--cream);
+}
+
+.dl-save{
+  position:sticky; bottom:0;
+  display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  margin-top:20px; padding:14px 0;
+  background:linear-gradient(180deg, transparent, var(--ink-3) 35%);
+}
+.dl-status{ font-size:13px; color:var(--mute); }
+.dl-status.is-dirty{ color:var(--gold-bright); font-weight:600; }
+.dl-status.is-ok{ color:var(--green); font-weight:600; }
+
+@media (max-width:640px){
+  .dl-dishes{ grid-template-columns:1fr; }
+}

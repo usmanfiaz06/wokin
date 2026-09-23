@@ -309,9 +309,11 @@ function fmtHour(h){
 /* ------------------------------------------------------------------ */
 /*  DELIVERY DEALS                                                    */
 /* ------------------------------------------------------------------ */
-function renderDeliveryDeals(){
+async function renderDeliveryDeals(){
   const list = document.getElementById("ddList");
   if (!list) return;
+  // Which dishes staff allow in the dropdowns — read before building them.
+  await loadDealDishOptions(window.db);
   list.innerHTML = "";
   DELIVERY_DEALS.forEach(d => list.appendChild(dealCard(d)));
   loadDishPhotos();               // swap in the real photos once they arrive

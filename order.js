@@ -210,11 +210,13 @@ function dishPhotoUrl(path){
 /* ==================================================================
    DELIVERY DEALS  (defined in delivery-deals.js, shared with /deals)
 =================================================================== */
-function renderDeliveryDeals(){
+async function renderDeliveryDeals(){
   const sec  = document.getElementById("ddealsSection");
   const grid = document.getElementById("ddealsGrid");
   if (!sec || !grid || typeof DELIVERY_DEALS === "undefined") return;
 
+  // Which dishes staff allow in the dropdowns — read before building them.
+  await loadDealDishOptions(window.db);
   grid.innerHTML = "";
   DELIVERY_DEALS.forEach(d => grid.appendChild(deliveryDealCard(d)));
   sec.hidden = false;
