@@ -2,7 +2,7 @@
    WOK!N  ·  QR DEALS PAGE  ·  deals.js
    ---------------------------------------------------------------------
    Flow:
-     1. Guest scans the table QR  →  lands on the gate (name/mobile/email)
+     1. Guest scans the table QR  →  lands on the gate (name + mobile)
      2. Details are written to public.qr_leads  →  Admin → GUESTS
      3. The offers unlock. The details are remembered on the device, so a
         returning guest skips straight to the deals.
@@ -54,7 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
   phone.addEventListener("input", onPhoneInput);
 
   // clear the error state as soon as the guest starts fixing a field
-  ["fName","fPhone","fEmail"].forEach(id => {
+  ["fName","fPhone"].forEach(id => {
     document.getElementById(id).addEventListener("input", () => clearFieldError(id));
   });
 
@@ -70,8 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
 async function onSubmit(e){
   e.preventDefault();
 
-  const name  = document.getElementById("fName").value.trim();
-  const email = document.getElementById("fEmail").value.trim();
+  const name = document.getElementById("fName").value.trim();
   const rawPhone = document.getElementById("fPhone").value;
 
   let ok = true;
@@ -82,12 +81,9 @@ async function onSubmit(e){
   if (!phone){
     setFieldError("fPhone", "Enter a valid mobile, e.g. 300 1234567."); ok = false;
   }
-  if (!isEmail(email)){
-    setFieldError("fEmail", "That email doesn't look right."); ok = false;
-  }
   if (!ok) return;
 
-  const lead = { name, phone, email, source: SOURCE };
+  const lead = { name, phone, source: SOURCE };
 
   const btn = document.getElementById("unlockBtn");
   btn.disabled = true;
@@ -136,10 +132,6 @@ function normalizePhone(raw){
   return /^3\d{9}$/.test(d) ? "+92" + d : null;
 }
 
-function isEmail(v){
-  return /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(v);
-}
-
 /* ------------------------------------------------------------------ */
 /*  LEAD STORAGE                                                      */
 /* ------------------------------------------------------------------ */
@@ -151,7 +143,10 @@ async function saveLead(lead){
     const insert = window.db.from("qr_leads").insert({
       name:  lead.name,
       phone: lead.phone,
-      email: lead.email,
+      // The column is NOT NULL on tables created before we stopped
+      // asking for an email; an empty string keeps the insert valid
+      // without needing a migration first.
+      email: lead.email || "",
       source: lead.source || SOURCE,
       user_agent: (navigator.userAgent || "").slice(0, 300),
     });

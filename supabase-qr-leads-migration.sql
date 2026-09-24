@@ -18,7 +18,7 @@ create table if not exists public.qr_leads (
   id          uuid primary key default gen_random_uuid(),
   name        text not null,
   phone       text not null,
-  email       text not null,
+  email       text not null default '',   -- no longer collected; kept for older rows
   source      text not null default 'qr-deals',   -- which QR / campaign
   user_agent  text,
   created_at  timestamptz not null default now()

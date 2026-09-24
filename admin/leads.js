@@ -149,10 +149,14 @@ function leadRow(lead){
   tel.textContent = "📱 " + (lead.phone || "—");
   links.appendChild(tel);
 
-  const mail = document.createElement("a");
-  mail.href = "mailto:" + (lead.email || "");
-  mail.textContent = "✉️ " + (lead.email || "—");
-  links.appendChild(mail);
+  // Older scans captured an email; the form no longer asks for one, so
+  // only show the link when there's actually an address.
+  if (lead.email){
+    const mail = document.createElement("a");
+    mail.href = "mailto:" + lead.email;
+    mail.textContent = "✉️ " + lead.email;
+    links.appendChild(mail);
+  }
 
   if (lead.phone){
     const wa = document.createElement("a");
