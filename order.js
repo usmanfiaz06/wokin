@@ -215,7 +215,8 @@ async function renderDeliveryDeals(){
   const grid = document.getElementById("ddealsGrid");
   if (!sec || !grid || typeof DELIVERY_DEALS === "undefined") return;
 
-  // Which dishes staff allow in the dropdowns — read before building them.
+  // The deals themselves, then which dishes their dropdowns may offer.
+  await loadDeliveryDeals(window.db);
   await loadDealDishOptions(window.db);
   grid.innerHTML = "";
   DELIVERY_DEALS.forEach(d => grid.appendChild(deliveryDealCard(d)));

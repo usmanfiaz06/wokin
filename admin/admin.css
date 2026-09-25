@@ -1157,3 +1157,78 @@ input{ font:inherit; color:inherit; }
 @media (max-width:640px){
   .dl-dishes{ grid-template-columns:1fr; }
 }
+
+/* ---- delivery.html · editing the deals themselves ---- */
+.dl-section{ margin-bottom:34px; }
+.dl-section-head{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:4px; }
+.dl-section-head h3{
+  font-family:'Bebas Neue',sans-serif; font-size:23px; letter-spacing:.06em;
+  color:var(--gold-bright); margin-right:auto;
+}
+.dl-section-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+
+.dl-deals{ display:flex; flex-direction:column; gap:14px; margin-top:14px; }
+
+.dl-deal{
+  background:var(--ink-2); border:2px solid var(--ink);
+  border-left:4px solid var(--red); border-radius:var(--r-card);
+  padding:14px 16px 16px;
+}
+.dl-deal.is-off{ opacity:.55; border-left-color:var(--mute); }
+
+.dl-deal-head{ display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin-bottom:12px; }
+.dl-deal-name{
+  flex:1; min-width:180px;
+  padding:9px 12px;
+  font-family:'Bebas Neue',sans-serif; font-size:19px; letter-spacing:.03em;
+  color:var(--cream); background:rgba(255,255,255,.05);
+  border:2px solid transparent; border-radius:9px;
+}
+.dl-deal-name:focus{ outline:none; border-color:var(--gold-bright); background:rgba(255,255,255,.08); }
+
+.dl-icon{ padding:7px 10px; line-height:1; }
+.dl-icon:disabled{ opacity:.3; cursor:not-allowed; }
+.dl-del:hover{ background:var(--red); color:#fff; border-color:var(--red); }
+.dl-toggle.is-on{ background:rgba(46,139,87,.2); border-color:var(--green); color:#9DE0B6; }
+
+.dl-deal-fields{
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px;
+  margin-bottom:14px;
+}
+.dl-field{ display:flex; flex-direction:column; gap:5px; }
+.dl-field > span{
+  font-family:'Bebas Neue',sans-serif; font-size:11.5px; letter-spacing:.16em; color:var(--mute);
+}
+.dl-field input, .dl-field select{
+  width:100%; padding:9px 11px;
+  font-family:'Inter',sans-serif; font-size:13.5px;
+  color:var(--cream); background:var(--ink-3);
+  border:2px solid var(--ink); border-radius:9px;
+}
+.dl-field input:focus, .dl-field select:focus{ outline:none; border-color:var(--gold-bright); }
+
+.dl-items-label{
+  font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:.16em;
+  color:var(--mute); margin-bottom:7px;
+}
+.dl-items{ display:flex; flex-direction:column; gap:7px; }
+.dl-item{
+  display:flex; align-items:center; gap:7px; flex-wrap:wrap;
+  padding:8px 10px;
+  background:rgba(255,255,255,.03); border:1.5px solid var(--ink); border-radius:9px;
+}
+.dl-item select, .dl-item input{
+  padding:8px 10px; font-size:13px;
+  color:var(--cream); background:var(--ink-3);
+  border:2px solid var(--ink); border-radius:8px;
+}
+.dl-item select:focus, .dl-item input:focus{ outline:none; border-color:var(--gold-bright); }
+.dl-item-kind{ flex:0 0 130px; }
+.dl-item-cat{ flex:0 0 130px; }
+.dl-item-text{ flex:1; min-width:160px; }
+
+.dl-item-adds{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+
+@media (max-width:640px){
+  .dl-item-kind, .dl-item-cat{ flex:1 1 100%; }
+}

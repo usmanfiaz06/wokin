@@ -74,16 +74,38 @@
 
   <section class="dl-wrap">
     <header class="dl-head">
-      <h2><span class="em">🛵</span> Delivery deals <small>· which dishes a customer may pick in a deal</small></h2>
+      <h2><span class="em">🛵</span> Delivery deals <small>· edit the bundles and what customers may pick in them</small></h2>
       <p class="hint">
-        The bundles say “half chicken dish” without naming one, so the customer
-        chooses from a dropdown. Tick the dishes that dropdown is allowed to
-        offer — this is what “selected dishes apply” actually means.
-        <b>Leave a section with nothing ticked and every dish in it stays on offer.</b>
+        Edit the delivery bundles customers see on the menu and on the QR
+        page — what's in them, what they cost, and which dishes a customer
+        may choose where a line doesn't name one.
       </p>
     </header>
 
-    <div class="dl-groups" id="dlGroups"></div>
+    <!-- ===== the deals themselves ===== -->
+    <section class="dl-section">
+      <header class="dl-section-head">
+        <h3>The deals</h3>
+        <div class="dl-section-actions">
+          <button class="btn-ghost small" id="dlSeed" hidden>LOAD THE 5 STANDARD DEALS</button>
+          <button class="btn-ghost small" id="dlAddDeal">+ NEW DEAL</button>
+        </div>
+      </header>
+      <p class="hint" id="dlDealsHint"></p>
+      <div class="dl-deals" id="dlDeals"></div>
+    </section>
+
+    <!-- ===== which dishes the dropdowns may offer ===== -->
+    <section class="dl-section">
+      <header class="dl-section-head">
+        <h3>What the dropdowns may offer</h3>
+      </header>
+      <p class="hint">
+        Where a deal line says “customer picks”, these decide which dishes
+        appear. <b>Nothing ticked in a section = every dish in it stays on offer.</b>
+      </p>
+      <div class="dl-groups" id="dlGroups"></div>
+    </section>
 
     <div class="dl-save">
       <button class="btn-primary" id="dlSave">SAVE CHANGES</button>

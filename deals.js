@@ -307,7 +307,8 @@ function fmtHour(h){
 async function renderDeliveryDeals(){
   const list = document.getElementById("ddList");
   if (!list) return;
-  // Which dishes staff allow in the dropdowns — read before building them.
+  // The deals themselves, then which dishes their dropdowns may offer.
+  await loadDeliveryDeals(window.db);
   await loadDealDishOptions(window.db);
   list.innerHTML = "";
   DELIVERY_DEALS.forEach(d => list.appendChild(dealCard(d)));

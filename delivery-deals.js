@@ -10,7 +10,7 @@
    card — the photo itself is whatever the admin has set for that dish,
    so these stay in step with the menu. Prices exclude tax, which the
    order page adds at checkout, exactly as it does for every other line. */
-const DELIVERY_DEALS = [
+const DEFAULT_DELIVERY_DEALS = [
   { id:"duo", name:"WOK!N DUO", price:2695, serves:"For 2 people",
     hero:"Chicken with Chillies (Dry)",
     items:[
@@ -81,6 +81,40 @@ const PICKS = {
   "rice-noodles": { cats:["rice","noodles"],   fallback:"Chicken Fried Rice" },
 };
 
+/* The deals the pages actually render. Starts as the built-ins above and
+   is replaced by whatever staff have saved, once loadDeliveryDeals runs.
+   Mutated in place so both pages keep the same array reference. */
+const DELIVERY_DEALS = DEFAULT_DELIVERY_DEALS.map(d => ({ ...d }));
+
+function rowToDeal(row){
+  return {
+    id:      row.id,
+    name:    row.name,
+    price:   Number(row.price) || 0,
+    serves:  row.serves || "",
+    hero:    row.hero || "",
+    items:   Array.isArray(row.items) ? row.items : [],
+    note:    row.note || undefined,
+    popular: row.is_popular === true,
+  };
+}
+
+/* Read the deals staff have saved. An empty table or a missing one both
+   leave the built-in five in place, so the section never goes blank. */
+async function loadDeliveryDeals(db){
+  if (!db) return;
+  try {
+    const { data, error } = await db.from("delivery_deals")
+      .select("*").eq("is_active", true).order("position", { ascending: true });
+    if (error) throw error;
+    if (!data || !data.length) return;
+    DELIVERY_DEALS.length = 0;
+    data.forEach(r => DELIVERY_DEALS.push(rowToDeal(r)));
+  } catch (e){
+    console.warn("[wokin] delivery deals unavailable (using the built-in set):", e.message || e);
+  }
+}
+
 /* Which dishes staff allow in the deal dropdowns, by menu category.
    Filled by loadDealDishOptions(); a category that isn't in here has no
    restriction, so the deals keep working before anyone sets one. */
@@ -144,7 +178,9 @@ const DEAL_CATEGORIES = [
 
 
 if (typeof window !== "undefined"){
-  window.DELIVERY_DEALS = DELIVERY_DEALS;
+  window.DELIVERY_DEALS         = DELIVERY_DEALS;
+  window.DEFAULT_DELIVERY_DEALS = DEFAULT_DELIVERY_DEALS;
+  window.loadDeliveryDeals      = loadDeliveryDeals;
   window.PICKS          = PICKS;
   window.pickOptions         = pickOptions;
   window.loadDealDishOptions = loadDealDishOptions;
