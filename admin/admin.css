@@ -1232,3 +1232,45 @@ input{ font:inherit; color:inherit; }
 @media (max-width:640px){
   .dl-item-kind, .dl-item-cat{ flex:1 1 100%; }
 }
+
+/* ====================================================================
+   LEFT SIDEBAR SHELL (injected by admin-shell.js)
+==================================================================== */
+.side{ position:fixed; left:0; top:0; bottom:0; width:232px; z-index:40;
+  background:var(--ink-2); border-right:2px solid var(--ink);
+  display:flex; flex-direction:column; padding:16px 12px; }
+.side-brand{ display:flex; align-items:center; gap:10px; padding:4px 8px 16px;
+  border-bottom:1px solid rgba(255,255,255,.08); margin-bottom:12px; }
+.side-brand img{ width:42px; height:42px; border:2px solid var(--ink); border-radius:9px; background:#fff; padding:4px; object-fit:contain; }
+.side-brand b{ font-family:'Bebas Neue',sans-serif; font-size:21px; letter-spacing:.06em; display:block; line-height:1; color:var(--cream); }
+.side-brand em{ font-family:'Bebas Neue',sans-serif; font-size:10px; letter-spacing:.26em; color:var(--gold); font-style:normal; }
+.side-nav{ display:flex; flex-direction:column; gap:3px; flex:1; overflow-y:auto; }
+.side-link{ display:flex; align-items:center; gap:12px; padding:11px 13px; border-radius:10px;
+  text-decoration:none; color:rgba(244,233,212,.72);
+  font-family:'Bebas Neue',sans-serif; letter-spacing:.11em; font-size:15px; transition:background .15s, color .15s; }
+.side-link .si{ font-size:17px; width:22px; text-align:center; }
+.side-link:hover{ background:var(--ink-3); color:var(--gold-bright); }
+.side-link.is-on{ background:var(--red); color:#fff; }
+.side-foot{ border-top:1px solid rgba(255,255,255,.08); padding-top:12px; margin-top:8px;
+  display:flex; flex-direction:column; gap:10px; align-items:flex-start; }
+.side-foot .who{ font-size:11px; color:var(--mute); font-family:'Bebas Neue'; letter-spacing:.12em; }
+.side-foot #signOut{ width:100%; }
+.side-burger{ display:none; }
+.side-scrim{ display:none; }
+
+/* shift the app content over for the fixed sidebar, and slim the old top bar */
+body.has-sidebar .app{ padding-left:232px; }
+body.has-sidebar .top .brand,
+body.has-sidebar .top .top-nav{ display:none; }
+body.has-sidebar .top{ display:flex; align-items:center; justify-content:flex-end; gap:16px; }
+
+@media (max-width:900px){
+  body.has-sidebar .app{ padding-left:0; }
+  .side{ transform:translateX(-100%); transition:transform .22s ease; box-shadow:6px 0 30px rgba(0,0,0,.55); }
+  body.side-open .side{ transform:translateX(0); }
+  body.side-open .side-scrim{ display:block; position:fixed; inset:0; z-index:39; background:rgba(0,0,0,.5); }
+  .side-burger{ display:flex; position:fixed; top:10px; left:10px; z-index:50;
+    width:44px; height:44px; align-items:center; justify-content:center;
+    background:var(--red); color:#fff; border-radius:10px; font-size:22px; border:2px solid var(--ink); }
+  body.has-sidebar .top{ padding-left:58px; }
+}
