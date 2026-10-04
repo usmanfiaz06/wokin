@@ -1336,3 +1336,42 @@ body.has-sidebar .top{ display:flex; align-items:center; justify-content:flex-en
 .tb-stats span{ font-size:10px; letter-spacing:.14em; color:var(--mute); text-transform:uppercase; }
 .tb-actions{ display:flex; flex-wrap:wrap; gap:6px; }
 .tb-actions .cb-del:hover{ background:var(--red); color:#fff; border-color:var(--red); }
+
+/* ====================================================================
+   SITE TEXT admin (site.html)
+==================================================================== */
+.st-preview-wrap{ margin:18px 0 22px; }
+.st-preview-lbl{ font-family:'Bebas Neue',sans-serif; letter-spacing:.14em; font-size:11px; color:var(--mute); display:block; margin-bottom:6px; }
+.st-preview{ background:var(--ink); border:2px solid var(--gold-bright); border-radius:10px; overflow:hidden; }
+.st-preview-row{ display:flex; gap:40px; white-space:nowrap; padding:11px 0; animation:stMarquee 22s linear infinite;
+  font-family:'Bebas Neue',sans-serif; letter-spacing:.14em; font-size:14px; color:var(--gold-bright); }
+.st-preview-row span{ flex:0 0 auto; }
+@keyframes stMarquee{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
+
+.st-card{ background:var(--ink-2); border:2px solid var(--ink); border-radius:14px; padding:18px 18px 20px; margin-bottom:16px; }
+.st-card h3{ font-family:'Bebas Neue',sans-serif; letter-spacing:.04em; font-size:20px; color:var(--cream); margin-bottom:4px; }
+.st-card .hint{ color:var(--mute); font-size:13px; margin:0 0 14px; line-height:1.5; }
+.st-card .hint code{ background:var(--ink-3); color:var(--gold-bright); padding:1px 6px; border-radius:5px; font-size:12px; }
+
+.st-nums{ display:flex; gap:14px; flex-wrap:wrap; }
+.st-num{ flex:1; min-width:180px; display:flex; flex-direction:column; gap:6px; }
+.st-num span{ font-size:12px; letter-spacing:.06em; color:var(--cream); font-weight:600; }
+.st-num input{ padding:12px 14px; border:2px solid var(--ink); border-radius:10px; background:var(--ink-3); color:var(--cream); font-size:16px; }
+.st-num input:focus{ outline:none; border-color:var(--gold-bright); }
+
+.st-msgs{ display:flex; flex-direction:column; gap:9px; }
+.st-msg{ display:flex; gap:10px; align-items:center; }
+.st-msg input{ flex:1; padding:11px 13px; border:2px solid var(--ink); border-radius:10px; background:var(--ink-3); color:var(--cream); font-size:14px; }
+.st-msg input:focus{ outline:none; border-color:var(--gold-bright); }
+.st-msg-ctl{ display:flex; gap:5px; flex-shrink:0; }
+.st-msg-ctl .btn-ghost{ padding:7px 10px; }
+.st-msg-ctl .cb-del:hover{ background:var(--red); color:#fff; border-color:var(--red); }
+
+.st-save-bar{ display:flex; align-items:center; gap:16px; margin-top:22px; }
+.st-saved{ color:var(--green); font-family:'Bebas Neue',sans-serif; letter-spacing:.1em; font-size:14px; }
+
+@media (max-width:560px){
+  .st-nums{ flex-direction:column; }
+  .st-msg{ flex-wrap:wrap; }
+  .st-msg input{ min-width:100%; }
+}

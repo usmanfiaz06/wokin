@@ -18,6 +18,7 @@
     { href: "/admin/areas.html",   label: "Areas",    icon: "📍" },
     { href: "/admin/leads.html",   label: "Guests",   icon: "👥" },
     { href: "/admin/hours.html",   label: "Hours",    icon: "🕒" },
+    { href: "/admin/site.html",    label: "Site Text",icon: "📝" },
   ];
 
   function build() {

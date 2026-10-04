@@ -37,8 +37,9 @@ let activeAreas = DELIVERY_AREAS.slice();
 const TAX_RATE             = 0.15;
 const TAX_RATE_PICKUP_CARD = 0.05;   // pick-up paid by card → reduced tax
 const DELIVERY_FEE   = 100;
-const FREE_THRESHOLD = 1800;
-const ETA_MIN        = 45;
+// These two are defaults; Admin → Site Text can override them live (loadSiteSettings).
+let FREE_THRESHOLD = 1800;
+let ETA_MIN        = 45;
 
 // Pick-up: single branch — we just show the address + maps link (no area picker)
 const PICKUP_BRANCH_LABEL = "WOK!N — Empire Plaza, Gulberg Greens";
@@ -139,6 +140,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadAutoPromos();
   await loadBusinessHours();
   await loadDeliveryAreas();
+  await loadSiteSettings();
   startStoreStatusClock();
 
   renderMenu();
@@ -169,6 +171,49 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 let _openCartAfterLocation = false;
 
+
+/* ==================================================================
+   SITE TEXT SETTINGS  (admin-managed; ticker + key numbers)
+   Row id='home' in site_settings. {threshold}/{eta} tokens in each
+   ticker message are substituted live, so changing the numbers in
+   admin updates the ticker, cart ETA and confirmation together.
+=================================================================== */
+let TICKER_MESSAGES = null;   // null → keep the HTML fallback
+
+async function loadSiteSettings(){
+  if (!window.db) return;
+  try {
+    const { data, error } = await window.db.from("site_settings")
+      .select("*").eq("id", "home").limit(1);
+    if (error) throw error;
+    const s = (data || [])[0];
+    if (!s) return;
+    if (Number.isFinite(+s.free_delivery_threshold) && +s.free_delivery_threshold > 0) FREE_THRESHOLD = +s.free_delivery_threshold;
+    if (Number.isFinite(+s.eta_minutes)            && +s.eta_minutes > 0)            ETA_MIN        = +s.eta_minutes;
+    if (Array.isArray(s.ticker_messages) && s.ticker_messages.length){
+      TICKER_MESSAGES = s.ticker_messages.map(String).filter(m => m.trim());
+    }
+  } catch(e){ /* table may not exist yet — keep defaults */ }
+  renderTicker();
+}
+
+function _tickerText(msg){
+  return String(msg)
+    .replace(/\{threshold\}/gi, fmtPKR(FREE_THRESHOLD))
+    .replace(/\{eta\}/gi, String(ETA_MIN));
+}
+
+function renderTicker(){
+  const row = document.getElementById("tickerRow");
+  if (!row || !TICKER_MESSAGES || !TICKER_MESSAGES.length) return;
+  // two copies back-to-back so the CSS marquee loops seamlessly
+  const once = TICKER_MESSAGES.map(m => {
+    const span = document.createElement("span");
+    span.textContent = _tickerText(m);
+    return span.outerHTML;
+  }).join("");
+  row.innerHTML = once + once;
+}
 
 /* ==================================================================
    DELIVERY AREAS  (admin-managed; falls back to DELIVERY_AREAS)
@@ -1507,7 +1552,7 @@ function recalcCart(){
   document.getElementById("totDel").textContent = t.del === 0 ? "FREE" : fmtPKR(t.del);
   document.getElementById("totGrand").textContent = fmtPKR(t.grand);
   document.getElementById("totDelEta").textContent =
-    state.type === "pickup" ? "· ready ~20 min" : "· arrives ~45 min";
+    state.type === "pickup" ? "· ready ~20 min" : `· arrives ~${ETA_MIN} min`;
 
   // also keep checkout summary in sync if open
   if (document.getElementById("checkout") && !document.getElementById("checkout").hidden){
