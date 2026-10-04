@@ -41,8 +41,10 @@ create table if not exists public.waiter_calls (
   table_label text not null,
   note        text,
   resolved    boolean not null default false,
+  resolved_at timestamptz,
   created_at  timestamptz not null default now()
 );
+alter table public.waiter_calls add column if not exists resolved_at timestamptz;
 alter table public.waiter_calls enable row level security;
 drop policy if exists "anon_insert_calls"  on public.waiter_calls;
 drop policy if exists "admin_manage_calls" on public.waiter_calls;

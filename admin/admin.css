@@ -893,7 +893,7 @@ input{ font:inherit; color:inherit; }
 ===================================================================== */
 @media print {
   body { background:#fff !important; color:#000 !important; }
-  .top, .stats, .board, .day-filter, .new-order-alarm,
+  .top, .stats, .board, .day-filter, .new-order-alarm, .waiter-alarm,
   .modal-actions, .modal-close, .m-msg-edit, .toast { display:none !important; }
   .modal[hidden] { display:none !important; }
   /* Print the open order modal as a plain receipt (no clipping) */
@@ -946,6 +946,40 @@ input{ font:inherit; color:inherit; }
 @media (max-width:540px){
   .new-order-alarm .noa-text{ font-size:15px; }
   .new-order-alarm .noa-text b{ font-size:18px; }
+}
+
+/* Waiter-call banner (dine-in guests calling for service) */
+.waiter-alarm[hidden]{ display:none; }
+.waiter-alarm{
+  display:flex; align-items:flex-start; gap:12px;
+  margin:0; padding:12px 20px;
+  background:var(--gold, #D4A017); color:var(--ink);
+  border-bottom:3px solid var(--ink);
+  animation:waFlash 1.2s steps(1,end) infinite;
+}
+.waiter-alarm .wa-bell{ font-size:22px; line-height:1.4; animation:noaWiggle .9s ease-in-out infinite; }
+.waiter-alarm .wa-list{ flex:1; display:flex; flex-direction:column; gap:6px; }
+.waiter-alarm .wa-item{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+}
+.waiter-alarm .wa-tbl{
+  font-family:'Bebas Neue',sans-serif; letter-spacing:.08em; font-size:19px;
+  background:var(--ink); color:#fff; padding:3px 12px; border-radius:var(--r-pill, 999px);
+}
+.waiter-alarm .wa-ago{ font-size:13px; font-weight:600; opacity:.85; }
+.waiter-alarm .wa-done{
+  margin-left:auto; flex:0 0 auto; padding:7px 16px;
+  background:var(--ink); color:#fff; border:none; border-radius:var(--r-pill, 999px);
+  font-family:'Bebas Neue',sans-serif; letter-spacing:.14em; font-size:13px;
+  cursor:pointer; transition:opacity .15s;
+}
+.waiter-alarm .wa-done:hover{ opacity:.85; }
+.waiter-alarm .wa-done:disabled{ opacity:.5; cursor:default; }
+
+@keyframes waFlash{ 0%,100%{ background:var(--gold, #D4A017); } 50%{ background:var(--gold-bright, #F0BC2E); } }
+
+@media (max-width:540px){
+  .waiter-alarm .wa-tbl{ font-size:16px; }
 }
 
 /* ====================================================================

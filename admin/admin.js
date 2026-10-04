@@ -49,6 +49,9 @@ const fmtTime = iso => {
   return sameDay ? t : d.toLocaleDateString("en-PK", { month:"short", day:"numeric" }) + " · " + t;
 };
 const minutesAgo = iso => Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+const escapeHtml = s => String(s == null ? "" : s)
+  .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+  .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
 /* ------------------------------------------------------------------ */
 /*  STATE                                                             */
@@ -56,6 +59,7 @@ const minutesAgo = iso => Math.round((Date.now() - new Date(iso).getTime()) / 60
 const state = {
   orders: new Map(),    // id → order row
   itemsByOrder: new Map(), // order_id → [items]
+  waiterCalls: new Map(), // id → unresolved waiter_call row
   realtime: null,
   currentModalId: null,
   dayFilter: "today",   // today | yesterday | 7days | all | "YYYY-MM-DD"
@@ -250,6 +254,8 @@ async function refreshAll(){
 
   renderBoard();
   renderStats();
+
+  await loadWaiterCalls();
 }
 
 /* ------------------------------------------------------------------ */
@@ -267,7 +273,28 @@ function subscribeRealtime(){
     .on("postgres_changes",
         { event: "INSERT", schema: "public", table: "order_items" },
         onItemInsert)
+    .on("postgres_changes",
+        { event: "*", schema: "public", table: "waiter_calls" },
+        onWaiterCallChange)
     .subscribe();
+}
+
+function onWaiterCallChange(payload){
+  const row = payload.new || payload.old;
+  if (!row) return;
+  const resolved = payload.eventType === "DELETE" || (payload.new && payload.new.resolved);
+  if (resolved){
+    state.waiterCalls.delete(row.id);
+  } else {
+    state.waiterCalls.set(row.id, payload.new);
+    if (payload.eventType === "INSERT"){
+      toast(`🛎️ TABLE ${payload.new.table_label} is calling`);
+      // Re-use the order alarm so staff hear it even on another tab
+      alarm.snoozed = false;
+      if (alarm.enabled){ try { startAlarmSound(); } catch(e){} }
+    }
+  }
+  renderWaiterCalls();
 }
 
 function onOrderChange(payload){
@@ -431,6 +458,67 @@ function setSoundEnabled(on){
 }
 
 /* ------------------------------------------------------------------ */
+/*  WAITER CALLS (dine-in "Call waiter")                              */
+/* ------------------------------------------------------------------ */
+async function loadWaiterCalls(){
+  try {
+    const { data, error } = await window.db
+      .from("waiter_calls")
+      .select("*")
+      .eq("resolved", false)
+      .order("created_at", { ascending: true });
+    if (error){
+      // table may not exist yet (migration not run) — fail quietly
+      if (!/relation .* does not exist/i.test(error.message || "")) {
+        console.warn("[admin] loadWaiterCalls:", error.message);
+      }
+      return;
+    }
+    state.waiterCalls.clear();
+    (data || []).forEach(c => state.waiterCalls.set(c.id, c));
+    renderWaiterCalls();
+  } catch(e){ console.warn("[admin] loadWaiterCalls threw", e); }
+}
+
+function renderWaiterCalls(){
+  const banner = document.getElementById("waiterBanner");
+  const list   = document.getElementById("waiterList");
+  if (!banner || !list) return;
+  const calls = [...state.waiterCalls.values()]
+    .sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+  banner.hidden = calls.length === 0;
+  if (!calls.length){ list.innerHTML = ""; return; }
+  list.innerHTML = calls.map(c => {
+    const note = c.note ? ` · ${escapeHtml(c.note)}` : "";
+    return '<div class="wa-item" data-id="' + c.id + '">' +
+             '<span class="wa-tbl">TABLE ' + escapeHtml(c.table_label || "?") + '</span>' +
+             '<span class="wa-ago">' + minutesAgo(c.created_at) + 'm ago' + note + '</span>' +
+             '<button type="button" class="wa-done" data-id="' + c.id + '">HANDLED</button>' +
+           '</div>';
+  }).join("");
+  list.querySelectorAll(".wa-done").forEach(btn =>
+    btn.addEventListener("click", () => resolveCall(btn.dataset.id)));
+}
+
+async function resolveCall(id){
+  const btn = document.querySelector('.wa-done[data-id="' + id + '"]');
+  if (btn){ btn.disabled = true; btn.textContent = "…"; }
+  const { error } = await window.db
+    .from("waiter_calls")
+    .update({ resolved: true, resolved_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error){
+    toast("Couldn't clear call: " + error.message);
+    if (btn){ btn.disabled = false; btn.textContent = "HANDLED"; }
+    return;
+  }
+  state.waiterCalls.delete(id);
+  renderWaiterCalls();
+  // stop the alarm if nothing else is pending
+  if (!countNewOrders() && !state.waiterCalls.size) stopAlarmSound();
+}
+
+/* ------------------------------------------------------------------ */
 /*  DAY FILTER                                                        */
 /* ------------------------------------------------------------------ */
 function _startOfDayPKT(d = new Date()){
@@ -522,9 +610,9 @@ function renderBoard({ flashId } = {}){
       const order = state.orders.get(orderId);
       if (!order) return;
       if (order.status === s.key) return; // dropped onto same column
-      // Pickup orders skip out_for_delivery; bounce that
-      if (order.order_type === "pickup" && s.key === "out_for_delivery"){
-        toast("Pick-up orders skip OUT-FOR-DELIVERY · use READY → DELIVERED");
+      // Pickup & dine-in skip out_for_delivery; bounce that
+      if ((order.order_type === "pickup" || order.order_type === "dine-in") && s.key === "out_for_delivery"){
+        toast("Pick-up / dine-in orders skip OUT-FOR-DELIVERY · use READY → DELIVERED");
         return;
       }
       updateStatus(orderId, s.key);
@@ -566,9 +654,14 @@ function orderCard(o, flash){
 
   // figure out the next status for the one-click button
   const isPickup = o.order_type === "pickup";
+  const isDinein = o.order_type === "dine-in";
+  const isTableside = isPickup || isDinein;          // both skip out-for-delivery
   let next     = STATUSES.find(s => s.key === o.status)?.next;
   let nextHint = STATUSES.find(s => s.key === o.status)?.nextLabel;
-  if (isPickup && PICKUP_NEXT[o.status]) { next = PICKUP_NEXT[o.status]; nextHint = "MARK PICKED UP"; }
+  if (isTableside && PICKUP_NEXT[o.status]) { next = PICKUP_NEXT[o.status]; nextHint = isDinein ? "MARK SERVED" : "MARK PICKED UP"; }
+  const typePill = isDinein
+    ? `<span class="pill dine-in">🍽️ DINE-IN${o.table_label ? " · " + o.table_label : ""}</span>`
+    : `<span class="pill ${o.order_type}">${isPickup ? "PICK-UP" : "DELIVERY"}</span>`;
 
   card.innerHTML = `
     ${next ? `<button class="oc-advance" data-next="${next}" title="${nextHint}" aria-label="${nextHint}">▸</button>` : ""}
@@ -576,11 +669,11 @@ function orderCard(o, flash){
       <span class="oc-num">${o.order_number}</span>
       <span class="oc-time">${minutesAgo(o.created_at)}m ago</span>
     </div>
-    <div class="oc-cust">${o.customer_name}</div>
+    <div class="oc-cust">${isDinein && o.table_label ? o.table_label : o.customer_name}</div>
     <div class="oc-meta">
-      <span class="pill ${o.order_type}">${isPickup ? "PICK-UP" : "DELIVERY"}</span>
-      ${o.area ? `<span class="pill">${o.area}</span>`:""}
-      <span class="pill">${o.customer_phone}</span>
+      ${typePill}
+      ${(!isDinein && o.area) ? `<span class="pill">${o.area}</span>`:""}
+      ${!isDinein ? `<span class="pill">${o.customer_phone}</span>` : ""}
     </div>
     <div class="oc-items">${itemsLabel}</div>
     ${o.status === "cancelled" ? `<div class="oc-cancel-reason">✕ ${o.cancel_reason ? o.cancel_reason : "No reason given"}</div>` : ""}
@@ -672,7 +765,14 @@ async function openModal(id){
 
   // delivery
   const dt = document.getElementById("mDeliveryTitle");
-  if (o.order_type === "pickup"){
+  if (o.order_type === "dine-in"){
+    dt.textContent = "★ DINE-IN";
+    document.getElementById("mDelivery").innerHTML = `
+      <dt>Table</dt><dd>${o.table_label || o.area || "—"}</dd>
+      <dt>Type</dt><dd>Dine-in · pay at table</dd>
+      <dt>Kitchen note</dt><dd>${o.delivery_instructions || `<span class="none">—</span>`}</dd>
+    `;
+  } else if (o.order_type === "pickup"){
     dt.textContent = "★ PICK-UP";
     document.getElementById("mDelivery").innerHTML = `
       <dt>Type</dt><dd>Customer pick-up</dd>
@@ -771,12 +871,13 @@ function renderActions(o){
   const wrap = document.getElementById("mActions");
   wrap.innerHTML = "";
   const isPickup = o.order_type === "pickup";
+  const isTableside = isPickup || o.order_type === "dine-in";
 
   let nextStatus = STATUSES.find(s => s.key === o.status)?.next;
   let nextLabel  = STATUSES.find(s => s.key === o.status)?.nextLabel;
-  if (isPickup && PICKUP_NEXT[o.status]){
+  if (isTableside && PICKUP_NEXT[o.status]){
     nextStatus = PICKUP_NEXT[o.status];
-    nextLabel  = "MARK PICKED UP";
+    nextLabel  = o.order_type === "dine-in" ? "MARK SERVED" : "MARK PICKED UP";
   }
 
   if (nextStatus){
