@@ -10,6 +10,7 @@ body{ font-family:'Inter',system-ui,sans-serif; background:var(--cream); color:v
   -webkit-font-smoothing:antialiased; padding-bottom:88px; }
 
 .t-loading,.t-error{ min-height:70vh; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; text-align:center; padding:40px 24px; color:var(--mute); }
+.t-loading[hidden],.t-error[hidden]{ display:none; }
 .t-error h2{ font-family:'Bebas Neue',sans-serif; font-size:34px; color:var(--ink); }
 .t-error a{ color:var(--red); font-weight:700; }
 

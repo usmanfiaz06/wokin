@@ -288,7 +288,7 @@ function onWaiterCallChange(payload){
   } else {
     state.waiterCalls.set(row.id, payload.new);
     if (payload.eventType === "INSERT"){
-      toast(`🛎️ TABLE ${payload.new.table_label} is calling`);
+      toast(`🛎️ ${payload.new.table_label} is calling`);
       // Re-use the order alarm so staff hear it even on another tab
       alarm.snoozed = false;
       if (alarm.enabled){ try { startAlarmSound(); } catch(e){} }
@@ -491,7 +491,7 @@ function renderWaiterCalls(){
   list.innerHTML = calls.map(c => {
     const note = c.note ? ` · ${escapeHtml(c.note)}` : "";
     return '<div class="wa-item" data-id="' + c.id + '">' +
-             '<span class="wa-tbl">TABLE ' + escapeHtml(c.table_label || "?") + '</span>' +
+             '<span class="wa-tbl">' + escapeHtml(c.table_label || "Table ?") + '</span>' +
              '<span class="wa-ago">' + minutesAgo(c.created_at) + 'm ago' + note + '</span>' +
              '<button type="button" class="wa-done" data-id="' + c.id + '">HANDLED</button>' +
            '</div>';
