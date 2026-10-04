@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>WOK!N · Admin · Tables & QR</title>
+<meta name="robots" content="noindex, nofollow" />
+<meta name="theme-color" content="#1A1A1A" />
+<link rel="icon" type="image/jpeg" href="/Wokin.- logo.jpeg" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&family=Caveat:wght@500;700&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="auth" id="authScreen">
+  <div class="auth-card">
+    <div class="auth-head">
+      <img src="/Wokin.- logo.jpeg" alt="WOK!N" />
+      <div><span class="cn">炒</span><b>WOK!N</b><em>ADMIN · BACK-OF-HOUSE</em></div>
+    </div>
+    <h1>Sign <em>in.</em></h1>
+    <p class="auth-sub">Restaurant staff only.</p>
+    <form id="loginForm" class="auth-form" novalidate action="javascript:void(0)">
+      <div class="field"><label for="email">Email</label><input type="email" id="email" required autocomplete="username" /></div>
+      <div class="field"><label for="password">Password</label><input type="password" id="password" required autocomplete="current-password" /></div>
+      <p class="auth-err" id="authErr" hidden></p>
+      <button type="button" id="loginBtn" class="btn-primary big">SIGN IN →</button>
+    </form>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="appScreen" hidden>
+  <header class="top">
+    <a href="/admin/" class="brand">
+      <img src="/Wokin.- logo.jpeg" alt="WOK!N" />
+      <span class="cn">炒</span>
+      <span class="brand-text"><b>WOK!N</b><em>ADMIN</em></span>
+    </a>
+    <nav class="top-nav"></nav>
+    <div class="top-right">
+      <span class="who" id="whoami">—</span>
+      <button class="btn-ghost small" id="signOut">SIGN OUT</button>
+    </div>
+  </header>
+
+  <section class="tb-wrap">
+    <header class="tb-head">
+      <h2><span class="em">🍽️</span> Tables &amp; QR codes <small>· print a QR for each table, takeaway &amp; delivery</small></h2>
+    </header>
+
+    <div class="tb-add">
+      <input type="text" id="tbLabel" maxlength="40" placeholder="Label… e.g. Table 5" />
+      <select id="tbKind">
+        <option value="dine-in">Dine-in (table)</option>
+        <option value="takeaway">Takeaway</option>
+        <option value="delivery">Delivery</option>
+      </select>
+      <button class="btn-primary" id="tbAdd">+ ADD</button>
+    </div>
+    <p class="hint" style="margin:6px 2px 20px">Dine-in QRs open a table ordering page (order + call waiter). Takeaway/Delivery QRs open your normal ordering site. Scans &amp; orders are counted per QR.</p>
+
+    <div class="tb-grid" id="tbGrid"></div>
+  </section>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/supabase-client.js"></script>
+<script src="/admin/admin-shell.js"></script>
+<script src="/admin/tables.js"></script>
+</body>
+</html>

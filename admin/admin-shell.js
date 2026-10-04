@@ -9,6 +9,7 @@
 (function () {
   const NAV = [
     { href: "/admin/",             label: "Orders",   icon: "🧾" },
+    { href: "/admin/tables.html",  label: "Tables & QR", icon: "🍽️" },
     { href: "/admin/menu.html",    label: "Menu",     icon: "🍜" },
     { href: "/admin/combos.html",  label: "Combos",   icon: "🍱" },
     { href: "/admin/banners.html", label: "Deals",    icon: "🔥" },
