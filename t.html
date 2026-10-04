@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>WOK!N · Order at your table</title>
+<meta name="robots" content="noindex, nofollow" />
+<meta name="theme-color" content="#1A1A1A" />
+<link rel="icon" type="image/jpeg" href="/Wokin.- logo.jpeg" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=Caveat:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/table.css">
+</head>
+<body>
+
+<div class="t-loading" id="tLoading">
+  <img src="/Wokin.- logo.jpeg" alt="WOK!N" style="width:60px;height:60px;border-radius:12px" />
+  <p>Loading the menu…</p>
+</div>
+
+<div class="t-error" id="tError" hidden>
+  <h2>Hmm, that QR isn't active</h2>
+  <p>Please ask our staff for help, or <a href="/">order online here</a>.</p>
+</div>
+
+<main id="tApp" hidden>
+  <header class="t-top">
+    <img src="/Wokin.- logo.jpeg" alt="WOK!N" />
+    <b>WOK!N</b>
+    <span class="t-table" id="tTable">Table</span>
+  </header>
+  <div class="t-cats" id="tCats"></div>
+  <div class="t-menu" id="tMenu"></div>
+  <button class="t-cartbar" id="tCartBar" hidden>
+    VIEW ORDER · <b id="tCartCount">0</b> · <span id="tCartTotal"></span>
+  </button>
+</main>
+
+<!-- cart sheet -->
+<div class="t-sheet" id="tSheet" hidden>
+  <div class="t-sheet-card">
+    <header><h3>Your order</h3><button id="tSheetClose" aria-label="Close">✕</button></header>
+    <div id="tCartList"></div>
+    <div class="t-sheet-total">TOTAL <b id="tGrand">Rs. 0</b></div>
+    <textarea class="t-note" id="tNote" rows="2" placeholder="Note for the kitchen (optional) — e.g. less spicy"></textarea>
+    <button class="t-place" id="tPlace" style="margin-top:12px">PLACE ORDER</button>
+    <p style="text-align:center;color:var(--mute);font-size:12px;margin-top:10px">Pay at the table — cash or card.</p>
+  </div>
+</div>
+
+<!-- order status -->
+<div class="t-status" id="tStatus" hidden>
+  <div class="t-status-card">
+    <h2>Order <em>placed!</em></h2>
+    <p class="t-status-num" id="tStatusNum"></p>
+    <div class="t-steps" id="tSteps"></div>
+    <button class="t-waiter" id="tWaiter">🔔 CALL WAITER</button>
+    <button class="t-more" id="tMore">+ ORDER MORE</button>
+  </div>
+</div>
+
+<div class="t-toast" id="tToast" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/supabase-client.js"></script>
+<script src="/menu-data.js"></script>
+<script src="/dish-images.js"></script>
+<script src="/table.js"></script>
+</body>
+</html>
