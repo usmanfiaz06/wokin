@@ -30,6 +30,9 @@ const DELIVERY_AREAS = [
   "Airport Housing Society",
   "Khanna Pul",
 ];
+// Live list used everywhere (admin-managed via the delivery_areas table,
+// falling back to DELIVERY_AREAS above until/if the admin sets their own).
+let activeAreas = DELIVERY_AREAS.slice();
 
 const TAX_RATE             = 0.15;
 const TAX_RATE_PICKUP_CARD = 0.05;   // pick-up paid by card → reduced tax
@@ -135,6 +138,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadCustomDishes();
   await loadAutoPromos();
   await loadBusinessHours();
+  await loadDeliveryAreas();
   startStoreStatusClock();
 
   renderMenu();
@@ -165,6 +169,21 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 let _openCartAfterLocation = false;
 
+
+/* ==================================================================
+   DELIVERY AREAS  (admin-managed; falls back to DELIVERY_AREAS)
+=================================================================== */
+async function loadDeliveryAreas(){
+  if (!window.db) return;
+  try {
+    const { data, error } = await window.db.from("delivery_areas")
+      .select("name,position").eq("is_active", true).order("position", { ascending: true });
+    if (error) throw error;
+    const names = (data || []).map(d => (d.name || "").trim()).filter(Boolean);
+    if (names.length) activeAreas = names;   // else keep the built-in fallback
+  } catch(e){ /* table may not exist yet — keep defaults */ }
+  populateAreaSelect();
+}
 
 /* ==================================================================
    DEALS MARQUEE  (admin-managed promo banners)
@@ -858,7 +877,7 @@ function bindLocationModal(){
 function renderAreaList(filter){
   const ul = document.getElementById("areaList");
   const term = filter.trim().toLowerCase();
-  const matches = DELIVERY_AREAS.filter(a => a.toLowerCase().includes(term));
+  const matches = activeAreas.filter(a => a.toLowerCase().includes(term));
   ul.innerHTML = "";
   if (!matches.length){
     const li = document.createElement("li");
@@ -896,7 +915,7 @@ function syncBarLocation(){
 function populateAreaSelect(){
   const sel = document.getElementById("coArea");
   if (!sel) return;
-  sel.innerHTML = DELIVERY_AREAS.map(a =>
+  sel.innerHTML = activeAreas.map(a =>
     `<option value="${a}" ${state.area===a?"selected":""}>${a}</option>`
   ).join("");
 }
@@ -1682,7 +1701,7 @@ function openCheckout(){
 
   populateAreaSelect();
   document.getElementById("coArea").value =
-    (state.area && DELIVERY_AREAS.includes(state.area)) ? state.area : DELIVERY_AREAS[0];
+    (state.area && activeAreas.includes(state.area)) ? state.area : activeAreas[0];
   reflectPaymentMethod();
   document.getElementById("checkout").hidden = false;
   document.body.classList.add("state-locked");
