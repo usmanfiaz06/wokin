@@ -1375,3 +1375,22 @@ body.has-sidebar .top{ display:flex; align-items:center; justify-content:flex-en
   .st-msg{ flex-wrap:wrap; }
   .st-msg input{ min-width:100%; }
 }
+
+/* ====================================================================
+   MENU CATEGORIES admin (categories.html)
+==================================================================== */
+.cat-row{ display:flex; align-items:center; gap:10px; padding:8px; background:var(--ink-2);
+  border:2px solid var(--ink); border-left:4px solid var(--gold-bright); border-radius:12px; }
+.cat-row.is-off{ opacity:.6; border-left-color:var(--mute); }
+.cat-emoji{ width:54px; flex:0 0 auto; text-align:center; padding:11px 6px; border:2px solid var(--ink);
+  border-radius:10px; background:var(--ink-3); color:var(--cream); font-size:20px; }
+.cat-name{ flex:1; min-width:0; padding:11px 13px; border:2px solid var(--ink); border-radius:10px;
+  background:var(--ink-3); color:var(--cream); font-size:15px; }
+.cat-emoji:focus,.cat-name:focus{ outline:none; border-color:var(--gold-bright); }
+.cat-ctl{ display:flex; align-items:center; gap:6px; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end; }
+.cat-ctl .bn-status{ min-width:64px; text-align:right; }
+@media (max-width:620px){
+  .cat-row{ flex-wrap:wrap; }
+  .cat-name{ min-width:60%; }
+  .cat-ctl{ width:100%; justify-content:space-between; }
+}

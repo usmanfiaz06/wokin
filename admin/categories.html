@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>WOK!N · Admin · Categories</title>
+<meta name="robots" content="noindex, nofollow" />
+<meta name="theme-color" content="#1A1A1A" />
+<link rel="icon" type="image/jpeg" href="/Wokin.- logo.jpeg" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&family=Caveat:wght@500;700&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="auth" id="authScreen">
+  <div class="auth-card">
+    <div class="auth-head">
+      <img src="/Wokin.- logo.jpeg" alt="WOK!N" />
+      <div><span class="cn">炒</span><b>WOK!N</b><em>ADMIN · BACK-OF-HOUSE</em></div>
+    </div>
+    <h1>Sign <em>in.</em></h1>
+    <p class="auth-sub">Restaurant staff only.</p>
+    <form id="loginForm" class="auth-form" novalidate action="javascript:void(0)">
+      <div class="field"><label for="email">Email</label><input type="email" id="email" required autocomplete="username" /></div>
+      <div class="field"><label for="password">Password</label><input type="password" id="password" required autocomplete="current-password" /></div>
+      <p class="auth-err" id="authErr" hidden></p>
+      <button type="button" id="loginBtn" class="btn-primary big">SIGN IN →</button>
+    </form>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="appScreen" hidden>
+  <header class="top">
+    <a href="/admin/" class="brand">
+      <img src="/Wokin.- logo.jpeg" alt="WOK!N" />
+      <span class="cn">炒</span>
+      <span class="brand-text"><b>WOK!N</b><em>ADMIN</em></span>
+    </a>
+    <nav class="top-nav">
+      <a href="/admin/">ORDERS</a>
+      <a href="/admin/menu.html">MENU</a>
+      <a href="/admin/categories.html" class="is-on">★ CATEGORIES</a>
+    </nav>
+    <div class="top-right">
+      <span class="who" id="whoami">—</span>
+      <button class="btn-ghost small" id="signOut">SIGN OUT</button>
+    </div>
+  </header>
+
+  <section class="bn-wrap">
+    <header class="bn-head">
+      <h2><span class="em">🍜</span> Menu categories <small>· rename, change the icon, reorder or hide a whole section</small></h2>
+    </header>
+    <p class="hint" style="margin:8px 2px 18px">
+      These are the sections customers see on the website and the dine-in page. Renaming is safe — the dishes stay where they are.
+      Turn one <b>OFF</b> to hide the whole section (and all its dishes) from customers without deleting anything.
+    </p>
+
+    <div class="st-msgs" id="catList"></div>
+
+    <div class="st-save-bar">
+      <button class="btn-primary big" id="catSave">SAVE CHANGES</button>
+      <button class="btn-ghost small" id="catReset" title="Undo unsaved edits">RESET</button>
+      <span class="st-saved" id="catSaved" hidden>✓ Saved · live on the site</span>
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/supabase-client.js"></script>
+<script src="/menu-data.js"></script>
+<script src="/admin/admin-shell.js"></script>
+<script src="/admin/categories.js"></script>
+</body>
+</html>

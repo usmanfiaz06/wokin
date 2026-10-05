@@ -902,3 +902,40 @@ const MENU_DATA = [
     ]
   }
 ];
+
+/* ---------------------------------------------------------------------
+   Admin category overrides (rename / emoji / reorder / hide).
+   Applied in place to MENU_DATA so every renderer (storefront + dine-in)
+   picks them up. Dishes map to a category by its stable id, so renaming
+   is safe. Pass the rows from the `menu_categories` table.
+--------------------------------------------------------------------- */
+window.applyCategoryOverrides = function (rows) {
+  if (typeof MENU_DATA === "undefined") return;
+  // remember the built-in order once, so un-set positions keep their place
+  MENU_DATA.forEach(function (c, i) { if (c._origPos === undefined) c._origPos = i; });
+
+  const ov = {};
+  (Array.isArray(rows) ? rows : []).forEach(function (r) { if (r && r.cat_id) ov[r.cat_id] = r; });
+
+  MENU_DATA.forEach(function (c) {
+    const o = ov[c.id];
+    c._catHidden = false;
+    c._pos = null;
+    if (!o) return;
+    if (o.name  && String(o.name).trim())  c.name  = String(o.name).trim();
+    if (o.emoji && String(o.emoji).trim()) c.emoji = String(o.emoji).trim();
+    c._catHidden = !!o.is_hidden;
+    c._pos = (o.position != null) ? Number(o.position) : null;
+  });
+
+  MENU_DATA.sort(function (a, b) {
+    const pa = (a._pos != null) ? a._pos : a._origPos;
+    const pb = (b._pos != null) ? b._pos : b._origPos;
+    return pa - pb;
+  });
+
+  // Remove hidden categories entirely so no renderer shows them to customers.
+  for (let i = MENU_DATA.length - 1; i >= 0; i--) {
+    if (MENU_DATA[i]._catHidden) MENU_DATA.splice(i, 1);
+  }
+};

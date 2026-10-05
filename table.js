@@ -31,6 +31,7 @@ async function boot(){
   if (t.kind !== "dine-in"){ location.replace("/"); return; }
 
   await loadMenu();
+  await loadCategoryOverrides();
   restoreCart();
   document.getElementById("tTable").textContent = t.label;
   renderCats();
@@ -65,6 +66,16 @@ async function loadMenu(){
       d._imgPath   = (o && o.image_path) ? o.image_path : null;
     });
   });
+}
+
+/* ---- category overrides (rename / emoji / order / hide) ---- */
+async function loadCategoryOverrides(){
+  if (!window.db || typeof window.applyCategoryOverrides !== "function") return;
+  try {
+    const { data, error } = await window.db.from("menu_categories").select("*");
+    if (error) throw error;
+    window.applyCategoryOverrides(data || []);
+  } catch(e){ /* table may not exist yet — keep built-in categories */ }
 }
 
 function supaImg(p){ return p ? (window.SUPABASE_URL || "").replace(/\/$/, "") + "/storage/v1/object/public/dish-images/" + p : null; }

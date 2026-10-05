@@ -137,6 +137,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Apply live menu overrides (availability / pricing) before render
   await loadMenuOverrides();
   await loadCustomDishes();
+  await loadCategoryOverrides();
   await loadAutoPromos();
   await loadBusinessHours();
   await loadDeliveryAreas();
@@ -171,6 +172,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 let _openCartAfterLocation = false;
 
+
+/* ==================================================================
+   MENU CATEGORY OVERRIDES  (admin-managed; rename / emoji / order / hide)
+   Falls back to the built-in categories in menu-data.js.
+=================================================================== */
+async function loadCategoryOverrides(){
+  if (!window.db || typeof window.applyCategoryOverrides !== "function") return;
+  try {
+    const { data, error } = await window.db.from("menu_categories").select("*");
+    if (error) throw error;
+    window.applyCategoryOverrides(data || []);
+  } catch(e){ /* table may not exist yet — keep the built-in categories */ }
+}
 
 /* ==================================================================
    SITE TEXT SETTINGS  (admin-managed; ticker + key numbers)
