@@ -917,6 +917,11 @@ window.applyCategoryOverrides = function (rows) {
   const ov = {};
   (Array.isArray(rows) ? rows : []).forEach(function (r) { if (r && r.cat_id) ov[r.cat_id] = r; });
 
+  // Which ids already exist (the built-in categories)?
+  const known = {};
+  MENU_DATA.forEach(function (c) { known[c.id] = true; });
+
+  // Apply overrides to the built-in categories.
   MENU_DATA.forEach(function (c) {
     const o = ov[c.id];
     c._catHidden = false;
@@ -926,6 +931,26 @@ window.applyCategoryOverrides = function (rows) {
     if (o.emoji && String(o.emoji).trim()) c.emoji = String(o.emoji).trim();
     c._catHidden = !!o.is_hidden;
     c._pos = (o.position != null) ? Number(o.position) : null;
+  });
+
+  // Inject brand-new (admin-created) categories: any override row whose
+  // cat_id isn't a built-in one. They start empty; custom dishes assigned
+  // to them attach afterwards, and an empty section is skipped by the
+  // renderers, so a new category only appears once it has a dish.
+  Object.keys(ov).forEach(function (id) {
+    if (known[id]) return;
+    const o = ov[id];
+    MENU_DATA.push({
+      id: id,
+      name: (o.name && String(o.name).trim()) ? String(o.name).trim() : "Untitled",
+      emoji: (o.emoji && String(o.emoji).trim()) ? String(o.emoji).trim() : "",
+      tagline: "",
+      items: [],
+      _custom: true,
+      _origPos: MENU_DATA.length,
+      _catHidden: !!o.is_hidden,
+      _pos: (o.position != null) ? Number(o.position) : null,
+    });
   });
 
   MENU_DATA.sort(function (a, b) {

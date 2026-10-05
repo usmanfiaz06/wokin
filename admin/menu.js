@@ -127,6 +127,7 @@ async function enterApp(session){
       console.error("[admin/menu] loadOverrides failed:", err);
       toast("Couldn't load overrides: " + (err.message || err));
     });
+    await loadAdminCategories().catch(() => {});
     await loadCustomDishes().catch(err => {
       console.warn("[admin/menu] loadCustomDishes failed (custom_dishes table missing?):", err);
     });
@@ -159,6 +160,30 @@ async function loadCustomDishes(){
     .from("custom_dishes").select("*").order("position", { ascending: true });
   if (error) throw error;
   state.customs = data || [];
+}
+
+// Apply admin category overrides to MENU_DATA for the admin Menu view:
+// rename/re-icon built-ins and inject admin-created categories. We do NOT
+// hide or reorder here, so staff can still manage every category's dishes.
+async function loadAdminCategories(){
+  if (!window.db || typeof MENU_DATA === "undefined") return;
+  const { data, error } = await window.db.from("menu_categories").select("*");
+  if (error) return;
+  (data || []).forEach(r => {
+    if (!r.cat_id) return;
+    const c = MENU_DATA.find(x => x.id === r.cat_id);
+    if (c){
+      if (r.name  && String(r.name).trim())  c.name  = String(r.name).trim();
+      if (r.emoji && String(r.emoji).trim()) c.emoji = String(r.emoji).trim();
+    } else {
+      MENU_DATA.push({
+        id: r.cat_id,
+        name: (r.name && String(r.name).trim()) ? String(r.name).trim() : "Untitled",
+        emoji: (r.emoji && String(r.emoji).trim()) ? String(r.emoji).trim() : "",
+        tagline: "", items: [], _custom: true,
+      });
+    }
+  });
 }
 
 function populateCategoryDropdown(){

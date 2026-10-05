@@ -1394,3 +1394,5 @@ body.has-sidebar .top{ display:flex; align-items:center; justify-content:flex-en
   .cat-name{ min-width:60%; }
   .cat-ctl{ width:100%; justify-content:space-between; }
 }
+.cat-tag{ font-family:'Bebas Neue',sans-serif; letter-spacing:.12em; font-size:10px; color:var(--ink);
+  background:var(--gold-bright); padding:2px 8px; border-radius:999px; }

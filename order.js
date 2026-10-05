@@ -134,10 +134,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   bindSearch();
   bindCheckout();
 
-  // Apply live menu overrides (availability / pricing) before render
+  // Apply live menu overrides (availability / pricing) before render.
+  // Category overrides run first so admin-created categories exist in
+  // MENU_DATA before custom dishes are attached to them.
   await loadMenuOverrides();
-  await loadCustomDishes();
   await loadCategoryOverrides();
+  await loadCustomDishes();
   await loadAutoPromos();
   await loadBusinessHours();
   await loadDeliveryAreas();
