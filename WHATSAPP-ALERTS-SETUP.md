@@ -22,7 +22,9 @@ WhatsApp requires a pre-approved *template* for business-initiated messages — 
 
 ### 1. Create the WhatsApp sender
 1. Go to **developers.facebook.com** → create an app → add the **WhatsApp** product.
-2. In **WhatsApp → API Setup**, note the **Phone number ID** and a temporary token. Add the manager's number as a test recipient to try it immediately. For production, add a real business number and generate a **permanent access token** (System User token with `whatsapp_business_messaging`).
+2. In **WhatsApp → API Setup**, note the **Phone number ID** and a temporary token. Add the manager's number (`923355979775`) as a test recipient to try it immediately. For production, add a real business number and generate a **permanent access token** (System User token with `whatsapp_business_messaging`).
+
+> ⚠️ **Important about the number.** `923355979775` is the WOK!N number already in use on the normal WhatsApp app (customers message it). That number stays the **recipient** of the alerts. The **sender** must be a *different* number — Meta gives you a free test sender to start, and for production you register a separate dedicated number as the API sender. You do **not** have to move your existing WhatsApp off the phone.
 
 ### 2. Create the message template
 In **WhatsApp Manager → Message templates → Create**:
@@ -43,7 +45,7 @@ Supabase → **Edge Functions → Secrets** (or `supabase secrets set`):
 ```
 NOTIFY_SECRET        = <make up a long random string>
 WA_PROVIDER          = meta
-MANAGER_WHATSAPP     = 923001234567        # manager number, E.164, no + or spaces
+MANAGER_WHATSAPP     = 923355979775        # the WOK!N number from the site (E.164, no + or spaces)
 WA_TEMPLATE          = wokin_new_order
 WA_LANG              = en
 META_PHONE_NUMBER_ID = <from step 1>
@@ -61,7 +63,7 @@ META_TOKEN           = <permanent token from step 1>
 ```
 NOTIFY_SECRET      = <same random string>
 WA_PROVIDER        = twilio
-MANAGER_WHATSAPP   = 923001234567
+MANAGER_WHATSAPP   = 923355979775
 TWILIO_ACCOUNT_SID = AC...
 TWILIO_AUTH_TOKEN  = ...
 TWILIO_WA_FROM     = 14155238886           # your Twilio WhatsApp sender, no +
