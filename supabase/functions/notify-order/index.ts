@@ -61,10 +61,10 @@ async function fetchItems(orderId: string): Promise<string> {
   } catch { return ""; }
 }
 
-async function sendMeta(params: string[]): Promise<Response> {
+async function sendMeta(to: string, params: string[]): Promise<Response> {
   const body = {
     messaging_product: "whatsapp",
-    to: env("MANAGER_WHATSAPP"),
+    to,
     type: "template",
     template: {
       name: env("WA_TEMPLATE"),
@@ -79,10 +79,10 @@ async function sendMeta(params: string[]): Promise<Response> {
   });
 }
 
-async function sendTwilio(params: string[]): Promise<Response> {
+async function sendTwilio(to: string, params: string[]): Promise<Response> {
   const sid = env("TWILIO_ACCOUNT_SID");
   const form = new URLSearchParams();
-  form.set("To", `whatsapp:+${env("MANAGER_WHATSAPP")}`);
+  form.set("To", `whatsapp:+${to}`);
   form.set("From", `whatsapp:+${env("TWILIO_WA_FROM")}`);
   form.set("ContentSid", env("TWILIO_CONTENT_SID"));
   // Twilio content variables are addressed by number "1","2",...
@@ -125,10 +125,16 @@ Deno.serve(async (req) => {
 
   try {
     const provider = (env("WA_PROVIDER") || "meta").toLowerCase();
-    const res = provider === "twilio" ? await sendTwilio(params) : await sendMeta(params);
-    const txt = await res.text();
-    if (!res.ok) console.error("[notify-order] send failed", res.status, txt);
-    return new Response(JSON.stringify({ ok: res.ok, status: res.status }), {
+    // MANAGER_WHATSAPP may be a comma-separated list of numbers.
+    const recipients = env("MANAGER_WHATSAPP").split(",").map((s) => s.trim()).filter(Boolean);
+    const results = [];
+    for (const to of recipients) {
+      const res = provider === "twilio" ? await sendTwilio(to, params) : await sendMeta(to, params);
+      const txt = await res.text();
+      if (!res.ok) console.error("[notify-order] send failed", to, res.status, txt);
+      results.push({ to, ok: res.ok, status: res.status });
+    }
+    return new Response(JSON.stringify({ sent: results }), {
       status: 200, headers: { "Content-Type": "application/json" },
     });
   } catch (e) {
