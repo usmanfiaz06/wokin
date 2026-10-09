@@ -113,15 +113,23 @@ Deno.serve(async (req) => {
 
   const { type, where } = orderLine(o);
   const items = await fetchItems(String(o.id || ""));
+  const typeLoc = where ? `${type} · ${where}` : type;
 
-  // Template body params — must match the approved template's {{1}}..{{4}}:
-  //   {{1}} order number   {{2}} type + location   {{3}} items   {{4}} total
-  const params = [
-    String(o.order_number),
-    where ? `${type} · ${where}` : type,
-    items || "see dashboard",
-    PKR(o.total),
-  ];
+  // Two shapes, chosen by the template name:
+  //  - a Meta "order_management*" library template (2 vars: name + details blob)
+  //  - our own wokin template ({{1}} order# {{2}} type/loc {{3}} items {{4}} total)
+  const tmpl = env("WA_TEMPLATE") || "";
+  const params = tmpl.startsWith("order_management")
+    ? [
+        "WOK!N team",
+        `${o.order_number} · ${typeLoc} · ${PKR(o.total)}${items ? " · " + items : ""}`,
+      ]
+    : [
+        String(o.order_number),
+        typeLoc,
+        items || "see dashboard",
+        PKR(o.total),
+      ];
 
   try {
     const provider = (env("WA_PROVIDER") || "meta").toLowerCase();
