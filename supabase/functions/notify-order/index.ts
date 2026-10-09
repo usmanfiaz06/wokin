@@ -119,17 +119,18 @@ Deno.serve(async (req) => {
   //  - a Meta "order_management*" library template (2 vars: name + details blob)
   //  - our own wokin template ({{1}} order# {{2}} type/loc {{3}} items {{4}} total)
   const tmpl = env("WA_TEMPLATE") || "";
-  const params = tmpl.startsWith("order_management")
-    ? [
-        "WOK!N team",
-        `${o.order_number} · ${typeLoc} · ${PKR(o.total)}${items ? " · " + items : ""}`,
-      ]
-    : [
-        String(o.order_number),
-        typeLoc,
-        items || "see dashboard",
-        PKR(o.total),
-      ];
+  const detailItemsFirst = `${items ? items + " · " : ""}${PKR(o.total)} · ${typeLoc}`;
+  let params;
+  if (tmpl.includes("no_cta")) {
+    // 2-var library template: greeting + one details blob
+    params = ["WOK!N team", `${o.order_number} · ${typeLoc} · ${PKR(o.total)}${items ? " · " + items : ""}`];
+  } else if (tmpl.startsWith("order_management")) {
+    // order_management_6 style: Hi {{1}}, Your order {{2}} ... placed with {{3}} ...
+    params = ["WOK!N team", String(o.order_number), detailItemsFirst];
+  } else {
+    // our own wokin template: {{1}} order# {{2}} type/loc {{3}} items {{4}} total
+    params = [String(o.order_number), typeLoc, items || "see dashboard", PKR(o.total)];
+  }
 
   try {
     const provider = (env("WA_PROVIDER") || "meta").toLowerCase();
