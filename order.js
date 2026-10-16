@@ -155,6 +155,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   loadCombos();
   renderDeliveryDeals();
 
+  // combo selection sheet: close on ✕ or backdrop
+  const comboModal = document.getElementById("comboModal");
+  const comboClose = document.getElementById("comboModalClose");
+  if (comboClose) comboClose.addEventListener("click", closeComboSheet);
+  if (comboModal) comboModal.addEventListener("click", e => { if (e.target === comboModal) closeComboSheet(); });
+
   // User lands on the site freely; pop-up rises 1.5s later
   // (only the very first time — once they've picked, we skip).
   // Pick-up has no area, so type alone counts as "chosen".
@@ -460,38 +466,160 @@ async function loadCombos(){
   } catch(e){ sec.hidden = true; }   // table may not exist yet
 }
 
+/* Normalised item list for a combo. Each entry is either a plain string
+   (a fixed included item) or { pick:"<catId>", label:"…" } (a choice).
+   Falls back to the old " · "-joined description for legacy combos. */
+function comboItems(combo){
+  if (Array.isArray(combo.items) && combo.items.length) return combo.items;
+  return (combo.description || "").split(" · ").map(s => s.trim()).filter(Boolean);
+}
+function comboChoices(combo){
+  return comboItems(combo).filter(it => it && typeof it === "object" && it.pick);
+}
+function comboDeliverable(combo){ return combo.deli_eligible === true; }
+function comboPickOptions(catId){
+  if (typeof MENU_DATA === "undefined") return [];
+  const cat = MENU_DATA.find(c => c.id === catId);
+  if (!cat) return [];
+  return cat.items
+    .filter(d => !d._hidden && !(d.tags && d.tags.includes("hidden")))
+    .map(d => d.name);
+}
+
 function comboCard(combo){
   const card = document.createElement("article");
   card.className = "combo-card";
+
   const img = document.createElement("div"); img.className = "img";
+  applyDishBg(img, comboImageUrl(combo));
+  card.appendChild(img);
+
   const pad = document.createElement("div"); pad.className = "pad";
-  const h3  = document.createElement("h3"); h3.textContent = combo.name;
-  pad.appendChild(h3);
-  if (combo.description){ const p = document.createElement("p"); p.textContent = combo.description; pad.appendChild(p); }
+  const h3 = document.createElement("h3"); h3.textContent = combo.name; pad.appendChild(h3);
+
+  // every item on its own line with a ★ bullet
+  const ul = document.createElement("ul"); ul.className = "combo-items";
+  comboItems(combo).forEach(it => {
+    const li = document.createElement("li");
+    const star = document.createElement("span"); star.className = "ci-star"; star.textContent = "★";
+    const txt = document.createElement("span");
+    if (it && typeof it === "object" && it.pick){
+      li.classList.add("is-choice");
+      const em = document.createElement("em"); em.textContent = "Choose: ";
+      txt.appendChild(em); txt.appendChild(document.createTextNode(it.label || "your dish"));
+    } else {
+      txt.textContent = String(it);
+    }
+    li.appendChild(star); li.appendChild(txt);
+    ul.appendChild(li);
+  });
+  pad.appendChild(ul);
+
+  if (!comboDeliverable(combo)){
+    const note = document.createElement("p"); note.className = "combo-note";
+    note.textContent = "🍽️ Dine-in & pick-up only";
+    pad.appendChild(note);
+  }
+
   const foot = document.createElement("div"); foot.className = "foot";
   const price = document.createElement("b"); price.textContent = fmtPKR(combo.price);
-  const btn = document.createElement("button"); btn.className = "add-btn"; btn.textContent = "ADD +";
-  btn.addEventListener("click", () => {
-    addComboToCart(combo);
-    card.classList.add("is-flash");
-    setTimeout(() => card.classList.remove("is-flash"), 600);
-  });
+  const btn = document.createElement("button"); btn.className = "add-btn";
+  btn.textContent = comboChoices(combo).length ? "CHOOSE +" : "ADD +";
+  btn.addEventListener("click", () => openComboModal(combo));
   foot.appendChild(price); foot.appendChild(btn);
   pad.appendChild(foot);
-  card.appendChild(img); card.appendChild(pad);
-  applyDishBg(img, comboImageUrl(combo));
+
+  card.appendChild(pad);
   return card;
 }
 
-function addComboToCart(combo){
-  const id = "combo::" + combo.id;
+/* ---- combo selection sheet ---- */
+function openComboSheet(){ const m = document.getElementById("comboModal"); if (m){ m.hidden = false; document.body.style.overflow = "hidden"; } }
+function closeComboSheet(){ const m = document.getElementById("comboModal"); if (m){ m.hidden = true; document.body.style.overflow = ""; } }
+function switchToPickup(){
+  state.type = "pickup"; state.area = null;
+  saveState(); syncBarLocation(); recalcCart();
+  toast("Switched to pick-up");
+}
+
+function openComboModal(combo){
+  const modal = document.getElementById("comboModal");
+  const body  = document.getElementById("comboModalBody");
+  if (!modal || !body) return;
+  document.getElementById("comboModalTitle").textContent = combo.name;
+  body.innerHTML = "";
+
+  // Delivery gate — deal is dine-in / pick-up only and they're on delivery
+  if (state.type === "delivery" && !comboDeliverable(combo)){
+    const block = document.createElement("div"); block.className = "combo-block";
+    const ic = document.createElement("div"); ic.className = "cb-ic"; ic.textContent = "🍽️";
+    const h4 = document.createElement("h4"); h4.textContent = "Dine-in & pick-up only";
+    const p  = document.createElement("p"); p.textContent = "This deal isn't available for delivery. Switch to pick-up to order it.";
+    const sw = document.createElement("button"); sw.className = "combo-switch"; sw.textContent = "SWITCH TO PICK-UP";
+    sw.addEventListener("click", () => { switchToPickup(); openComboModal(combo); });
+    block.appendChild(ic); block.appendChild(h4); block.appendChild(p); block.appendChild(sw);
+    body.appendChild(block);
+    openComboSheet();
+    return;
+  }
+
+  const items = comboItems(combo);
+  const fixed = items.filter(it => !(it && typeof it === "object" && it.pick));
+  const choiceEls = [];
+
+  if (fixed.length){
+    const inc = document.createElement("div"); inc.className = "combo-included";
+    const lbl = document.createElement("span"); lbl.className = "cm-lbl"; lbl.textContent = "INCLUDED"; inc.appendChild(lbl);
+    const ul = document.createElement("ul");
+    fixed.forEach(f => { const li = document.createElement("li"); li.textContent = String(f); ul.appendChild(li); });
+    inc.appendChild(ul); body.appendChild(inc);
+  }
+
+  items.forEach(it => {
+    if (!(it && typeof it === "object" && it.pick)) return;
+    const opts = comboPickOptions(it.pick);
+    const wrap = document.createElement("div"); wrap.className = "combo-choice";
+    const lbl = document.createElement("label"); lbl.className = "cm-lbl"; lbl.textContent = (it.label || "Choose your dish").toUpperCase();
+    const sel = document.createElement("select"); sel.className = "combo-sel";
+    if (!opts.length){
+      const o = document.createElement("option"); o.value = ""; o.textContent = "— currently unavailable —"; sel.appendChild(o);
+    } else {
+      const ph = document.createElement("option"); ph.value = ""; ph.textContent = "— select —"; sel.appendChild(ph);
+      opts.forEach(n => { const o = document.createElement("option"); o.value = n; o.textContent = n; sel.appendChild(o); });
+    }
+    wrap.appendChild(lbl); wrap.appendChild(sel);
+    body.appendChild(wrap);
+    choiceEls.push(sel);
+  });
+
+  const addRow = document.createElement("div"); addRow.className = "combo-addrow";
+  const total = document.createElement("b"); total.textContent = fmtPKR(combo.price);
+  const add = document.createElement("button"); add.className = "combo-add"; add.textContent = "ADD TO CART";
+  add.addEventListener("click", () => {
+    const picks = choiceEls.map(s => s.value);
+    if (picks.some(v => !v)){ toast("Please pick an option for each choice."); return; }
+    addComboToCart(combo, picks);
+    closeComboSheet();
+    toast("🍱 Added to cart");
+  });
+  addRow.appendChild(total); addRow.appendChild(add);
+  body.appendChild(addRow);
+
+  openComboSheet();
+}
+
+function addComboToCart(combo, picks){
+  picks = picks || [];
+  const variant = picks.length ? picks.join(" · ") : null;
+  const id = "combo::" + combo.id + (picks.length ? "::" + picks.join("|") : "");
   const existing = state.cart.find(c => c.id === id);
   if (existing){ existing.qty += 1; }
   else {
     state.cart.push({
-      id, name: combo.name, desc: "🍱 Combo deal", variant: null,
+      id, name: combo.name, desc: "🍱 Combo deal", variant,
       image: comboImageUrl(combo) || (window.FALLBACK_DISH_IMG || "Assorted_Chinese_food_set.jpg.webp"),
       price: Number(combo.price) || 0, qty: 1, customId: null,
+      deliOk: comboDeliverable(combo),
     });
   }
   if (state.coupon){ state.couponDiscount = 0; state.coupon = null; state.couponLabel = ""; }
@@ -920,6 +1048,12 @@ function bindLocationModal(){
     if (!_locDraft.type || (!isPickup && !_locDraft.area)) return;
     state.type = _locDraft.type;
     state.area = isPickup ? null : _locDraft.area;  // pick-up = single branch, no area
+    // dine-in / pick-up only deals can't be delivered — drop them if switching to delivery
+    if (state.type === "delivery"){
+      const before = state.cart.length;
+      state.cart = state.cart.filter(c => c.deliOk !== false);
+      if (state.cart.length !== before) toast("Removed dine-in & pick-up only deals from your cart");
+    }
     saveState();
     syncBarLocation();
     const sel = document.getElementById("coArea");

@@ -482,16 +482,53 @@ body.is-store-closed .fab-cart-mid strong{ color:#aaa; }
   border-radius:16px; overflow:hidden; box-shadow:4px 4px 0 var(--gold-bright); position:relative;
   transition:transform var(--t-fast), box-shadow var(--t-fast); }
 .combo-card.is-flash{ transform:translate(-2px,-2px); box-shadow:6px 6px 0 var(--red); }
-.combo-card .img{ height:150px; background:var(--paper) center/cover no-repeat; border-bottom:3px solid var(--ink); }
-.combo-card .pad{ padding:14px 16px 16px; display:flex; flex-direction:column; gap:6px; flex:1; }
-.combo-card h3{ font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:.02em; line-height:1.05; color:var(--ink); }
-.combo-card p{ font-size:13px; color:var(--mute); line-height:1.4; margin:0; }
-.combo-card .foot{ margin-top:auto; padding-top:10px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
-.combo-card .foot b{ font-family:'Bebas Neue',sans-serif; font-size:24px; color:var(--red); }
-.combo-card .add-btn{ padding:10px 20px; background:var(--ink); color:#fff; font-family:'Bebas Neue',sans-serif;
-  letter-spacing:.14em; font-size:15px; border-radius:var(--r-pill); white-space:nowrap; transition:background var(--t-fast); }
+.combo-card .img{ height:118px; background:var(--paper) center/cover no-repeat; border-bottom:3px solid var(--ink); }
+.combo-card .pad{ padding:13px 15px 15px; display:flex; flex-direction:column; gap:8px; flex:1; }
+.combo-card h3{ font-family:'Bebas Neue',sans-serif; font-size:21px; letter-spacing:.02em; line-height:1.05; color:var(--ink); }
+.combo-card .combo-items{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:3px; }
+.combo-card .combo-items li{ display:flex; gap:7px; font-size:12.5px; line-height:1.35; color:var(--ink); }
+.combo-card .combo-items .ci-star{ color:var(--gold-bright); flex:0 0 auto; font-size:11px; line-height:1.5; }
+.combo-card .combo-items li.is-choice{ color:var(--red-dark, #B71419); font-weight:600; }
+.combo-card .combo-items li.is-choice em{ font-style:normal; }
+.combo-card .combo-note{ font-family:'Bebas Neue',sans-serif; letter-spacing:.08em; font-size:11px; color:var(--mute);
+  background:var(--paper); border:1.5px solid var(--line, #E7DCC6); border-radius:8px; padding:3px 9px; align-self:flex-start; }
+.combo-card .foot{ margin-top:auto; padding-top:8px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.combo-card .foot b{ font-family:'Bebas Neue',sans-serif; font-size:23px; color:var(--red); }
+.combo-card .add-btn{ padding:9px 18px; background:var(--ink); color:#fff; font-family:'Bebas Neue',sans-serif;
+  letter-spacing:.12em; font-size:14px; border-radius:var(--r-pill); white-space:nowrap; transition:background var(--t-fast); cursor:pointer; }
 .combo-card .add-btn:hover{ background:var(--red); }
-@media (max-width:600px){ .combos-grid{ grid-template-columns:1fr 1fr; gap:12px; } .combo-card h3{ font-size:18px; } }
+@media (max-width:600px){ .combos-grid{ grid-template-columns:1fr 1fr; gap:12px; } .combo-card h3{ font-size:18px; } .combo-card .combo-items li{ font-size:12px; } }
+
+/* combo selection sheet */
+.combo-modal{ position:fixed; inset:0; z-index:120; background:rgba(0,0,0,.55); display:flex; align-items:flex-end; justify-content:center; }
+.combo-modal[hidden]{ display:none; }
+.combo-sheet{ width:100%; max-width:460px; max-height:88vh; overflow-y:auto; background:var(--cream);
+  border:3px solid var(--ink); border-radius:20px 20px 0 0; }
+@media (min-width:560px){ .combo-modal{ align-items:center; } .combo-sheet{ border-radius:20px; } }
+.combo-sheet header{ position:sticky; top:0; display:flex; align-items:center; justify-content:space-between;
+  padding:16px 18px; background:var(--ink); color:var(--cream); border-bottom:3px solid var(--gold-bright); }
+.combo-sheet header h3{ font-family:'Bebas Neue',sans-serif; font-size:24px; letter-spacing:.04em; }
+.combo-sheet header button{ width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,.15); color:#fff; font-size:16px; cursor:pointer; border:none; }
+.combo-modal-body{ padding:18px; display:flex; flex-direction:column; gap:16px; }
+.cm-lbl{ display:block; font-family:'Bebas Neue',sans-serif; letter-spacing:.1em; font-size:12px; color:var(--mute); margin-bottom:6px; }
+.combo-included ul{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:4px; }
+.combo-included li{ font-size:14px; color:var(--ink); padding-left:16px; position:relative; }
+.combo-included li::before{ content:"★"; position:absolute; left:0; color:var(--gold-bright); font-size:11px; }
+.combo-choice .combo-sel{ width:100%; padding:12px 13px; border:2px solid var(--ink); border-radius:11px;
+  background:#fff; font-size:15px; font-family:inherit; color:var(--ink); }
+.combo-choice .combo-sel:focus{ outline:none; border-color:var(--red); }
+.combo-addrow{ position:sticky; bottom:0; display:flex; align-items:center; gap:12px; padding-top:4px; background:var(--cream); }
+.combo-addrow b{ font-family:'Bebas Neue',sans-serif; font-size:24px; color:var(--red); }
+.combo-add{ flex:1; padding:15px; background:var(--red); color:#fff; border:2px solid var(--ink); border-radius:14px;
+  font-family:'Bebas Neue',sans-serif; letter-spacing:.14em; font-size:17px; cursor:pointer; }
+.combo-add:hover{ background:var(--red-dark, #B71419); }
+.combo-block{ text-align:center; padding:14px 8px; display:flex; flex-direction:column; align-items:center; gap:8px; }
+.combo-block .cb-ic{ font-size:40px; }
+.combo-block h4{ font-family:'Bebas Neue',sans-serif; font-size:24px; color:var(--ink); letter-spacing:.02em; }
+.combo-block p{ font-size:14px; color:var(--mute); max-width:300px; line-height:1.45; }
+.combo-switch{ margin-top:6px; padding:13px 24px; background:var(--ink); color:#fff; border:none; border-radius:var(--r-pill);
+  font-family:'Bebas Neue',sans-serif; letter-spacing:.14em; font-size:15px; cursor:pointer; }
+.combo-switch:hover{ background:var(--red); }
 
 /* Deals marquee (admin-managed promotions) — prominent */
 .deals-bar{ display:flex; align-items:stretch; background:var(--gold-bright); color:var(--ink);

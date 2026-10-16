@@ -1035,6 +1035,25 @@ input{ font:inherit; color:inherit; }
 .cb-price{ font-family:'Bebas Neue',sans-serif; font-size:20px; color:var(--gold-bright); white-space:nowrap; }
 .cb-actions{ display:flex; gap:8px; align-items:center; flex-shrink:0; }
 .cb-del:hover{ background:var(--red); color:#fff; border-color:var(--red); }
+.cb-tag{ display:inline-block; margin-top:5px; font-size:11px; font-weight:600; padding:2px 9px; border-radius:999px; }
+.cb-tag.is-dinein{ background:rgba(240,188,46,.16); color:var(--gold-bright); }
+.cb-tag.is-deli{ background:rgba(46,139,87,.18); color:#7FD1A2; }
+
+/* customer choices builder */
+.cb-choices{ display:flex; flex-direction:column; gap:7px; }
+.cb-choices[hidden]{ display:none; }
+.cb-choice-row{ display:flex; align-items:center; gap:10px; padding:9px 12px; background:var(--ink-3);
+  border:2px solid var(--ink); border-radius:10px; }
+.cb-choice-row span{ flex:1; color:var(--cream); font-size:14px; }
+.cb-choice-row small{ color:var(--mute); }
+.cb-choice-add{ display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
+.cb-choice-add select{ flex:0 0 auto; min-width:150px; padding:11px 12px; border:2px solid var(--ink); border-radius:10px;
+  background:var(--ink-3); color:var(--cream); font-size:14px; }
+.cb-choice-add input{ flex:1; min-width:160px; }
+.cb-choice-add select:focus{ outline:none; border-color:var(--gold-bright); }
+.cb-check{ flex-direction:row !important; align-items:center; gap:10px !important; cursor:pointer; }
+.cb-check input{ width:20px; height:20px; flex:0 0 auto; accent-color:var(--gold-bright); }
+.cb-check span{ font-family:'Inter',sans-serif; letter-spacing:0; font-size:14px; color:var(--cream); font-weight:600; }
 @media (max-width:640px){
   .cb-row{ grid-template-columns:52px 1fr; grid-auto-rows:auto; }
   .cb-price{ grid-column:2; }

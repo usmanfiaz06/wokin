@@ -9,8 +9,9 @@
 
 const fmtPKR = n => "Rs. " + Math.round(Number(n)||0).toLocaleString("en-PK");
 
-const state = { combos: [], editingId: null, chips: [] };
+const state = { combos: [], editingId: null, chips: [], choices: [] };
 let ALL_DISHES = [];   // flat list of menu dish names for the picker
+let MENU_CATS  = [];   // [{id,name}] for the choice-category picker
 let _pendingImage = null;    // File selected but not yet uploaded
 let _removeImage  = false;   // true if the edit cleared the existing photo
 
@@ -37,7 +38,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   // dish picker for "what's included"
   if (typeof MENU_DATA !== "undefined"){
     ALL_DISHES = MENU_DATA.flatMap(c => c.items.map(d => d.name));
+    MENU_CATS  = MENU_DATA.map(c => ({ id: c.id, name: c.name, emoji: c.emoji || "" }));
   }
+  // choice-category picker
+  const catSel = document.getElementById("cbChoiceCat");
+  if (catSel){
+    catSel.innerHTML = MENU_CATS.map(c => `<option value="${c.id}">${c.emoji ? c.emoji + " " : ""}${c.name}</option>`).join("");
+  }
+  const chAdd = document.getElementById("cbChoiceAdd");
+  if (chAdd) chAdd.addEventListener("click", addChoice);
+  const chLbl = document.getElementById("cbChoiceLabel");
+  if (chLbl) chLbl.addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); addChoice(); } });
   const di = document.getElementById("cbDishInput");
   di.addEventListener("input", () => renderDishDropdown(di.value));
   di.addEventListener("focus", () => renderDishDropdown(di.value));
@@ -145,8 +156,16 @@ function renderCombos(){
     img.style.backgroundImage = `url("${publicImageUrl(c.image_path) || "/" + (window.FALLBACK_DISH_IMG || "Assorted_Chinese_food_set.jpg.webp")}")`;
     const main = document.createElement("div"); main.className = "cb-main";
     const nm = document.createElement("b"); nm.textContent = c.name;
-    const ds = document.createElement("p"); ds.textContent = c.description || "";
-    main.appendChild(nm); if (c.description) main.appendChild(ds);
+    // summary: fixed items + "Choose: …" for each choice
+    const items = Array.isArray(c.items) && c.items.length
+      ? c.items
+      : (c.description || "").split(" · ").map(s => s.trim()).filter(Boolean);
+    const summary = items.map(it => (it && typeof it === "object" && it.pick) ? ("Choose: " + (it.label || catName(it.pick))) : String(it)).join(" · ");
+    const ds = document.createElement("p"); ds.textContent = summary;
+    main.appendChild(nm); if (summary) main.appendChild(ds);
+    const tag = document.createElement("span"); tag.className = "cb-tag " + (c.deli_eligible ? "is-deli" : "is-dinein");
+    tag.textContent = c.deli_eligible ? "🛵 Delivery OK" : "🍽️ Dine-in & pick-up only";
+    main.appendChild(tag);
     const price = document.createElement("div"); price.className = "cb-price"; price.textContent = fmtPKR(c.price);
 
     const actions = document.createElement("div"); actions.className = "cb-actions";
@@ -191,6 +210,37 @@ function addChip(name){
   hideDropdown(); renderChips(); di.focus();
 }
 function removeChip(name){ state.chips = state.chips.filter(s => s !== name); renderChips(); }
+
+/* ---- customer choices ( {pick:catId, label} ) ---- */
+function catName(id){ const c = MENU_CATS.find(x => x.id === id); return c ? c.name : id; }
+function addChoice(){
+  const catSel = document.getElementById("cbChoiceCat");
+  const lblEl  = document.getElementById("cbChoiceLabel");
+  const pick = catSel ? catSel.value : "";
+  const label = (lblEl ? lblEl.value : "").trim() || ("Choose your " + catName(pick).toLowerCase());
+  if (!pick){ toast("Pick a category for the choice."); return; }
+  state.choices.push({ pick, label });
+  if (lblEl) lblEl.value = "";
+  renderChoices();
+}
+function removeChoice(i){ state.choices.splice(i, 1); renderChoices(); }
+function renderChoices(){
+  const box = document.getElementById("cbChoices");
+  if (!box) return;
+  box.innerHTML = "";
+  if (!state.choices.length){ box.hidden = true; return; }
+  box.hidden = false;
+  state.choices.forEach((ch, i) => {
+    const row = document.createElement("div"); row.className = "cb-choice-row";
+    const txt = document.createElement("span");
+    txt.innerHTML = `<b>${ch.label}</b> <small>— from ${catName(ch.pick)}</small>`;
+    const x = document.createElement("button"); x.type = "button"; x.className = "cb-chip-x"; x.textContent = "×";
+    x.setAttribute("aria-label", "Remove choice");
+    x.addEventListener("click", () => removeChoice(i));
+    row.appendChild(txt); row.appendChild(x);
+    box.appendChild(row);
+  });
+}
 function renderChips(){
   const box = document.getElementById("cbChips");
   box.innerHTML = "";
@@ -207,8 +257,10 @@ function renderChips(){
 /* ---- form (add / edit) ---- */
 function resetForm(){
   state.editingId = null; _pendingImage = null; _removeImage = false;
-  state.chips = []; renderChips(); hideDropdown();
+  state.chips = []; renderChips();
+  state.choices = []; renderChoices(); hideDropdown();
   document.getElementById("comboForm").reset();
+  const di = document.getElementById("cbDineinOnly"); if (di) di.checked = true;   // default: dine-in/pick-up only
   setPreview(null);
   document.getElementById("cbImgClear").hidden = true;
   document.getElementById("cbFormTitle").textContent = "Add a combo";
@@ -218,9 +270,15 @@ function resetForm(){
 function startEdit(c){
   state.editingId = c.id; _pendingImage = null; _removeImage = false;
   document.getElementById("cbName").value = c.name;
-  state.chips = (c.description || "").split(" · ").map(s => s.trim()).filter(Boolean);
-  renderChips();
+  // split stored items into fixed (strings) and choices (objects); fall back to description
+  const items = Array.isArray(c.items) && c.items.length
+    ? c.items
+    : (c.description || "").split(" · ").map(s => s.trim()).filter(Boolean);
+  state.chips   = items.filter(it => !(it && typeof it === "object" && it.pick)).map(String);
+  state.choices = items.filter(it => it && typeof it === "object" && it.pick).map(it => ({ pick: it.pick, label: it.label || "" }));
+  renderChips(); renderChoices();
   document.getElementById("cbPrice").value = c.price;
+  const di = document.getElementById("cbDineinOnly"); if (di) di.checked = c.deli_eligible !== true;
   setPreview(publicImageUrl(c.image_path));
   document.getElementById("cbImgClear").hidden = !c.image_path;
   document.getElementById("cbFormTitle").textContent = "Edit combo";
@@ -237,6 +295,10 @@ async function onSaveCombo(e){
   if (!name){ toast("Give the combo a name."); return; }
   if (price === "" || Number(price) <= 0){ toast("Set a combo price."); return; }
 
+  // structured items: fixed strings first, then the customer choices
+  const items = [...state.chips.map(String), ...state.choices.map(ch => ({ pick: ch.pick, label: ch.label }))];
+  const dineinOnly = !!document.getElementById("cbDineinOnly")?.checked;
+
   const editing = state.combos.find(c => c.id === state.editingId);
   let image_path;
   if (_pendingImage){
@@ -245,7 +307,7 @@ async function onSaveCombo(e){
   } else if (_removeImage){ image_path = null; }
   else { image_path = editing ? (editing.image_path ?? null) : null; }
 
-  const row = { name, description: desc || null, price: Number(price), image_path };
+  const row = { name, description: desc || null, price: Number(price), image_path, items, deli_eligible: !dineinOnly };
 
   if (state.editingId){
     const { error } = await window.db.from("combos").update(row).eq("id", state.editingId);
