@@ -414,8 +414,10 @@ body{
   background:rgba(255,255,255,.11); opacity:1; font-weight:600;
 }
 
-/* deals that link out (combo deals → menu, delivery deals → section) */
-.deal-link{ display:block; text-decoration:none; color:inherit; cursor:pointer;
+/* deals that link out (combo deals → menu, delivery deals → section).
+   No `color` here — let .deal--gold (dark text) / .deal--ink (cream text)
+   set it, exactly as on the original offer cards. */
+.deal-link{ display:block; text-decoration:none; cursor:pointer;
   transition:transform .15s ease, box-shadow .15s ease; }
 .deal-link:active{ transform:scale(.99); }
 .deal-cta{ display:inline-block; margin-top:14px; font-family:'Bebas Neue',sans-serif;
