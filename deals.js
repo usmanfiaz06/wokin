@@ -22,16 +22,14 @@ const SAVE_TIMEOUT_MS = 3500;             // never hold the offers hostage
 const SHARE_TEXT = [
   "Hey! Check out the amazing deals I've found at WOK!N \u2014 the finest pan-Asian restaurant in Gulberg Greens \uD83D\uDD25",
   "",
-  "Flat 20% off in weekend Golden Hour, and up to 50% off on bank cards.",
+  "Combo lunch deals for dine-in & pick-up, plus delivery feasts built for sharing.",
   "",
   "",
 ].join("\n");
 
 /* Offer windows, in Pakistan Standard Time.
    days: 0=Sun … 6=Sat · from/to are 24h hours. */
-const WINDOWS = [
-  { id:"dealGolden", label:"GOLDEN HOUR", days:[0,6], from:12, to:16 },
-];
+const WINDOWS = [];   // no timed discount offers running right now
 
 const DAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 
@@ -240,6 +238,8 @@ function pktNow(){
 }
 
 function markLiveOffer(){
+  // No timed offers → keep the "live" pill hidden entirely.
+  if (!WINDOWS.length){ const p = document.getElementById("livePill"); if (p) p.hidden = true; return; }
   const now  = pktNow();
   const day  = now.getDay();
   const mins = now.getHours() * 60 + now.getMinutes();

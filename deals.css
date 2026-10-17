@@ -414,6 +414,15 @@ body{
   background:rgba(255,255,255,.11); opacity:1; font-weight:600;
 }
 
+/* deals that link out (combo deals → menu, delivery deals → section) */
+.deal-link{ display:block; text-decoration:none; color:inherit; cursor:pointer;
+  transition:transform .15s ease, box-shadow .15s ease; }
+.deal-link:active{ transform:scale(.99); }
+.deal-cta{ display:inline-block; margin-top:14px; font-family:'Bebas Neue',sans-serif;
+  letter-spacing:.14em; font-size:14px; padding:8px 16px; border-radius:999px;
+  background:rgba(26,26,26,.14); }
+.deal--ink .deal-cta{ background:rgba(255,255,255,.16); }
+
 /* the offer that's live right now gets lifted out of the stack */
 .deal.is-live{
   box-shadow:0 6px 0 -1px var(--ink), 0 0 0 4px rgba(46,139,87,.55), 0 20px 34px -16px rgba(26,26,26,.55);
